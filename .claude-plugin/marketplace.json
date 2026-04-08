@@ -1,0 +1,54 @@
+{
+  "name": "momentic",
+  "owner": {
+    "name": "Momentic",
+    "email": "support@momentic.ai"
+  },
+  "metadata": {
+    "description": "E2E testing and test result classification skills for Momentic",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "momentic-test",
+      "source": "./",
+      "description": "Run and manage Momentic end-to-end tests from the CLI, including browser, Android, and iOS automation. Use when the user asks to run tests, build new tests, update impacted tests, or manage Momentic test suites. Supports hosted and local execution.",
+      "version": "0.0.1",
+      "author": {
+        "name": "Momentic"
+      },
+      "category": "testing",
+      "keywords": [
+        "e2e",
+        "testing",
+        "browser",
+        "android",
+        "ios",
+        "automation",
+        "momentic"
+      ],
+      "strict": false,
+      "skills": ["./skills/momentic-test"]
+    },
+    {
+      "name": "momentic-result-classification",
+      "source": "./",
+      "description": "Classify and analyze Momentic test results to identify likely failure causes, separate real bugs from noise, and improve test signal. Use when the user asks to analyze test failures, triage results, or understand why tests failed.",
+      "version": "0.0.1",
+      "author": {
+        "name": "Momentic"
+      },
+      "category": "testing",
+      "keywords": [
+        "testing",
+        "classification",
+        "triage",
+        "analysis",
+        "failures",
+        "momentic"
+      ],
+      "strict": false,
+      "skills": ["./skills/momentic-result-classification"]
+    }
+  ]
+}

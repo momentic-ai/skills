@@ -19,6 +19,29 @@ To install the skill to popular coding agents:
 $ npx skills add momentic-ai/skills
 ```
 
+### Claude Code
+
+On Claude Code, to add the marketplace, simply run:
+
+```bash
+/plugin marketplace add momentic-ai/skills
+```
+
+Then install a plugin:
+
+```bash
+/plugin install momentic-test@momentic
+```
+
+If you prefer the manual interface:
+
+1. On Claude Code, type `/plugin`
+2. Select option `3. Add marketplace`
+3. Enter the marketplace source: `momentic-ai/skills`
+4. Press enter to select the plugin you want
+5. Hit enter again to `Install now`
+6. **Restart Claude Code** for changes to take effect
+
 ## Usage
 
 Once installed, you can ask Claude:

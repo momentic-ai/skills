@@ -314,6 +314,20 @@ Keys in `defaultParameters` and `parameterEnums` must appear in `parameters`. Ch
 Example: to add a new parameter `test2` with enums `["2","3","4","5"]`, replace the module step with:
 `--step-type MODULE --module-id MODULE_ID --inputs test=1 --parameters test,test2 --parameter-enum test=1,2,3,4 --parameter-enum test2=2,3,4,5`
 
+## Environment variable syntax by context
+
+There are two env-var reference forms in Momentic tests, depending on where the value is evaluated:
+
+- First, create/store the value with `--env-key SOME_NAME` on a step that produces output.
+- Use `env.X` inside JavaScript-evaluated fragments such as MODULE `--inputs` values and JavaScript expressions.
+- Use `{{ env.X }}` when the test DSL/text supports template interpolation. The `{{ ... }}` block can also evaluate JavaScript, for example `{{ env.CURRENT_URL.slice(0, 50) }}`.
+
+In general, if the field is code or a module input expression, use `env.X`, but, if the field is user-facing/interpolated text in the saved test YAML, use `{{ env.X }}`. Like this: 
+- `--step-type JAVASCRIPT --code "assert(env.PAGE_TITLE === 'Hacker News')" --environment NODE`
+- `--step-type MODULE --module-id MODULE_ID --inputs email=env.USER_EMAIL`
+- `Select date {{ env.TARGET_DATE }}`
+- `Verify the date field shows {{ env.INVOICE_DATE }}`
+
 ## Troubleshooting checklist
 
 - **Wrong page / unexpected UI**: use the UI-state snapshot from the last run (if it was returned as a file path, read that file); otherwise call `momentic_get_session_state` and, if you get a path back, read it to inspect the structured UI state.

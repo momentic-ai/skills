@@ -55,10 +55,6 @@ When unzipped, run directories have the following structure:
 
 When getting run results via the momentic MCP, tools such as `momentic_get_run` will return links to the MCP working directory (default `.momentic-mcp`). This directory will contain unzipped run result folders, following the structure above, named `run-result-<runId>`.
 
-### Steps snapshot
-
-The metadata.json file includes a `stepsSnapshot` property which shows the state of the test steps at the time of execution. Use this property if you suspect that the test has changed between runs, or to validate that the test has been setup properly
-
 ### Element locators
 
 Certain step types that interact with elements have a "target" property, or **locator**, that specifies which element the step should interact with.
@@ -109,11 +105,12 @@ When `momentic_list_runs` shows a passing run with `attempts > 1`, treat it as a
 ### Test temporality
 
 - Any past results may not necessarily match today’s test file. The test may have changed, meaning the result was on a different version of the test.
-- Looking at the stepsSnapshot property of the attempt metadata.json can help you determine whether the test has changed.
+- Looking at the `simplifiedTestSteps` property in the response from `momentic_get_run` can help you determine whether the test has changed.
+- For specific step configuration details, look at the `stepsSnapshot` property of the full run results.
 
 ## Identifying related vs unrelated issues
 
-- Use test name and description to determine what the test is intending to verify
+- Use test name, description, and the `simplifiedTestSteps` property on the response from `momentic_get_run` to determine what the test is intending to verify
 - Failures outside that intent are unrelated, otherwise consider them related.
 - Any failures in setup or teardown steps are pretty much always considered unrelated
 

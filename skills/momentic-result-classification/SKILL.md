@@ -65,7 +65,7 @@ Certain step types that interact with elements have a "target" property, or **lo
 
 #### Locator caches
 
-Locators identify elements by sending the page state html/xml to an llm as well as a screenshot. The llm identifies which element on the page the user is referring to. Momentic will attempt to "cache" the answer from the llm so that future calls don't require AI calls. On future runs, the page state is checked against the cached element to determine whether the element is still usable, or the page has changed enough such that another AI call is required.
+Locators identify elements by sending the page state html/xml to an llm as well as a screenshot. The llm identifies which element on the page the user is referring to. Momentic will attempt to "cache" the answer from the llm so that future runs don't require AI calls. On future runs, the page state is checked against the cached element to determine whether the element is still usable, or the page has changed enough such that another AI call is required.
 
 A locator cache can bust for a variety of reasons:
 
@@ -93,6 +93,8 @@ When looking at past runs, use the following workflow:
 
 1. Call the `momentic_list_runs` tool to identify the runs you want more detail on.
 2. Call `momentic_get_run` for that specific run to get the run details.
+
+**ALWAYS** look at screenshots when determining the behavior of test runs.
 
 ### Multi-attempt runs
 

@@ -19,7 +19,7 @@ Momentic is an end-to-end testing framework where each test is composed of brows
 
 `momentic_get_run` — Returns some metadata about the run and the path to the full run results. Use the metadata to help you parse through the run results (e.g. which attempt to look at, which step failed, etc.)
 
-`momentic_list_runs` — Recent runs for a test so you can compare the result of past runs over time. Always pass a branch name so that it's more likely you're looking at the same version of the test.
+`momentic_list_runs` — Recent runs for a test so you can compare the result of past runs over time. **Always pass `gitBranchName` when it exists on the run in question** so that it's more likely you're looking at the same version of the test.
 
 ## Background
 

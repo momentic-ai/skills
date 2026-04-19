@@ -19,7 +19,7 @@ This is a workflow guide for creating and maintaining Momentic tests using the *
 
 ## Non-negotiables
 
-- **Always call `momentic_get_initial_data` first** before making any other MCP tool calls. It returns project root, cwd, and the step schema—required for paths and for constructing valid test steps.
+- **Read the Step Authoring Guide artifact from `momentic_session_start` before constructing steps.** Session start returns project root, cwd, and the CLI-style step schema as a standalone artifact. Call `momentic_session_start` by itself; do not invoke any other MCP tool in parallel with session startup. Wait for the response, read the guide artifact, then continue.
 - **Never edit Momentic YAML directly.** Persist changes only with `momentic_test_splice_steps`.
 - **Never splice unvalidated steps.** Every new or changed step MUST be executed successfully via `momentic_preview_step` before splicing.
 - **Always carry preview cache keys into splice.** If a `momentic_preview_step` response returns a cache key / `CacheId` for a step and you decide to persist that step, you MUST include `--cache-id <CacheId>` when you add that step with `momentic_test_splice_steps`.
@@ -52,11 +52,7 @@ This is a workflow guide for creating and maintaining Momentic tests using the *
 
 ## Tool headers (Momentic MCP)
 
-Use these tools (and only these) to discover tests/modules, manage sessions, validate steps, and persist changes. **Call `momentic_get_initial_data` first** before any other tool.
-
-### Initial context (call first)
-
-- **`momentic_get_initial_data()`**: returns project root, cwd, and the step schema. Call this before any other tool so you have correct paths and can construct valid CLI-style steps.
+Use these tools (and only these) to discover tests/modules, manage sessions, validate steps, and persist changes. Read the Step Authoring Guide artifact returned by `momentic_session_start` before constructing CLI-style steps with session dependant tools.
 
 ### Environments and tests
 
@@ -75,7 +71,7 @@ Use these tools (and only these) to discover tests/modules, manage sessions, val
 
 ### Sessions (restart options)
 
-- **`momentic_session_start({ testId, envName?, projectConfigPath?, projectNameFilter?, headfulBrowser?, video? })`**: start a granular browser session. Returns session metadata (`sessionId`, `testId`, `testFileAbsolutePath`, `createdAt`, `expiresAt`, `idleTimeoutMinutes`, `envName`, `baseUrl`) plus `viewport` (`width`/`height` in pixels, or `null` if unavailable). Required: `testId`. Optional: env override, config path, project filter, headful browser, video recording.
+- **`momentic_session_start({ testId, ... })`**: start a browser or mobile session. Returns session metadata (`sessionId`, `testId`, `testFileAbsolutePath`, `createdAt`, `expiresAt`, `idleTimeoutMinutes`, environment/session details) and a standalone Step Authoring Guide artifact. Read that artifact before creating, previewing, running, or splicing CLI-style steps. Required: `testId`. Web options include env override, config path, project filter, headful browser, and video recording. Mobile options include provider, env override, local AVD/APK overrides, and headful remote control.
 - **`momentic_session_terminate({ sessionId })`**: terminate the current session. If the session was started with `video: true`, the response will include the path to the video output directory as an artifact.
 
 Restart rule:
@@ -136,7 +132,7 @@ Output note:
 - **Adding any logical multi-step action (login, navigation, setup, checkout, etc.)**: default to module-first: call `momentic_module_recommend` → `momentic_module_get` for strong candidates → decide module vs inline steps. Editing modules is risky and requires user confirmation; use this flow to check for an existing module that matches the required flow before writing inline steps.
 - **Editing a module**: If you must edit a module and have confirmed with the user that the module should be edited, replace the module step with a MODULE step includes arguments for the properties you'd like to update: `--parameters "a,b,c"`, `--parameter-enum param=val1,val2`, `--default-parameter param=val`, `--module-name`, `--module-description`, `--disabled`. Example: `--step-type MODULE --module-id <id> --inputs <same> --parameters test,test2 --parameter-enum test=1,2 --parameter-enum test2=2,3`.
 - **Testing a new single step idea quickly**: `momentic_preview_step`.
-- **Unsaved preview limit**: never keep too many validated unsaved steps in memory; splice each contiguous batch. This should be at each logical break point in the test (suggested 5ish steps)
+- **Unsaved preview limit**: never keep too many validated unsaved steps in memory; splice each contiguous group. This should be at each logical break point in the test (suggested 5ish steps)
 - **Persisting steps**: `momentic_test_splice_steps`. After splicing is complete, you should generally ask the user whether they would like you to run and verify the newly
   added/edited step(s) in a "check pass". `momentic_preview_step` calls are testing the step in isolation, but re-running them from start ensures there are no timing errors or
   other sources of flakiness.
@@ -146,20 +142,18 @@ Output note:
 
 ## Build and edit workflow (preview → splice → validate safely)
 
-### 0) Get initial data (first call)
-
-- Call `momentic_get_initial_data()` before any other tool. It provides project root, cwd, and the step schema needed for all subsequent operations.
-
-### 1) Create the test (or select existing)
+### 0) Create the test (or select existing)
 
 - If you’re making a brand new test, call `momentic_test_create`.
 - If the user might already have a similar test, prefer: `momentic_get_artifacts` to discover tests, then read the tests using the returned `testFileAbsolutePath`.
 
-### 2) Start a session
+### 1) Start a session and read the guide
 
 - Call `momentic_session_start({ testId, envName? })` and keep using that `sessionId`.
+- Read the returned Step Authoring Guide artifact before constructing CLI-style steps. It contains project root, cwd, and the full step schema for preview/run/splice tools.
+- Do not call any other MCP tool in parallel with session startup. Wait for the session-start response before making the next MCP tool call.
 
-### 3) Identify the minimal delta and navigate to the work point
+### 2) Identify the minimal delta and navigate to the work point
 
 - Determine exactly which step index(es) to insert/replace/delete.
 - If this is a new test, start from the beginning and build the first vertical slice.
@@ -167,7 +161,7 @@ Output note:
 - Use output from `momentic_run_step` to confirm what’s on screen before previewing. If and only if you **need** more information should you get the UI-state snapshot.
 - When previewing, use the narrowest valid change to the steps and avoid widening the edit to adjacent steps. All adjusted fields must be in your preview and only adjust what is required to keep the requested behavior correct.
 
-### 4) Build the test incrementally
+### 3) Build the test incrementally
 
 Start with the smallest meaningful “vertical slice”:
 
@@ -178,13 +172,13 @@ Then add the next step, etc.
 
 Rules:
 
-- Prefer **preview preview preview → splice** for a small batch of adjacent, idempotent steps. Validate each step first, then splice them together to keep the test reproducible without constant splicing. When splicing, pass the `<CacheId>` from each preview response as `--cache-id CACHE_ID` in the CLI string for the corresponding step so the cache is reused.
+- Prefer **preview preview preview → splice** for a small group of adjacent, idempotent steps. Validate each step first, then splice them together to keep the test reproducible without constant splicing. When splicing, pass the `<CacheId>` from each preview response as `--cache-id CACHE_ID` in the CLI string for the corresponding step so the cache is reused.
 - If the user asks you to create/edit a test, your task is not complete until you have persisted the steps with splice. You should splice each logical grouping of steps as soon as you finish previewing them. EX: if you were to be testing google flights and booking a flight, all of the toggles and selects before clicking search would be a logical grouping. When it doubt try to keep each splice to around 5 steps. This ensures you do not forget about previously previewed steps and returned cache IDs.
 - After each preview or run, if the tool returns **file paths**, read only the artifact(s) required to verify the intended outcome before splicing; if you require structured UI-state details, call `momentic_get_session_state`.
 - Avoid "nice-to-have" assertions. If the user asked for one final assertion, keep exactly that assertion unless an intermediate readiness check is truly necessary to make the test reliable.
 - When editing an existing test, prefer the smallest possible splice. Do not rewrite neighboring steps or change unnecessary fields.
 
-### 5) Author steps (natural language targeting)
+### 4) Author steps (natural language targeting)
 
 For every UI step, write an element description a human would understand:
 
@@ -195,7 +189,7 @@ For every UI step, write an element description a human would understand:
 
 NOTE: Single quotes signal strict queries, so do not use them unless you expect an exact match in the page snapshot and want incredibly strict behavior.
 
-### 6) Use modules for obvious flows
+### 5) Use modules for obvious flows
 
 If the flow is 4+ steps or obviously reusable:
 
@@ -204,7 +198,7 @@ If the flow is 4+ steps or obviously reusable:
 3. Preview the module
 4. Add a `MODULE` step via `momentic_test_splice_steps`.
 
-### 7) Avoid double-executing risky steps
+### 6) Avoid double-executing risky steps
 
 - If a step is **idempotent** (tab switches, typing into empty fields, assertions), it’s usually fine to preview, splice, then continue validating forward.
 - If a step is **not idempotent / risky** (submit/purchase/delete/send/create), do **not** immediately re-run it in the same session:
@@ -221,9 +215,9 @@ If something fails:
 - Before restarting: consider recovering via `momentic_preview_step`, even if you do not intend to add the steps to the test, to get the browser into a state where the test can continue (e.g., dismiss a modal, navigate back). Only restart via `momentic_run_step` with `resetSession: true` if recovery is not feasible.
 - After ~3 attempts, stop and collaborate with the user on alternatives.
 
-### 8) Persist and re-validate
+### 7) Persist and re-validate
 
-Once a small batch of steps is validated, persist them together with `momentic_test_splice_steps`.
+Once a small group of steps is validated, persist them together with `momentic_test_splice_steps`.
 
 Common splice patterns:
 
@@ -344,9 +338,9 @@ In general, if the field is code or a module input expression, use `env.X`, but,
 
 Goal: “Homepage loads and shows the Log in button.”
 
-1. `momentic_get_initial_data()` — first, always
-2. `momentic_test_create(name, baseUrl)`
-3. `momentic_session_start(testId)`
+1. `momentic_test_create(name, baseUrl)`
+2. `momentic_session_start(testId)`
+3. Read the Step Authoring Guide artifact returned by session start
 4. `momentic_preview_step` NAVIGATE to `baseUrl`
 5. `momentic_preview_step` AI_ASSERTION “page shows Log in button”
 6. `momentic_test_splice_steps` to persist both steps

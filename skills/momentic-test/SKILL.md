@@ -19,7 +19,7 @@ This is a workflow guide for creating and maintaining Momentic tests using the *
 
 ## Non-negotiables
 
-- **Read the Step Authoring Guide artifact from `momentic_session_start` before constructing steps.** Session start returns project root, cwd, and the CLI-style step schema as a standalone artifact. Call `momentic_session_start` by itself; do not invoke any other MCP tool in parallel with session startup. Wait for the response, read the guide artifact, then continue.
+- **Read the Step Authoring Guide artifact from `momentic_session_start` before constructing steps.** `momentic_session_start` returns `projectRootAbsolutePath`, `projectConfigAbsolutePath`, `cwd`, and the CLI-style step schema as a standalone artifact. `projectRootAbsolutePath` points at the project root where `.momentic-mcp` artifacts live, `projectConfigAbsolutePath` is the active `momentic.config.yaml`, and `cwd` is what you use when resolving relative links or paths. Call `momentic_session_start` by itself; do not invoke any other MCP tool in parallel with session startup. Wait for the response, read the guide artifact, then continue.
 - **Never edit Momentic YAML directly.** Persist changes only with `momentic_test_splice_steps`.
 - **Never splice unvalidated steps.** Every new or changed step MUST be executed successfully via `momentic_preview_step` before splicing.
 - **Always carry preview cache keys into splice.** If a `momentic_preview_step` response returns a cache key / `CacheId` for a step and you decide to persist that step, you MUST include `--cache-id <CacheId>` when you add that step with `momentic_test_splice_steps`.
@@ -57,7 +57,7 @@ Use these tools (and only these) to discover tests/modules, manage sessions, val
 ### Environments and tests
 
 - **IDs in Momentic files**: Test files are usually .test.yaml and will have an id attribute. The id field is authoritative. Module files are .module.yaml.
-- **`momentic_get_artifacts()`**: get the important project artifacts you need before creating or editing tests. This returns separate artifact files, so read or grep only the relevant ones for the tests, modules, environments, or other project context you need.
+- **`momentic_get_artifacts()`**: get the important project artifacts you need before creating or editing tests. This returns a project context section with `projectRootAbsolutePath`, `projectConfigAbsolutePath`, and `cwd` plus separate artifact files, so read or grep only the relevant ones for the tests, modules, environments, or other project context you need.
 - **`momentic_test_create({ name, baseUrl | environment, description?, pathSegments?, browserType?, viewport? })`**: create a new test.
   - Required: `name` and either `baseUrl` or `environment`.
   - Name rules: 1–255 chars, letters/numbers/dashes only, cannot start/end with `-`, not `.yaml`, not `none`, not a UUID.
@@ -71,7 +71,7 @@ Use these tools (and only these) to discover tests/modules, manage sessions, val
 
 ### Sessions (restart options)
 
-- **`momentic_session_start({ testId, ... })`**: start a browser or mobile session. Returns session metadata (`sessionId`, `testId`, `testFileAbsolutePath`, `createdAt`, `expiresAt`, `idleTimeoutMinutes`, environment/session details) and a standalone Step Authoring Guide artifact. Read that artifact before creating, previewing, running, or splicing CLI-style steps. Required: `testId`. Web options include env override, config path, project filter, headful browser, and video recording. Mobile options include provider, env override, local AVD/APK overrides, and headful remote control.
+- **`momentic_session_start({ testId, ... })`**: start a browser or mobile session. Returns session metadata (`sessionId`, `testId`, `testFileAbsolutePath`, `projectRootAbsolutePath`, `projectConfigAbsolutePath`, `cwd`, `createdAt`, `expiresAt`, `idleTimeoutMinutes`, environment/session details) and a standalone Step Authoring Guide artifact. Read that artifact before creating, previewing, running, or splicing CLI-style steps. Required: `testId`. Web options include env override, config path, project filter, headful browser, and video recording. Mobile options include provider, env override, local AVD/APK overrides, and headful remote control.
 - **`momentic_session_terminate({ sessionId })`**: terminate the current session. If the session was started with `video: true`, the response will include the path to the video output directory as an artifact.
 
 Restart rule:
@@ -150,7 +150,7 @@ Output note:
 ### 1) Start a session and read the guide
 
 - Call `momentic_session_start({ testId, envName? })` and keep using that `sessionId`.
-- Read the returned Step Authoring Guide artifact before constructing CLI-style steps. It contains project root, cwd, and the full step schema for preview/run/splice tools.
+- Read the returned Step Authoring Guide artifact before constructing CLI-style steps. It contains `projectRootAbsolutePath`, `projectConfigAbsolutePath`, `cwd`, and the full step schema for preview/run/splice tools.
 - Do not call any other MCP tool in parallel with session startup. Wait for the session-start response before making the next MCP tool call.
 
 ### 2) Identify the minimal delta and navigate to the work point

@@ -17,9 +17,11 @@ Momentic is an end-to-end testing framework where each test is composed of brows
 
 ## Helpful MCP tools
 
-`momentic_get_run` — Returns some metadata about the run and the path to the full run results. Use the metadata to help you parse through the run results (e.g. which attempt to look at, which step failed, etc.)
+`momentic_get_run` — Returns some metadata about the run and a summary of the full run results. Use the metadata to help you parse through the run results (e.g. which attempt to look at, which step failed, etc.)
 
 `momentic_list_runs` — Recent runs for a test so you can compare the result of past runs over time. **Always pass `gitBranchName` when it exists on the run in question** so that it's more likely you're looking at the same version of the test.
+
+`momentic_get_step_result` — Returns the result of a specific step, with other information such as full step trace and before/after screenshots. Use `parentStepIdChain` for steps nested inside other steps.
 
 ## Background
 
@@ -75,6 +77,18 @@ You can find the `cacheBustReason` on the `trace` property in the results for a 
 
 Sometimes the element that was cached is not the element that the user intended to target. This can cause failures or unexpected behaviors in tests. In these cases, it helps to verify exactly why the wrong cache was saved in the first place. Use the `runId` property of the `targetUpdateLoggerTags` on the incorrect cache to get the details of the original run, calling `momentic_get_run` with this runId. This will return the run where the cache target was updated.
 
+### Module caching
+
+Cached modules skip executing their steps when the module cache key and resolved inputs are unchanged, and reuse the cached return value from the module's last step.
+
+Authentication modules can also save and restore browser auth state from the module cache, including cookies, localStorage, and IndexedDB. They may use a page-content check after restoring auth state to decide whether the cache is still valid.
+
+### File uploads
+
+A file upload step prepares one file for the next native file picker, so it must run before the action that opens the picker.
+
+Sources can be remote URLs, `file://` references to earlier downloads, CLI-local paths, or uploaded user files. The step can also override the presented filename, and Momentic wires the prepared file into the browser's file chooser handling.
+
 ## Using past runs
 
 You MUST look at past runs of the same test when understanding why a test failed. Looking at past runs helps you identify:
@@ -89,12 +103,13 @@ When looking at past runs, use the following workflow:
 
 1. Call the `momentic_list_runs` tool to identify the runs you want more detail on.
 2. Call `momentic_get_run` for that specific run to get the run details.
+3. Call `momentic_get_step_result` for step results that you want to see in more detail, especially for step screenshots.
 
 **ALWAYS** look at screenshots when determining the behavior of test runs.
 
 ### Multi-attempt runs
 
-When `momentic_list_runs` shows a passing run with `attempts > 1`, treat it as a partial failure worth investigating, not a clean passing run. Pull the first attempt's step results and failure messages to understand what was going wrong before the retry succeeded.
+When `momentic_list_runs` shows a passing run with `attempts > 1`, treat it as a partial failure worth investigating, not a clean passing run. Use the attemptNumber parameter to retrieve earlier failed attempt results for that run to understand what was going wrong before the retry succeeded.
 
 ### Flakiness and intermittent failures
 
@@ -106,13 +121,14 @@ When `momentic_list_runs` shows a passing run with `attempts > 1`, treat it as a
 
 - Any past results may not necessarily match today’s test file. The test may have changed, meaning the result was on a different version of the test.
 - Looking at the `simplifiedTestSteps` property in the response from `momentic_get_run` can help you determine whether the test has changed.
-- For specific step configuration details, look at the `stepsSnapshot` property of the full run results.
+- For specific step configuration details, look at the response from `momentic_get_step_result`.
 
 ## Identifying related vs unrelated issues
 
 - Use test name, description, and the `simplifiedTestSteps` property on the response from `momentic_get_run` to determine what the test is intending to verify
 - Failures outside that intent are unrelated, otherwise consider them related.
-- Any failures in setup or teardown steps are pretty much always considered unrelated
+- Any failures in setup (beforeSteps/beforeResults) or teardown (afterSteps/afterResults) steps are pretty much always considered unrelated.
+- Related vs. unrelated changes only apply to bugs and changes (e.g. an INFRA failure would still be INFRA regardless of whether it's in the setup or main section).
 
 ## Bug vs change
 
@@ -123,22 +139,40 @@ When `momentic_list_runs` shows a passing run with `attempts > 1`, treat it as a
 
 - Exactly one category id — no new labels, no multi-label.
 - Ground your decision in data. Be sure that you've fully investigated the run before assigning the category.
+- When reasoning cites another run, use the full runId UUID exactly as returned by tools. Do not shorten it to a prefix.
 
 ```text
 Reasoning: <a few sentences tied to summary, past runs, and intent>
 Category: <one id from the list>
+Confidence: <high | medium | low>
 ```
+
+Confidence levels:
+
+- `high` — direct evidence (e.g. clear screenshot of label change or crash)
+- `medium` — strong inference from multiple signals but no single conclusive screenshot or data point
+- `low` — ambiguous evidence; the classification required significant inference or the root cause is unclear
 
 ## Category ids
 
 Use these strings verbatim:
 
-- `NO_FAILURE` — Nothing failed; all attempts passed.
-- `RELATED_APPLICATION_CHANGE` — Related to intent; expectation drift / change, not a clear defect.
-- `RELATED_APPLICATION_BUG` — Related to intent; clearly incorrect behavior.
-- `UNRELATED_APPLICATION_CHANGE` — Outside intent; not a clear bug.
-- `UNRELATED_APPLICATION_BUG` — Outside intent but clearly broken.
-- `TEST_CAN_BE_IMPROVED` — Test/automation issue (race, vague locator or assertion).
-- `INFRA` — Rare or external (browser crash, resource pressure, rate limits, flaky environment).
-- `PERFORMANCE` — Load/responsiveness (stuck spinner, assertion timeouts) when not pure infra.
-- `MOMENTIC_ISSUE` — There was an issue with momentic itself, the platform running the test (e.g. an AI hallucination, data issues, incorrectly redirecting to the wrong element).
+- `NO_FAILURE` — The run had no failures; all attempts passed.
+- `RELATED_APPLICATION_CHANGE` — A failure related to the test's intended behavior.
+- `RELATED_APPLICATION_BUG` — A failure related to the test's intended behavior that is clearly a bug.
+- `UNRELATED_APPLICATION_CHANGE` — A failure unrelated to the test's intended behavior.
+- `UNRELATED_APPLICATION_BUG` — A failure unrelated to the test's intended behavior that is clearly a bug.
+  - Example: any app bug in setup, not in the test steps.
+- `TEST_CAN_BE_IMPROVED` — We know what to change about the test to make it better.
+  - Examples: an obvious race condition that can be fixed by adding or modifying steps; vague assertion or locator descriptions; test misconfiguration such as a missing file for a file upload step.
+  - If increasing a timeout or adding wait steps seems like the fix, you must be extremely confident that this would make the test consistently pass, backed by evidence from past runs.
+- `INFRA` — Something very rare happened, or something that doesn't happen all of the time and that you're confident is related to outside factors.
+  - Examples: browser crash, high resource usage, or rate limiting.
+- `PERFORMANCE` — Page loading or application performance was too slow, and just waiting longer would likely have allowed the step to pass.
+  - Use for sporadic slowdowns or load stalls that usually should not justify a permanent update to the test.
+  - Do not choose this category just because a step timed out.
+  - You must be confident that this was a temporary performance issue that occurs infrequently and would likely be resolved by waiting longer in the current test run.
+  - Choose `INFRA` instead when external systems, browser crashes, resource exhaustion, or rate limits caused the slowdown.
+  - Examples: page took too long to load; loading spinner did not disappear before the step timed out, but past runs show it normally does; an assertion timed out because the expected state appeared slowly, not because the assertion or test intent was wrong.
+- `MOMENTIC_ISSUE` — Some issue occurred with the execution of the test or Momentic data was incorrect.
+  - Examples: unexpected behavior when viewing the run trace; the AI clearly misread or hallucinated data that is unambiguous in the screenshot, and no reasonable test alternative exists to avoid the AI step.

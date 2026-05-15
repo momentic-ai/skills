@@ -1,11 +1,11 @@
 ---
 name: momentic-test
-description: Create and maintain Momentic browser E2E tests via the Momentic MCP tools. Use when a user asks to create a new test, scaffold a smoke test, or add/modify/delete steps in an existing test. Do not use for editing Momentic YAML directly.
+description: Create and maintain Momentic session E2E tests via the Momentic MCP tools. Use when a user asks to create a new test, scaffold a smoke test, or add/modify/delete steps in an existing test. Do not use for editing Momentic YAML directly.
 ---
 
 # Momentic test creation and maintenance agent (MCP)
 
-This is a workflow guide for creating and maintaining Momentic tests using the **Momentic MCP tool suite** (the `momentic_*` tools). Momentic is an end-to-end testing framework where each test is composed of browser interaction steps. Each step combines Momentic-specific behavior (AI checks, natural-language locators, ai actions, etc.) with Playwright capabilities wrapped in our YAML step schema. Use these together to build stable, maintainable tests. Your sole goal is to build and maintain these tests.
+This is a workflow guide for creating and maintaining Momentic tests using the **Momentic MCP tool suite** (the `momentic_*` tools). Momentic is an end-to-end testing framework where each test is composed of session interaction steps. Each step combines Momentic-specific behavior (AI checks, natural-language locators, ai actions, etc.) with Playwright capabilities wrapped in our YAML step schema. Use these together to build stable, maintainable tests. Your sole goal is to build and maintain these tests.
 
 ## Scope
 
@@ -38,7 +38,7 @@ This is a workflow guide for creating and maintaining Momentic tests using the *
 
 - **Use natural language element descriptions only.** No CSS selectors, XPath, or HTML snippets.
 - **Prefer native Momentic steps over `JAVASCRIPT` steps.** Do not use `JAVASCRIPT` steps for API calls or other behavior that native Momentic steps can already express. Only reach for `JAVASCRIPT` when there is no native step that fits the job.
-- **Do not auto-navigate.** The browser session starts on your page; only add a NAVIGATE step when you confirm you are not already on the intended page.
+- **Do not auto-navigate.** The browser session starts on your page for web tests; only add a NAVIGATE step when you confirm you are not already on the intended page.
 - **Do not use AI actions** (AI_ACTION_DYNAMIC steps) unless the user specifically asks for them.
 - **Do not add optional/default fields just because they are available.** Only include parameters that are required for correctness or explicitly needed for the requested behavior.
 
@@ -85,7 +85,7 @@ Restart rule:
 
 **Live sessions and transient snapshots**
 
-- Each session is a **live browser session**—a real browser process running statefully.
+- Each session is a **live session**—a real browser or emulator process running statefully.
 - Screenshots and UI-state snapshots are **transient**; they capture a moment in time and do not persist.
 - If a screenshot or step output doesn't show the expected state (e.g., you clicked a button but the returned image doesn't show the resulting UI), **call `momentic_get_session_state` again** to get a fresh snapshot. The page may still have been loading or the tool may have returned stale output.
 - When in doubt, retry: get a fresh UI-state snapshot before concluding that something failed. That being said don't loop over and over, a second try is usually good enough.
@@ -110,8 +110,8 @@ The MCP server may return **file output** as markdown links in tool response sec
 
 > **CRITICAL: Never persist steps that have not been executed successfully via `momentic_preview_step`.**
 
-- **`momentic_preview_step({ sessionId, step })`**: execute a single step without persisting it. **Stateful**: can advance the browser. Some preview responses include a cache key / `<CacheId>`. **Save this value.** and use it as the `--cache-id <CacheId>` for that step when you splice it. Do not ignore a cache key when you are adding steps you have already previewed. Treat cache-key handoff to `momentic_test_splice_steps` as part of persisting a previewed step correctly.
-- **`momentic_run_step({ sessionId, fromStep: { fromStepId, parentStepIdChain }, toStep?, targetSection?, resetSession? })`**: execute steps already in the test. Set `resetSession: true` to reset the browser session before running. Step IDs for the session's bound test are returned  in the Test Content section returned by `momentic_session_start`, in the diffs section of `momentic_test_splice_steps` after edits or with return test = true, or call `momentic_test_get({ testId })` / `momentic_test_get({ testPath })` if that output is stale. The new v2 simplified test files do not store IDs so use tools instead of reading the files if you cannot find the ids. Use `parentStepIdChain: []` for top-level steps. Set `resetSession: true` to reset the browser before running. Returns screenshot and env vars at the end.
+- **`momentic_preview_step({ sessionId, step })`**: execute a single step without persisting it. **Stateful**: can advance the session. Some preview responses include a cache key / `<CacheId>`. **Save this value.** and use it as the `--cache-id <CacheId>` for that step when you splice it. Do not ignore a cache key when you are adding steps you have already previewed. Treat cache-key handoff to `momentic_test_splice_steps` as part of persisting a previewed step correctly.
+- **`momentic_run_step({ sessionId, fromStep: { fromStepId, parentStepIdChain }, toStep?, targetSection?, resetSession? })`**: execute steps already in the test. Set `resetSession: true` to reset the session before running. Step IDs for the session's bound test are returned in the Test Content section returned by `momentic_session_start`, in the diffs section of `momentic_test_splice_steps` after edits or with return test = true, or call `momentic_test_get({ testId })` / `momentic_test_get({ testPath })` if that output is stale. The new v2 simplified test files do not store IDs so use tools instead of reading the files if you cannot find the ids. Use `parentStepIdChain: []` for top-level steps. Set `resetSession: true` to reset the session before running. Returns screenshot and env vars at the end.
 - **`momentic_test_splice_steps({ sessionId, startIndex, deleteCount, steps, targetSection?, parentStepIdChain?, returnTest? })`**: insert/replace/delete steps and persist. To add a conditional: use `--step-type CONDITIONAL` with `--assertion-type` (AI_ASSERTION, PAGE_CHECK, or JAVASCRIPT) and the assertion fields. Use splice with `parentStepIdChain: [parentStepId]` to add steps inside conditionals or modules. **Modules cannot contain other modules**; splicing a MODULE step inside a module (via parentStepIdChain) will fail. **To modify a module** (name, parameters, parameterEnums, etc.): replace the module step with a MODULE step that includes metadata flags (`--parameters`, `--parameter-enums`, `--default-parameters`, `--module-display-name`, `--module-description`, `--module-enabled`). Metadata comes on the step itself; changes persist to the module `.module.yaml` file.
 
 Splice response handling (required):
@@ -127,7 +127,7 @@ Output note:
 ## Decision rules (tool choice)
 
 - **Need to know which index to edit**: This is usually unnecessary since splice returns the new indices. If you do need it, use the Test Content section returned by `momentic_session_start`; if that output is stale, call `momentic_test_get({ testId })` or `momentic_test_get({ testPath })` to fetch the current test. For a *different* test in the project, call `momentic_test_get(testId)` for inspection only; IDs from another test cannot be passed to `momentic_run_step` on the active session.
-- **Need to get the browser into the right state before editing step N**: `momentic_run_step` from first step to the step before N (use the step IDs from the Test Content section returned by `momentic_session_start`, `momentic_test_splice_steps`, or `momentic_test_get). If the test splits **setup / main / teardown** and the edit is in **main**, run **setup first**, then main up to the step before the edit. Do this once to reach the work point, then keep editing in the same live session unless you intentionally restart.
+- **Need to get the session into the right state before editing step N**: `momentic_run_step` from first step to the step before N (use the step IDs from the Test Content section returned by `momentic_session_start`, `momentic_test_splice_steps`, or `momentic_test_get`). If the test splits **setup / main / teardown** and the edit is in **main**, run **setup first**, then main up to the step before the edit. Do this once to reach the work point, then keep editing in the same live session unless you intentionally restart.
 - **Need to understand the current UI state / fix an element description when screenshot-only output is insufficient**: `momentic_get_session_state`.
 - **Adding any logical multi-step action (login, navigation, setup, checkout, etc.)**: default to module-first: call `momentic_module_recommend` → `momentic_module_get` for strong candidates → decide module vs inline steps. Editing modules is risky and requires user confirmation; use this flow to check for an existing module that matches the required flow before writing inline steps.
 - **Editing a module**: If you must edit a module and have confirmed with the user that the module should be edited, replace the module step with a MODULE step includes arguments for the properties you'd like to update: `--parameters "a,b,c"`, `--parameter-enum param=val1,val2`, `--default-parameter param=val`, `--module-name`, `--module-description`, `--disabled`. Example: `--step-type MODULE --module-id <id> --inputs <same> --parameters test,test2 --parameter-enum test=1,2 --parameter-enum test2=2,3`.
@@ -137,7 +137,7 @@ Output note:
   added/edited step(s) in a "check pass". `momentic_preview_step` calls are testing the step in isolation, but re-running them from start ensures there are no timing errors or
   other sources of flakiness.
 - **Step failed mid-run, need to recover**: You can use `momentic_preview_step` with steps that you don't intend to persist to the test in order to recover from failures or incorrect states, then resume `momentic_run_step` from the appropriate step. Only restart from the beginning if recovery is not feasible.
-- **Need a clean slate**: `momentic_run_step` with `resetSession: true`; if this implies a long re-run, ask for confirmation first. This re-creates the browser, destroying any local state.
+- **Need a clean slate**: `momentic_run_step` with `resetSession: true`; if this implies a long re-run, ask for confirmation first. This re-creates the session, destroying any local state.
 - **Break up long `run_step` operations**: avoid running many steps at once; prefer smaller checkpoint-based runs. Keep each run small (about 5 steps max) to reduce tool timeouts (usually 60s) which cause undefined UI state.
 
 ## Build and edit workflow (preview → splice → validate safely)
@@ -212,7 +212,7 @@ If something fails:
 - First: check if it's a timing/state issue (see smart waiting context above); add an explicit readiness wait/assertion when needed.
 - Second: check if it's an element description issue (use the UI-state snapshot to refine the wording after the UI is ready).
 - If the page is showing a genuine product failure which blocks your testing (for example, an empty graph because the backend is down, missing data required for the requested assertion, or a localhost request that cannot connect), report it to the user instead of editing around it.
-- Before restarting: consider recovering via `momentic_preview_step`, even if you do not intend to add the steps to the test, to get the browser into a state where the test can continue (e.g., dismiss a modal, navigate back). Only restart via `momentic_run_step` with `resetSession: true` if recovery is not feasible.
+- Before restarting: consider recovering via `momentic_preview_step`, even if you do not intend to add the steps to the test, to get the session into a state where the test can continue (e.g., dismiss a modal, navigate back). Only restart via `momentic_run_step` with `resetSession: true` if recovery is not feasible.
 - After ~3 attempts, stop and collaborate with the user on alternatives.
 
 ### 7) Persist and re-validate
@@ -326,7 +326,7 @@ In general, if the field is code or a module input expression, use `env.X`, but,
 
 - **Wrong page / unexpected UI**: use the UI-state snapshot from the last run (if it was returned as a file path, read that file); otherwise call `momentic_get_session_state` and, if you get a path back, read it to inspect the structured UI state.
 - **Element not found**:
-  - Read the latest browser-state (or screenshot) file to see what’s on the page
+  - Read the latest session-state (or screenshot) file to see what’s on the page
   - If the target element is on the page but was not found, rewrite the step description using visible text, role, and nearby context
   - If the expected element is missing or clearly not present/usable, an earlier prerequisite step may have been incorrect or silently failed.
 - **Screenshot doesn't show expected state after a click/action**: snapshots are transient. Call `momentic_get_session_state` again to get a fresh image; the page may have been loading. If the fresh snapshot still doesn't match, retry the step or add a wait.

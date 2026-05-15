@@ -23,6 +23,8 @@ Momentic is an end-to-end testing framework where each test is composed of brows
 
 `momentic_get_step_result` — Returns the result of a specific step, with other information such as full step trace and before/after screenshots. Use `parentStepIdChain` for steps nested inside other steps.
 
+`momentic_get_test_steps_for_run` — Returns the simplified test steps recorded on a run (`stepsSnapshot`, `beforeStepsSnapshot`, `afterStepsSnapshot`). You can use this to understand the intent of the test if you need more information than what you can glean from the test name and description.
+
 ## Background
 
 ### Test run result structure
@@ -120,12 +122,11 @@ When `momentic_list_runs` shows a passing run with `attempts > 1`, treat it as a
 ### Test temporality
 
 - Any past results may not necessarily match today’s test file. The test may have changed, meaning the result was on a different version of the test.
-- Looking at the `simplifiedTestSteps` property in the response from `momentic_get_run` can help you determine whether the test has changed.
-- For specific step configuration details, look at the response from `momentic_get_step_result`.
+- You can call `get_test_steps_for_run` to help you determine if the test itself changed between runs, although note that this tool returns a _summary_ of each test step. If you suspect that specific details on certain steps have changed between test runs, full step details are included in the response from `momentic_get_step_result`.
 
 ## Identifying related vs unrelated issues
 
-- Use test name, description, and the `simplifiedTestSteps` property on the response from `momentic_get_run` to determine what the test is intending to verify
+- Use test name, description, and, if needed, the simplified test steps returned by `momentic_get_test_steps_for_run` to determine what the test is intending to verify
 - Failures outside that intent are unrelated, otherwise consider them related.
 - Any failures in setup (beforeSteps/beforeResults) or teardown (afterSteps/afterResults) steps are pretty much always considered unrelated.
 - Related vs. unrelated changes only apply to bugs and changes (e.g. an INFRA failure would still be INFRA regardless of whether it's in the setup or main section).

@@ -136,13 +136,6 @@ When `momentic_list_runs` shows a passing run with `attempts > 1`, treat it as a
 - Any past results may not necessarily match today’s test file. The test may have changed, meaning the result was on a different version of the test.
 - You can call `get_test_steps_for_run` to help you determine if the test itself changed between runs, although note that this tool returns a _summary_ of each test step. If you suspect that specific details on certain steps have changed between test runs, full step details are included in the response from `momentic_get_step_result`; only request `includeTrace=true` when those fields and screenshots still are not enough.
 
-## Identifying related vs unrelated issues
-
-- Use test name, description, and, if needed, the simplified test steps returned by `momentic_get_test_steps_for_run` to determine what the test is intending to verify.
-- Failures outside that intent are unrelated, otherwise consider them related.
-- Any failures in setup (`beforeSteps` or `beforeResults`) or teardown (`afterSteps` or `afterResults`) are pretty much always considered unrelated.
-- Related vs unrelated changes only apply to bugs and changes. For example, an `INFRA` failure is still `INFRA` regardless of whether it is in setup or the main section.
-
 ## Bug vs change
 
 - Bug: something very clearly went wrong when it should not have, such as an error message appearing. It is obvious just by looking at a single step or two that this is a bug.
@@ -184,21 +177,14 @@ Confidence levels:
 Use these strings verbatim:
 
 - `NO_FAILURE` — The run had no failures; all attempts passed.
-- `RELATED_APPLICATION_CHANGE` — A failure related to the test's intended behavior.
-- `RELATED_APPLICATION_BUG` — A failure related to the test's intended behavior that is clearly a bug.
-- `UNRELATED_APPLICATION_CHANGE` — A failure unrelated to the test's intended behavior.
-- `UNRELATED_APPLICATION_BUG` — A failure unrelated to the test's intended behavior that is clearly a bug.
-  - Example: any app bug in setup, not in the test steps.
-- `TEST_CAN_BE_IMPROVED` — We know what to change about the test to make it better.
-  - Examples: an obvious race condition that can be fixed by adding or modifying steps; vague assertion or locator descriptions; test misconfiguration such as a missing file for a file upload step.
-  - If increasing a timeout or adding wait steps seems like the fix, you must be extremely confident that this would make the test consistently pass, backed by evidence from past runs.
-- `INFRA` — Something very rare happened, or something that does not happen all of the time and that you are confident is related to outside factors.
-  - Examples: browser crash, high resource usage, or rate limiting.
-- `PERFORMANCE` — Page loading or application performance was too slow, and just waiting longer would likely have allowed the step to pass.
-  - Use for sporadic slowdowns or load stalls that usually should not justify a permanent update to the test.
-  - Do not choose this category just because a step timed out.
-  - You must be confident that this was a temporary performance issue that occurs infrequently and would likely be resolved by waiting longer in the current test run.
-  - Choose `INFRA` instead when external systems, browser crashes, resource exhaustion, or rate limits caused the slowdown.
-  - Examples: page took too long to load; loading spinner did not disappear before the step timed out, but past runs show it normally does; an assertion timed out because the expected state appeared slowly, not because the assertion or test intent was wrong.
-- `MOMENTIC_ISSUE` — Some issue occurred with the execution of the test or Momentic data was incorrect.
+- `APPLICATION_CHANGE` — The test is out of date because the application's flow or UI has changed; updating the test to match the new behavior would permanently fix the failure.
+- `BUG` — Something clearly went wrong in the application that shouldn't have, such as an error message appearing or expected content failing to render.
+- `TEST_AUTHORSHIP` — The test can be permanently updated to prevent the failure while still validating its original intent, and you can recommend a specific authorship change such as adding or modifying a step, rewriting a vague assertion, or making a locator description more specific. If you cannot name a concrete change, choose a different category. Timeouts, slow page loads, and any failure whose recommended fix is to "wait longer" or to increase a timeout are NOT authorship issues — those are `INFRA`, even when the test could technically be edited to wait longer.
+  - Examples: race conditions that can be fixed by adding or modifying steps **other than** waits/timeouts (e.g. replacing a "type with pressEnter" step with an explicit "select from list" step so the test no longer races the application); vague assertions or locator descriptions that can be rewritten to be more specific.
+- `TEST_SETUP` — Missing test data or files necessary to run the test, where the fix requires user action outside of the test itself.
+  - Examples: missing file for a file upload step; missing or incorrect credentials needed by the test.
+- `INFRA` — The failure was unrelated to the application or application code and was caused by an infrastructure outage, long load times, or some other issue due to outside factors.
+  - Examples: browser crash; high resource usage; rate limiting; a step or assertion that timed out waiting for the page or application to reach a slow-but-eventual state.
+- `MOMENTIC_ISSUE` — Some issue occurred with the execution of the test or Momentic data was incorrect (e.g. cache is wrong, global locator redirect did something weird, AI hallucinations).
   - Examples: unexpected behavior when viewing the run trace; the AI clearly misread or hallucinated data that is unambiguous in the screenshot, and no reasonable test alternative exists to avoid the AI step.
+- `OTHER` — The failure doesn't fit any of the other categories.

@@ -40,7 +40,8 @@ This is a workflow guide for creating and maintaining Momentic tests using the *
 - **Use natural language element descriptions only.** No CSS selectors, XPath, or HTML snippets.
 - **Prefer native Momentic steps over `JAVASCRIPT` steps.** Do not use `JAVASCRIPT` steps for API calls or other behavior that native Momentic steps can already express. Only reach for `JAVASCRIPT` when there is no native step that fits the job.
 - **Do not auto-navigate.** The browser session starts on your page for web tests; only add a NAVIGATE step when you confirm you are not already on the intended page.
-- **Do not use AI actions** (AI_ACTION_DYNAMIC steps) unless the user specifically asks for them.
+- **Do not use AI actions** (`AI_ACTION` or `AI_ACTION_DYNAMIC` for both v2 and v3 versions) unless the user specifically asks for them.
+- **When a native action fails, debug and prefer native.** Use the screenshot, `momentic_get_session_state({ returnBrowserState: true })`, narrower descriptions, `SCROLL_TO`/`SWIPE`, individual `TAP`/`TYPE` steps, coordinate targeting only when appropriate, or an explicit readiness assertion. 
 - **Do not add optional/default fields just because they are available.** Only include parameters that are required for correctness or explicitly needed for the requested behavior.
 
 ## Inputs you should gather (up front)
@@ -254,7 +255,7 @@ When splicing, set `targetSection` accordingly (`setup`, `main`, `teardown`).
 
 ## Step shapes (what to send)
 
-Steps use **CLI-style** strings: `--step-type <type> [options]` where the step type is: `CLICK`, `TYPE`, `NAVIGATE`, `AI_ASSERTION`, `MODULE`, `AI_ACTION_DYNAMIC`, `WAIT_FOR_URL`, etc.
+Steps use **CLI-style** strings: `--step-type <type> [options]` where the step type is: `CLICK`, `TYPE`, `NAVIGATE`, `AI_ASSERTION`, `MODULE`, `WAIT_FOR_URL`, etc. AI action step types may appear in the Step Authoring Guide, but do not author them where other step types will work.
 
 ### Preview a single step (`momentic_preview_step`)
 

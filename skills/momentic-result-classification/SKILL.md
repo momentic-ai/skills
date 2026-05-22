@@ -12,13 +12,9 @@ Momentic is an end-to-end testing framework where each test is composed of brows
 
 ## Instructions
 
-1. Given a failing test run, start by understanding the current run from the data already provided, such as the run summary, the failing step's screenshots, and nearby step results. In many cases the current run is enough on its own to explain the failure.
-2. Only look beyond the current run, including past runs of the same test, when the current run is not sufficient to determine what should have happened, such as when the test intent is ambiguous, when you are not sure whether something is an application change versus a test issue, or when distinguishing flakiness from a regression.
-3. After analyzing why the run failed, bucket the failure into one of the below categories, explaining the reasoning for choosing the specific category.
-4. Also determine the failure's recoverability:
-   - `RECOVERABLE` when the test itself can be updated so future runs pass.
-   - `ONE_TIME_RECOVERABLE` when this specific run could be recovered without persisting a test change.
-   - `NON_RECOVERABLE` when manual intervention is required.
+1. Given a failing test run, identify the earliest point where the current run entered a bad state. Do not stop at the final failing assertion or missing locator target.
+2. Explain the root cause at action/state level: what step tried to do, what specific element or state it relied on, what actually happened, and what evidence proves it.
+3. Bucket the failure into one of the below categories, explaining the reasoning for choosing the specific category.
 
 ## Helpful MCP tools
 
@@ -29,6 +25,37 @@ Momentic is an end-to-end testing framework where each test is composed of brows
 `momentic_get_step_result` — Returns the result of a specific step, with other information such as full step trace and before/after screenshots. Use `parentStepIdChain` for steps nested inside other steps. Only request `includeTrace=true` when you need it, because it can be very large.
 
 `momentic_get_test_steps_for_run` — Returns the simplified test steps recorded on a run (`stepsSnapshot`, `beforeStepsSnapshot`, `afterStepsSnapshot`). You can use this to understand the intent of the test if you need more information than what you can glean from the test name and description.
+
+## Investigation workflow
+
+Start with the current run before relying on history.
+
+1. Call `momentic_get_run` and identify the failing attempt, section (`beforeSteps`, main steps, or `afterSteps`), failing step, and any `parentStepIdChain`.
+2. Pull the failing step result with screenshots and trace. If the step is nested, also pull the nearest parent container or module result.
+3. Decide whether the failing step's before-screenshot is the correct baseline for that action. If it is already wrong, walk backward through the current run until you find the step/container that produced that bad state.
+4. For repeated modules or repeated workflows, compare invocations inside the same current run before comparing older runs. The later failure is often caused by an earlier invocation that succeeded, recovered, or left an invalid postcondition.
+5. Treat successful containers with failed or recovered child steps as partial failures until you inspect the container's final after-screenshot and URL.
+6. Use past runs only for specific comparison questions once the current-run behavior is understood.
+
+Before classifying, be able to answer:
+
+- What is the test's intended behavior?
+- What is the earliest divergent step/container?
+- What did that step intend to do?
+- Which element/state did it actually interact with or observe?
+- What changed in the screenshot, URL, DOM, trace, or recovery log after the step?
+- Why is the later failure a consequence of that earlier divergence?
+
+Avoid vague root causes such as "setup was unreliable" or "the page was in the wrong state." Name the broken postcondition directly: for example, "the row-level plus button was clicked, but the app stayed on the parent page instead of opening the child-page editor; the following global `Add to` assertion passed against unrelated page text, so the untargeted type step never entered the child title."
+
+## Evidence standards
+
+- Screenshots are the default truth source for page state. Use trace fields and DOM/HTML to explain why the screenshot changed or did not change.
+- Verify every causal claim. Do not say an overlay, side peek, modal, or menu was present unless the relevant before/after screenshot, URL, or DOM proves it.
+- Separate "the target is missing now" from "the browser is in the state where that target should exist." A missing target is often a symptom of an earlier failed action.
+- For click/type/action steps, record the intended action, actual interacted element when available, before/after URL, and whether the expected UI state appeared.
+- For assertions, check whether the assertion is scoped enough to prove the intended state. A broad page-content assertion can pass for unrelated text.
+- For recovery, inspect both the failed child step and the recovered container final state. Recovery can pass a retried assertion while leaving state that later steps did not expect.
 
 ## Background
 
@@ -98,27 +125,22 @@ Sources can be remote URLs, `file://` references to earlier downloads, CLI-local
 
 ## Using past runs
 
-Look at past runs of the same test only when the current run is not enough on its own to explain the failure. Past runs help answer questions like:
+Past runs are comparison evidence, not a substitute for reconstructing the current run. Use them when the current run does not answer:
 
 - When did this test start failing?
 - What differed vs the last passing run?
 - Did the same action behave differently on an earlier run?
-- Did the application behavior change for this test?
-- Is this actually flaky, or did the app or test change?
+- Is this a test weakness, an application change, a real application bug, or a temporary slowdown?
 
-When you do need past runs, do not rely only on summaries from `momentic_get_run` or `momentic_list_runs` to understand what happened in a test run. You must look at the specific run details, including step results and screenshots, to determine the behavior of past runs.
+Use step results and screenshots on past runs to answer these questions. Do NOT rely only on summaries from `momentic_get_run` or `momentic_list_runs` to understand what happened in a test run. Look at the specific run details, including step results and screenshots, before citing a past run as evidence.
 
 When looking at past runs, use the following workflow:
 
-1. Call the `momentic_list_runs` tool to identify the runs you want more detail on.
+1. Call the `momentic_list_runs` tool to identify the runs you want more detail on. Always pass `gitBranchName` when it exists on the run in question.
 2. Call `momentic_get_run` for that specific run to get the run details.
-3. Call `momentic_get_step_result` for step results that you want to see in more detail, especially for step screenshots. Do not request `includeTrace=true` unless screenshots and the normal step-result fields are insufficient.
+3. Call `momentic_get_step_result` for the same step/container or closest equivalent you are comparing, especially for screenshots.
 
-Always look at screenshots when determining the behavior of test runs. Do not guess at what happened on a step without checking screenshots.
-
-### Recovered runs
-
-A recovered run is one that ultimately passed via Momentic's failure recovery mechanism after one or more failing attempts. Treat recovered runs as partial failures, not clean passes.
+When past runs are irrelevant because the current run already proves the root cause, say that briefly instead of forcing historical evidence.
 
 ### Multi-attempt runs
 
@@ -135,6 +157,23 @@ When `momentic_list_runs` shows a passing run with `attempts > 1`, treat it as a
 
 - Any past results may not necessarily match today’s test file. The test may have changed, meaning the result was on a different version of the test.
 - You can call `get_test_steps_for_run` to help you determine if the test itself changed between runs, although note that this tool returns a _summary_ of each test step. If you suspect that specific details on certain steps have changed between test runs, full step details are included in the response from `momentic_get_step_result`; only request `includeTrace=true` when those fields and screenshots still are not enough.
+
+## Common failure modes to watch for
+
+- A setup module appears to pass but leaves the wrong page, overlay, filter, search, selected row, or side peek open. Classify from the step/container that left the bad postcondition, not only from the next step that failed.
+- A click reports success and targets the intended element, but the application does not transition to the intended state. Verify the post-state; do not assume the click worked because the locator was correct.
+- A weak global assertion such as "page contains X" passes because unrelated text on the page matches. The next step may then type or click in the wrong context.
+- A type step without a specific target can silently type nowhere useful if the preceding action failed to focus the intended field.
+- A locator or cache can be technically valid but semantically wrong. Check the interacted element and, for bad caches, inspect the original cache-update run from `targetUpdateLoggerTags.runId`.
+- A recovered step can hide the first failure. Inspect failed child steps inside recovered modules and compare the recovered final state to the next step's expected baseline.
+- A timeout is not automatically `INFRA`. First rule out missing data, wrong page state, changed app flow, bad locator/assertion, and setup failure.
+
+## Identifying related vs unrelated issues
+
+- Use test name, description, and, if needed, the simplified test steps returned by `momentic_get_test_steps_for_run` to determine what the test is intending to verify.
+- Failures outside that intent are unrelated, otherwise consider them related.
+- Any failures in setup (`beforeSteps` or `beforeResults`) or teardown (`afterSteps` or `afterResults`) are pretty much always considered unrelated.
+- Related vs unrelated changes only apply to bugs and changes. For example, an `INFRA` failure is still `INFRA` regardless of whether it is in setup or the main section.
 
 ## Bug vs change
 
@@ -154,13 +193,14 @@ Along with the category, determine one recoverability value:
 
 ## Formal classification output
 
-- Exactly one category id and one recoverability value. Do not invent new labels or use multiple categories.
-- Ground your decision in data. Be sure that you have fully investigated the run before assigning the category.
-- You can only confirm behavior through screenshots. Do not guess at step behavior without checking screenshots.
-- When reasoning cites another run, use the full runId UUID exactly as returned by tools. Do not shorten it to a prefix.
+- Exactly one category id — no new labels, no multi-label.
+- Ground your decision in data. Be sure that you've fully investigated the run before assigning the category.
+- Prefer human-readable references over UUIDs when the step/module can be identified colloquially: `module create-subpage-under-parent-page`, `the last invocation of module <name>`, `substep 4 (0-indexed)`, `the failed setup assertion`, etc. Tool calls still require exact IDs, but final reasoning should be readable.
+- When referencing past runs in final output, use clickable Momentic URLs rather than bare UUIDs: `https://app.momentic.ai/runs/<runId>`. Do not shorten UUIDs inside those URLs.
+- The reasoning must include the earliest divergent step/container and the broken postcondition it produced, not just the final failing step.
 
 ```text
-Reasoning: <a few sentences tied to summary, any relevant past runs, and test intent>
+Reasoning: <a few sentences tied to the earliest divergence, screenshots/traces, past runs if used, and test intent>
 Category: <one id from the list>
 Recoverable: <RECOVERABLE | ONE_TIME_RECOVERABLE | NON_RECOVERABLE>
 Confidence: <high | medium | low>

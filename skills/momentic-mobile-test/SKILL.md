@@ -194,6 +194,12 @@ tests.
 - After an action that should materially change screen state, add an immediate
   validation before dependent actions. Prefer `ELEMENT_CHECK` or `SCREEN_CHECK`
   for deterministic text/state, and `AI_CHECK` for semantic visual state.
+- An `AI_CHECK` is multimodal by default (screenshot + accessibility/XML
+  hierarchy). For a screenshot-only check, use its visual-only form (the
+  `assertVisually` YAML key). Reach for it when the hierarchy is unavailable or
+  unreliable, such as a WebView with multiple pages, or when the condition is
+  purely visual. The condition must be fully verifiable from the current
+  viewport, since no hierarchy and nothing offscreen is available.
 - Do not use AI actions unless the user asks or the existing test already uses
   one.
 - Do not add optional/default fields unless needed for correctness.

@@ -234,7 +234,11 @@ or direct YAML edit plus reload.
 - `momentic_run_step({ sessionId, fromStep, toStep?, targetSection?,
   resetSession? })`: run existing active-session steps. Use step IDs from Test
   Content or splice responses, never raw YAML. Use `parentStepIdChain: []` for
-  top-level steps.
+  top-level steps. **Never run a range containing an AI action through this MCP
+  tool.** MCP tool calls are capped at 60s, and AI actions routinely run well past
+  that and get cancelled mid-run — the run is killed and its work is lost. ALWAYS
+  execute such a range with the `momentic run-step` CLI in your terminal (see
+  "Executing long-running AI Action steps"), which has no such cap.
 - If state drifts, restart with `momentic_run_step` and `resetSession: true` on
   the same `sessionId`; do not reset between every micro-edit.
 - `momentic_session_terminate({ sessionId })`: terminate when done. If started
@@ -249,7 +253,10 @@ boundaries such as login complete, form submitted, page deleted, etc. Avoid spli
 - `momentic_preview_step({ sessionId, step })`: execute one step in the browser without
   persisting. If it returns `CacheId`, include
   `--cache-id <CacheId>` when splicing that step. The response screenshot shows
-  the page state after the step.
+  the page state after the step. **Never preview an AI action through this MCP
+  tool** — it will be cancelled at the 60s tool-call cap mid-run and its work lost.
+  ALWAYS preview an AI action with the `momentic preview-step` CLI in your terminal
+  (see "Executing long-running AI Action steps").
 - If a preview screenshot is not enough to target, call
   `momentic_get_session_state` with `returnBrowserState: true`, then inspect the
   artifact for stable names, roles, visible text, and prominent structure to
@@ -324,6 +331,72 @@ Splice example:
 For conditionals, create the `CONDITIONAL` step with `--assertion-type` and the
 matching assertion fields, then splice nested steps with
 `parentStepIdChain: [conditionalStepId]`.
+
+# Executing long-running AI Action steps (CLI)
+
+**This is mandatory, not a suggestion.** AI actions (`AI_ACTION_DYNAMIC`) plan and
+run many sub-steps at runtime and routinely take well over 60 seconds. MCP tool
+calls are capped at 60 seconds and are cancelled regardless of progress, so running
+an AI action through `momentic_preview_step` / `momentic_run_step` gets it killed
+mid-run and you lose the work. The terminal has no such cap. **ALWAYS execute any
+step range that contains an AI action through the `momentic` CLI in your terminal —
+NEVER through the MCP run/preview tools.**
+
+The CLI commands mirror the MCP tools one-to-one and run against the same
+long-lived daemon. When the MCP server is started with `--daemon`, an MCP session
+and a CLI call share the same live browser (keyed by the project config path):
+author over MCP, then run the AI action over the CLI with the **same** `sessionId`.
+If the server is not in `--daemon` mode, or you are unsure, drive the whole flow
+over the CLI: `session-start`, then preview/splice/run, then `session-terminate`.
+
+Pass `--json` on any command for the raw tool result instead of text. Screenshots
+and other artifacts are written under `.momentic/mcp-cli-artifacts/`.
+
+## CLI command reference
+
+All commands also accept `--api-key`, `--server`, `--config`, and `--filter`.
+
+- `momentic session-start <testId> [--env <name>] [--headful-browser] [--video]`
+  — start a session (mirrors `momentic_session_start`). Prints the `sessionId`
+  and the Step Authoring Guide. Use only when not reusing an MCP session.
+- `momentic session-terminate --session <id>` — terminate a session (mirrors
+  `momentic_session_terminate`).
+- `momentic session-state --session <id>` — current session state (mirrors
+  `momentic_get_session_state`).
+- `momentic session-env --session <id>` — environment variables available to the
+  session (mirrors `momentic_get_environment_variables`).
+- `momentic preview-step --session <id> --step "<cli-style step>"` — execute one
+  step without persisting (mirrors `momentic_preview_step`). `--step` takes the
+  same CLI-style step string as MCP; pass `--step "--step-type CLICK --help"` for
+  step authoring help.
+- `momentic run-step --session <id> --from-step <stepId> [--from-parent <ids...>] [--to-step <stepId>] [--to-parent <ids...>] [--section main] [--reset]`
+  — run a saved step range (mirrors `momentic_run_step`). This is the command to
+  use for AI actions. `--from-parent` / `--to-parent` are the parentStepIdChain
+  (root to immediate parent; omit for top-level). `--reset` resets the browser
+  first.
+- `momentic splice-steps --session <id> --start <index> --delete <count> [--step "<cli-style step>" ...] [--section main] [--parent <ids...>] [--return-test]`
+  — insert/replace/delete steps and persist (mirrors `momentic_test_splice_steps`).
+  Repeat `--step` to splice multiple steps. `--delete 0` inserts, `1` replaces one,
+  `N` deletes N. `--parent` is the parentStepIdChain when splicing into a nested
+  step.
+
+Author over MCP, then execute the AI action over the CLI with the shared session
+(`stepId` values come from the splice response / Test Content):
+
+```bash
+momentic run-step --session "$SESSION_ID" --from-step "$AI_ACTION_STEP_ID"
+```
+
+Fully self-contained CLI flow:
+
+```bash
+momentic session-start my-test-id            # prints SESSION_ID
+momentic splice-steps --session "$SESSION_ID" --start 0 --delete 0 \
+  --step "--step-type NAVIGATE --url https://example.com" \
+  --step "--step-type AI_ACTION_DYNAMIC --text \"complete checkout with the saved test card\""
+momentic run-step --session "$SESSION_ID" --from-step "$FIRST_STEP_ID"
+momentic session-terminate --session "$SESSION_ID"
+```
 
 # Modules
 
@@ -432,3 +505,6 @@ direction.
 - Persist validated MCP steps: `momentic_test_splice_steps`.
 - Clean restart: `momentic_run_step` with `resetSession: true`.
 - Validate direct v2 edit: `momentic_test_reload` if active, else fresh session.
+- Step range contains an AI action: **ALWAYS** execute via the `momentic run-step`
+  CLI in the terminal — NEVER `momentic_run_step`, which is cancelled at the 60s
+  MCP tool-call cap mid-run.

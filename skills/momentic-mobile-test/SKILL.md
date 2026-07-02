@@ -287,10 +287,12 @@ resetSession? })`: run existing active-session steps. Use step IDs from Test
   `momentic_poll_runner` for the result. Do not start multiple runs in the same
   session at once unless you intentionally want overlap; overlapping runs share
   emulator state and can race each other.
-- `momentic_poll_runner({ sessionId, stepRunnerId? })`: reports active runs,
-  finished runs, and any newly finished results. Prefer passing the
+- `momentic_poll_runner({ sessionId, stepRunnerId?, timeoutSeconds? })`: reports
+  active runs, finished runs, and any newly finished results. Prefer passing the
   `stepRunnerId` reported by `momentic_run_step` to scope the response to that
-  run. Poll this instead of retrying `momentic_run_step`.
+  run. Pass `timeoutSeconds` (0-30, default 0) alongside `stepRunnerId` to wait
+  up to that long for that run to finish before responding. Poll this instead
+  of retrying `momentic_run_step`.
 - If state drifts, restart with `momentic_run_step` and `resetSession: true` on
   the same `sessionId`; do not reset between every micro-edit.
 - `momentic_session_terminate({ sessionId })`: terminate when done.

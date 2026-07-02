@@ -281,7 +281,16 @@ splice or direct YAML edit plus reload/restart.
 - `momentic_run_step({ sessionId, fromStep, toStep?, targetSection?,
 resetSession? })`: run existing active-session steps. Use step IDs from Test
   Content or splice responses, never raw YAML. Use `parentStepIdChain: []` for
-  top-level steps.
+  top-level steps. Responds with the full result if the run finishes within 30
+  seconds. Otherwise it responds with the `stepRunnerId` and currently
+  executing step while the run continues in the background. Poll
+  `momentic_poll_runner` for the result. Do not start multiple runs in the same
+  session at once unless you intentionally want overlap; overlapping runs share
+  emulator state and can race each other.
+- `momentic_poll_runner({ sessionId, stepRunnerId? })`: reports active runs,
+  finished runs, and any newly finished results. Prefer passing the
+  `stepRunnerId` reported by `momentic_run_step` to scope the response to that
+  run. Poll this instead of retrying `momentic_run_step`.
 - If state drifts, restart with `momentic_run_step` and `resetSession: true` on
   the same `sessionId`; do not reset between every micro-edit.
 - `momentic_session_terminate({ sessionId })`: terminate when done.

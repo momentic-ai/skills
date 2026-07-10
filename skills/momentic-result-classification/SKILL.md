@@ -20,7 +20,7 @@ Momentic is an end-to-end testing framework where each test is composed of brows
 
 `momentic_get_run` — Returns some metadata about the run and a summary of the full run results. Use the metadata to help you parse through the run results (e.g. which attempt to look at, which step failed, etc.). If the current run details were already supplied in the initial context, do not call this again for that same run unless you explicitly need a different attempt.
 
-`momentic_list_runs` — Recent runs for a test so you can compare the result of past runs over time. **Always pass `gitBranchName` when it exists on the run in question** so that it's more likely you're looking at the same version of the test. Pass `recovered=true` when you want to inspect recovered runs.
+`momentic_list_runs` — Recent runs for a test so you can compare the result of past runs over time. **Always pass `gitBranchName` when it exists on the run in question** so that it's more likely you're looking at the same version of the test. Omit it when you need runs from other branches. Pass `recovered=true` when you want to inspect recovered runs.
 
 `momentic_get_step_result` — Returns the result of a specific step, with other information such as full step trace and before/after screenshots. Use `parentStepIdChain` for steps nested inside other steps. Only request `includeTrace=true` when you need it, because it can be very large.
 
@@ -136,7 +136,7 @@ Use step results and screenshots on past runs to answer these questions. Do NOT 
 
 When looking at past runs, use the following workflow:
 
-1. Call the `momentic_list_runs` tool to identify the runs you want more detail on. Always pass `gitBranchName` when it exists on the run in question.
+1. Call the `momentic_list_runs` tool to identify the runs you want more detail on. Always pass `gitBranchName` when it exists on the run in question. Omit it when you need runs from other branches.
 2. Call `momentic_get_run` for that specific run to get the run details.
 3. Call `momentic_get_step_result` for the same step/container or closest equivalent you are comparing, especially for screenshots.
 

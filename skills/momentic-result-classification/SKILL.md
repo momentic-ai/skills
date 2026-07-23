@@ -26,6 +26,8 @@ Momentic is an end-to-end testing framework where each test is composed of brows
 
 `momentic_get_test_steps_for_run` — Returns the simplified test steps recorded on a run (`stepsSnapshot`, `beforeStepsSnapshot`, `afterStepsSnapshot`). You can use this to understand the intent of the test if you need more information than what you can glean from the test name and description.
 
+`momentic_submit_result_classification` — Persist your classification verdict for a run. Call this only after you have finished the investigation and are ready to record the final classification. Pass `runId` plus the fields described in the "Formal classification output" section below.
+
 ## Investigation workflow
 
 Start with the current run before relying on history.

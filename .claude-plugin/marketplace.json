@@ -49,6 +49,26 @@
       ],
       "strict": false,
       "skills": ["./skills/momentic-result-classification"]
+    },
+    {
+      "name": "triage-quarantined-tests",
+      "source": "./",
+      "description": "Work through the Momentic quarantine backlog: find quarantined tests, classify why they fail, repair them with Momentic triage, and deliver the fixes as a pull request, commit, or patch. Use when the user asks to fix, re-check, or report on quarantined tests.",
+      "version": "0.0.1",
+      "author": {
+        "name": "Momentic"
+      },
+      "category": "testing",
+      "keywords": [
+        "testing",
+        "quarantine",
+        "triage",
+        "heal",
+        "flaky",
+        "momentic"
+      ],
+      "strict": false,
+      "skills": ["./skills/triage-quarantined-tests"]
     }
   ]
 }

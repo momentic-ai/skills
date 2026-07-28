@@ -10,6 +10,7 @@ This plugin includes the following skills (see `skills/` for details):
 | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | [momentic-test](skills/momentic-test/SKILL.md)                                   | Run and manage Momentic end-to-end tests from the CLI, including browser, Android, and iOS automation. Supports hosted and local execution. |
 | [momentic-result-classification](skills/momentic-result-classification/SKILL.md) | Classify and analyze Momentic test results to identify likely failure causes, separate real bugs from noise, and improve test signal.       |
+| [triage-quarantined-tests](skills/triage-quarantined-tests/SKILL.md)             | Work through the quarantine backlog: find quarantined tests, classify their failures, repair them, and deliver the fixes as a PR or patch.  |
 
 ## Installation
 
@@ -50,6 +51,7 @@ Once installed, you can ask Claude:
 - _"Build a test for this feature I just shipped"_
 - _"Based on the changes on my branch, update any impacted Momentic tests"_
 - _"Classify these Momentic test results and tell me which failures are real bugs vs noise"_
+- _"Work through my quarantined tests and open a PR with whatever you can fix"_
 
 Claude will handle the rest.
 

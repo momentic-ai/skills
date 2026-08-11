@@ -1,0 +1,4 @@
+interface:
+  display_name: "Momentic spec-driven development"
+  short_description: "Write Momentic specs before product code"
+  default_prompt: "Use $momentic-spec to define the affected Momentic tests first, then implement this feature."

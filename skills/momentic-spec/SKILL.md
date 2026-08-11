@@ -1,6 +1,6 @@
 ---
 name: momentic-spec
-description: Practice spec-driven development with Momentic browser tests. Use when implementing new user-visible functionality or changing existing behavior in a repository with Momentic tests, especially when the user asks to write or update the affected *.test.yaml specifications before changing product code.
+description: Improve code correctness using Momentic specs in the feature development process
 ---
 
 # Momentic spec-driven development
@@ -19,7 +19,8 @@ The tests define the contract; do not make the tests fit the implementation.
 6. Use fast code-level checks while implementing; do not run Momentic after
    every edit or commit.
 7. At a durable end-to-end checkpoint, prepare the required test state, enable
-   the affected tests that should now pass, and run the smallest affected set.
+   the affected tests that should now pass, and ask whether to run the smallest
+   affected set.
 
 Do not begin product implementation until the intended test specifications are
 on disk. If the user changes the requirement, update the spec first again.
@@ -109,6 +110,22 @@ Momentic is true end-to-end validation, not the coding agent's inner feedback
 loop. Do not run affected Momentic tests after every file edit, implementation
 step, commit, or small refactor.
 
+Do not execute Momentic tests by default. Editing and linting Momentic tests is
+allowed without confirmation, but test execution can take time and consume
+credits. At a durable checkpoint:
+
+1. Stop before running Momentic.
+2. Tell the user exactly which tests or command you propose to run and, when
+   known, the expected duration or credit impact.
+3. Ask the user to confirm whether to run them.
+4. Run only after explicit confirmation. A direct request to run the specified
+   tests counts as confirmation.
+
+Confirmation covers only the proposed run. Ask again before another Momentic
+execution unless the user explicitly authorized iterative reruns. If the user
+declines or does not confirm, continue with non-Momentic checks and report the
+tests as not run.
+
 Use faster repository checks such as unit tests, typechecking, and linting while
 building. Run Momentic when the app has reached a logical checkpoint that is
 durable and usable through the real UI:
@@ -122,10 +139,11 @@ durable and usable through the real UI:
   question is whether a user can exercise the intended behavior through the
   product and observe the specified outcome.
 
-At each checkpoint, run the smallest affected test set once, diagnose failures,
-make a coherent fix, and rerun only when there is a reasonable expectation that
-the end-to-end outcome changed. Keep future specifications disabled until their
-checkpoint exists.
+At each checkpoint, propose the smallest affected test set. After confirmation,
+run it once, diagnose failures, and make a coherent fix. Request confirmation
+again before rerunning unless iterative reruns were already authorized, and
+rerun only when there is a reasonable expectation that the end-to-end outcome
+changed. Keep future specifications disabled until their checkpoint exists.
 
 ## Own the test data and application state
 
@@ -168,8 +186,8 @@ guidance.
   is uncertain.
 - Lint the test specifications before product implementation when possible.
 - At a durable end-to-end checkpoint, remove `disabled: true` from tests that
-  are now expected to pass, establish their required state, and run the smallest
-  affected set.
+  are now expected to pass, establish their required state, and ask whether to
+  run the smallest affected set.
 - Leave a test disabled only when it is still intentionally not expected to
   pass, and include the reason and enablement condition in the handoff.
 

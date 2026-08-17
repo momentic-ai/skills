@@ -237,9 +237,9 @@ or direct YAML edit plus reload.
   top-level steps. Responds with the full result if the run finishes within 30
   seconds. Otherwise it responds with the `stepRunnerId` and currently
   executing step while the run continues in the background. Poll
-  `momentic_poll_runner` for the result. Do not start multiple runs in the same
-  session at once unless you intentionally want overlap; overlapping runs share
-  browser state and can race each other.
+  `momentic_poll_runner` for the result. Only one run may be active per session;
+  another `momentic_run_step` call fails until it finishes or the session is
+  stopped.
 - `momentic_poll_runner({ sessionId, stepRunnerId?, timeoutSeconds? })`: reports
   active runs, finished runs, and any newly finished results. Prefer passing the
   `stepRunnerId` reported by `momentic_run_step` to scope the response to that
@@ -258,12 +258,22 @@ section works, then splice that checkpoint. Good checkpoints are natural flow
 boundaries such as login complete, form submitted, page deleted, etc. Avoid splicing one step at a time, unless it is highly risky and non-idempotent.
 
 - `momentic_preview_step({ sessionId, step })`: execute one step in the browser without
-  persisting. If it returns `CacheId`, include
-  `--cache-id <CacheId>` when splicing that step. The response screenshot shows
-  the page state after the step. **Never preview an AI action through this MCP
+  persisting. CacheIds are optional; if it returns one, include
+  `--cache-id <CacheId>` when splicing that exact step. If it returns none,
+  splice the original step unchanged. The response screenshot shows the page
+  state after the step. **Never preview an AI action through this MCP
   tool** — it will be cancelled at the 60s tool-call cap mid-run and its work lost.
   ALWAYS preview an AI action with the `momentic preview-step` CLI in your terminal
   (see "CLI mirror of the MCP tools").
+- Prefer `momentic_preview_steps` for adjacent known steps. It executes them in
+  order, stops at the first failure, and returns results in the same order.
+- Use `momentic_locate_multiple_elements` first only when several future
+  element targets are already present and earlier interactions will not replace
+  or materially change them. Apply each returned CacheId only to its exact step,
+  then execute with `momentic_preview_steps`.
+- Many steps intentionally return no CacheId, especially navigation, waits,
+  requests, JavaScript, storage/header setup, and page checks. This is expected;
+  never invent or require a cache before splicing them.
 - If a preview screenshot is not enough to target, call
   `momentic_get_session_state` with `returnBrowserState: true`, then inspect the
   artifact for stable names, roles, visible text, and prominent structure to
@@ -273,7 +283,8 @@ boundaries such as login complete, form submitted, page deleted, etc. Avoid spli
   previewing each field one by one.
 - `momentic_test_splice_steps({ sessionId, startIndex, deleteCount, steps,
   targetSection?, parentStepIdChain?, returnTest? })`: insert, replace, or
-  delete steps and persist.
+  delete steps and persist. CacheIds are optional; splice cacheless steps
+  unchanged.
 - After splicing, read the response immediately; it is the source of truth for
   inserted/deleted refs and active-session step IDs.
 - If `returnTest: true`, verify the returned structure before continuing.
@@ -341,7 +352,7 @@ matching assertion fields, then splice nested steps with
 
 # CLI mirror of the MCP tools
 
-The CLI commands mirror the MCP tools one-to-one and run against the same
+The CLI provides terminal mirrors for selected MCP tools and runs against the same
 long-lived daemon. When the MCP server is started with `--daemon`, an MCP session
 and a CLI call share the same live browser (keyed by the project config path):
 you can author over MCP and execute over the CLI with the **same** `sessionId`.
@@ -502,12 +513,14 @@ direction.
 - Need the browser at step N: run once from start/setup to N-1, then keep using
   the same session.
 - Single new step idea: `momentic_preview_step`.
+- Adjacent known steps: `momentic_preview_steps`; prelocate only stable,
+  simultaneously present targets with `momentic_locate_multiple_elements`.
 - Persist validated MCP steps: `momentic_test_splice_steps`.
 - Clean restart: `momentic_run_step` with `resetSession: true`.
 - Validate direct v2 edit: `momentic_test_reload` if active, else fresh session.
 - `momentic_run_step` reported the run is still executing after 30s: poll
   `momentic_poll_runner` until it returns the final result. Do not start
-  another run on the session unless overlapping execution is intentional.
+  another run or use other browser tools on the session until it finishes.
 - Previewing an AI action: **ALWAYS** use the `momentic preview-step` CLI in the
   terminal, NEVER `momentic_preview_step`, which is cancelled at the 60s MCP
   tool-call cap mid-run.

@@ -1,526 +1,304 @@
 ---
 name: momentic-test
-description: Create, run, and maintain Momentic E2E tests and modules, which are serialized to disk as *.test.yaml and *.module.yaml files. Momentic uses fast, accurate AI agents to automate browser interactions for the purpose of testing web applications.
+description: Create, run, and maintain Momentic browser E2E tests and modules stored as *.test.yaml and *.module.yaml files.
 ---
 
-# Momentic background
+# Momentic model
 
-## Execution model
+Momentic turns structured natural language into browser automation using forked
+Playwright, CDP, and custom agents. Interactive steps resolve natural-language
+targets, assertions can use multimodal models, and AI actions can complete
+broader goals.
 
-Momentic is an end-to-end testing framework. Tests are ordered lists of
-structured steps executed with Playwright and CDP.
+# Project files and formats
 
-- Interactive steps such as clicks and types use AI to resolve natural-language
-  targets into concrete browser actions.
-- Assertion steps can use multimodal models to evaluate page state.
-- Goal-based AI actions can perform broader tasks such as "checkout with credit card".
+Tests use `*.test.yaml`; reusable modules use `*.module.yaml`. Test IDs live in
+the test file's `id` field. Check `momentic.config.yaml` and test-level metadata
+before assuming project defaults apply.
 
-## Cache and memory
+`fileType: momentic/test/v2` and `fileType: momentic/module/v2` identify v2
+files. Treat missing or different `fileType` as deprecated v1. Never edit v1
+YAML directly; persist changes through `momentic_test_splice_steps`.
 
-Momentic caches resolved step metadata such as selectors, XPaths, visible text,
-and coordinates so most runs avoid repeated AI calls. This is critical for speed, but
-stale cache is a real debugging possibility: a step may hit the wrong element.
-AI assertions may also use past-result memory to stay consistent across runs;
-bad memory can explain repeated borderline failures.
-
-Caches are scoped by git metadata, including branch. Cache writes are skipped on
-protected branches, including the configured main branch, unless cache saving is
-forced with `--save-cache` or the `CI` environment variable is set. Cache reads
-can still happen on protected branches. Use `--disable-cache` to bypass cache
-entirely.
-
-Ways to force fresh behavior:
-
-- Change the step description/assertion when the intent has changed; this
-  changes the step identity used for cache matching. In v1, splicing a changed
-  step also creates fresh internal UUIDs.
-- Use `--disable-cache` for dynamic targets that should resolve fresh every run, e.g "the calendar cell for today's date".
-- Preserve good previewed cache by carrying `CacheId` into splice with
-  `--cache-id <CacheId>`.
-- Change assertion wording and add disambiguation when previous AI memory is now misleading.
-
-## Timing
-
-Momentic uses "smart waiting" before targeting steps. It waits up to the
-configured Smart waiting timeout, which defaults to 5 seconds, for page state to settle or the desired element to appear. Within that window, do not add manual sleeps or waits. For slower or more semantic readiness, use `waitForUrl`, text/element checks, or an AI assertion.
-
-## Settings precedence
-
-`momentic.config.yaml` sets project defaults, but many settings can be
-overridden at the test level: browser type, viewport, locale/timezone,
-geolocation, page-load timeout, smart-waiting timeout, proxy, headers, auth, extensions, etc. Always check the test's own metadata before assuming the project default applies.
-
-## Test context
-
-Each run has a test-scoped `env` context that persists across steps, including
-modules. Later steps can read values written by earlier steps.
-
-- v2: use `saveAs` on steps with return values.
-- v1/MCP CLI strings: use `--env-key`.
-- JavaScript: prefer `return` plus `saveAs` / `--env-key`; use
-  `setVariable(name, value)` when setting multiple variables.
-- Use `env.NAME` in JavaScript and module input expressions.
-- Use `{{ env.NAME }}` in string fields. `{{ ... }}` can evaluate JavaScript,
-  but do not use it inside JavaScript step source because `env` is already in
-  scope there.
-
-Module inputs are JavaScript fragments as strings. Quote literal strings and use
-`env.X` for variables; they are not `{{ }}` templates.
-
-## JavaScript context
-
-JavaScript steps can run in `NODE` or `BROWSER`.
-
-- `NODE`: default for API calls, data prep, OTP/email/SMS, DB queries, and
-  variable writes. It has Momentic globals and preloaded libraries. `env`, `setVariable`, `email`, `sms`, `axios`, `assert`, `faker`, `moment`, `pg`, `OTPAuth`, `child_process`, etc. Check the JavaScript command docs or the Step Authoring Guide for more details
-- `BROWSER`: runs in the page with `window` / `document` and page globals. It
-  does not have Node-only Momentic helpers.
-
-Keep short one-off JavaScript inline. In v2 YAML, reusable utilities and long
-scripts can live in a project script file, following existing project
-conventions. Prefer locations such as
-`./scripts/page-utilities/auth-loader.js`. Read nearby scripts first and match their
-module style, helper naming, env usage, and error style.
-
-# Project state on disk
-
-Tests are `*.test.yaml` files. Modules are reusable step collections stored as
-`*.module.yaml` files. Test IDs are authoritative and live on the test file's
-`id` field.
-
-There are two major file formats:
-
-- `fileType: momentic/test/v2` or `fileType: momentic/module/v2` -> **v2**.
-  Direct YAML editing is preferred for high-confidence changes as it is faster.
-- Missing `fileType` or any other value -> **v1**. Never edit v1 YAML
-  directly; persist changes only through `momentic_test_splice_steps`.
-
-`momentic.config.yaml` is the project root config. It stores project defaults
-for agents, AI features, browser options, recording, timeouts, browser type,
-file globs, and environments. See
-https://momentic.ai/docs/configuration/momentic-config.md.
-
-v2 steps can reference local files by relative path:
-
-- Module invocations: `path: ./modules/login.module.yaml`
-- JavaScript steps: `javascript: ./scripts/setup.js`
-- Auth state: `authLoad: ./auth-state.json`, `authSave: ./auth-state.json`
-
-Relative paths resolve from the YAML file containing the step, not from the
-project root or importing test. Use `./...` or `../...`; do not use absolute
-paths or `~`. If you move, rename, or delete a referenced file, grep for the old
-path and update every reference.
-
-v1 YAML should still be edited only through MCP. Do not use `codeFile` in v1
-YAML or MCP CLI step strings; v1 JavaScript steps should carry executable code
-in `code` / `--code`. Use JavaScript file references only in v2 YAML.
-
-Do not add internal or auto-generated fields to v2 YAML.
-
-# Before you edit
-
-Gather only what you need:
-
-- Test goal and user-visible success criteria.
-- Start point: `baseUrl` or named environment.
-- Auth requirements and required env vars.
-- Risky actions that must not run twice: submit, purchase, delete, send, create.
-
-For long tasks, inspect nearby tests and modules before authoring. Reusing an
-existing module is usually better than rebuilding a common flow inline.
-
-Ask before long-running checks, starting over from scratch, destructive actions,
-or editing a shared module.
+V2 can reference modules, JavaScript, and auth state with relative paths. Paths
+resolve from the YAML file containing the reference. Use `./...` or `../...`,
+never absolute paths or `~`. Before moving, renaming, or deleting a referenced
+file, grep its path and update or remove every reference. Do not add internal or
+generated fields to v2 YAML.
 
 # Choose the workflow
 
-If the user requests a specific workflow, respect it unless it is unsafe or
-impossible. Otherwise, use direct v2 YAML editing when the file is v2, the
-change is localized, the step sequence is known, and live UI discovery is not
-required. Good examples: scaffold from a nearby pattern, reword an assertion,
-adjust a target, update an env key, fix a file reference, or insert a small
-known step.
+Prefer these compact workflows unless the user requests something else:
 
-Use the MCP browser-validation workflow when the file is v1 or unknown, UI state
-must be discovered, locator timing is flaky, the flow is multi-step and unclear,
-or the user asks to build/validate interactively ("headful mode").
+- **Known v2 change:** inspect nearby patterns -> edit YAML -> lint when syntax
+  or references are uncertain -> reload or restart if validating -> run the
+  relevant range. This is fastest and produces the clearest reviewable diff.
+- **V1, unknown UI, or interactive validation:** start MCP session -> run any
+  prerequisites -> preview a logical checkpoint -> splice it -> validate the
+  saved range -> terminate. This grounds each edit in the live app without
+  repeatedly running the whole test.
+- **New test:** create with `momentic_test_create` -> author a known v2 sequence
+  in one YAML edit, or use MCP step-by-step when discovery is needed.
+  `momentic_session_start` only opens an existing test.
 
-Use `momentic_test_create` for new tests; search for the tool if it is not
-visible. It requires `name` and either `baseUrl` or `environment`. Only pass
-destination fields such as `pathSegments` when requested.
-`momentic_session_start` requires an existing `testId`; it does not create
-tests.
+Use MCP as the default interactive interface: it returns structured results,
+screenshots, artifacts, step refs, and pollable execution. Preview and run tools
+wait 30 seconds by default, then return a `stepRunnerId` while work continues.
+Leave `timeoutSeconds` unset for most calls, especially single preset steps.
+Set it below 30 seconds only when the coding agent's tool-call timeout is
+shorter. Raise it only to wait longer within a larger tool-call timeout; poll
+returned handles with `momentic_poll_runner`.
 
-# Universal authoring rules
+Polling has a separate `timeoutSeconds` (default 0, maximum 30). Pass the
+returned `stepRunnerId` and use a nonzero wait within the coding agent's
+tool-call timeout instead of repeatedly polling without a wait.
 
-- Prefer natural-language element descriptions. Use selectors or
-  coordinates only as a last resort for cases the AI cannot see, such as SVG
-  internals, canvas, or a user-requested selector-level target.
-- Prefer native Momentic steps over JavaScript. Use JS only when no native step
-  expresses the behavior. JS steps can run in either the browser (client-side)
-  or Node (server-side).
-- Do not add navigation at the start. The session starts on the test's base URL.
-- Keep assertions minimal and user-driven. Add readiness checks only when they
-  are needed to make the next dependent action reliable.
-- After a click/action that should navigate or materially change state, add an
-  immediate validation before dependent actions. Prefer `waitForUrl` for URL
-  contracts, `checkPageContains` / `checkElement...` for stable text or
-  elements, and `assert` for semantic visual state.
-- Do not use AI actions (`act`, `AI_ACTION`, `AI_ACTION_DYNAMIC`) unless the
-  user asks or the existing test already uses one.
-- Do not add optional/default fields unless needed for correctness.
-- Keep the delta small. Preserve unrelated params, request bodies, env keys,
-  literal values, quoting, comments, ordering, and step style.
-- Do not work around real app failures. If the app is broken, data is missing,
-  or a backend is down, report the failure instead of weakening the test.
-- Do not reorganize `before` / `steps` / `after` or setup / main / teardown
-  unless the test intent requires it.
+# Before editing
+
+Confirm the test goal, user-visible success criteria, start environment, auth,
+and env requirements. Ask before previewing or running any step or AI Action
+that may submit, purchase, delete, send, create, or cause another non-idempotent
+side effect. If approved, execute it at most once. Also ask before editing a
+shared module, restarting a long flow, or running an expensive full test.
+
+# Authoring rules
+
+- Prefer natural-language targets. Use selectors or coordinates only when the
+  AI cannot see the target or the user requires selector-level precision.
+- Use native Momentic steps for browser actions and checks. See **JavaScript**
+  under **Test execution behavior** for the exceptions.
+- Do not add initial navigation; a session starts at the test's base URL.
+- Keep assertions minimal and user-driven. After navigation or a material state
+  change, validate the contract before dependent actions.
+- Prefer `waitForUrl` for URL contracts, page/element checks for stable text or
+  structure, and AI assertions for semantic visual state.
+- Prefer AI Action V3 for new tests unless the exact interaction sequence is
+  part of the contract.
+- Do not add optional or default-valued fields unless correctness requires them.
+- Keep changes narrow. Preserve unrelated values, comments, ordering, and step
+  style. Do not weaken a test to hide a broken app or service.
+- Preserve the existing `before` / `steps` / `after` structure unless the test
+  intent requires a change.
+
+## AI Action V3
+
+AI Action V3 takes a natural-language goal and determines the browser steps.
+
+- **Cached by default:** save and replay a successful flow, self-healing failed
+  replay steps. Use for repeatable flows.
+- **Uncached:** run the agent fresh each time. Set `cache: false` in v2 or use
+  `--disable-cache` with `AI_ACTION_DYNAMIC`. Prefer this for chats, agentic
+  workflows, exploratory tests, and other dynamic or nondeterministic behavior.
+
+Treat “make sure you can do X” as goal-based testing unless the user specifies a
+route. Use granular steps when controls, order, intermediate assertions,
+deterministic replay, speed, or a risky side effect is itself under test. Keep
+existing granular tests granular unless asked to change strategy.
+
+# Test execution behavior
+
+## Cache and memory
+
+Momentic caches resolved selectors, text, coordinates, and other metadata so
+most runs avoid repeated AI calls. AI assertions may also reuse past-result
+memory. Stale cache or memory can explain a fast wrong-element match or a
+repeated borderline verdict.
+
+Cache is scoped by git metadata, including branch. Protected branches read cache
+but do not write it unless `--save-cache` is used or `CI` is set.
+
+- Change a granular step description when its intent changes. Never add
+  `DANGEROUS_FORCE_DYNAMIC` or `--disable-cache` to locator steps; built-in cache
+  validation handles changing content.
+- Carry a successful preview's `CacheId` into the exact step being spliced.
+- Reword an assertion when old memory no longer matches its intended condition.
+- For AI Action V3 cache behavior, see **AI Action V3** above.
+
+## Readiness and timing
+
+Smart waiting runs before targeting steps and defaults to five seconds. Within
+that window, do not add sleeps. For longer or semantic readiness, wait for a URL
+or use a page, element, or AI check that describes the required positive state.
+Checks retry until their timeout; increase that timeout instead of polling the
+UI with JavaScript. See the
+[browser configuration](https://momentic.ai/docs/configuration/browser) for
+project-wide timing settings.
+
+## Test context
+
+Each run has a test-scoped `env` that persists across steps and modules.
+
+- In v2, save returned values with `saveAs`; in MCP step strings, use
+  `--env-key`. Use `setVariable(name, value)` in JavaScript when saving several
+  values.
+- Use `env.NAME` in JavaScript and module input expressions. Use
+  `{{ env.NAME }}` in string fields, but not inside JavaScript source.
+- Module inputs are JavaScript fragments stored as strings. Quote literal
+  strings and use `env.X` for variables.
+
+## JavaScript
+
+Use native click, type, hover, wait, and check steps for browser behavior. They
+retain Momentic's smart waiting, cache, traces, and retries. Do not use browser
+JavaScript to click or type, and do not poll the UI when a check can retry until
+its timeout.
+
+Use Node JavaScript for test setup, data generation, APIs, databases,
+OTP/email/SMS, and Momentic helpers. Use Browser JavaScript to access
+`window`, `document`, client-side state, or inject page scripts when no native
+step expresses the operation. Keep one-off code short and follow nearby project
+conventions for reusable v2 scripts. See the
+[JavaScript guide](https://momentic.ai/docs/integrations/javascript) for runtime
+APIs and timeout details.
 
 # Working with v2 YAML
 
-v2 is the human-editable format. Steps are compact: each step has one top-level
-command key, such as `click: Submit`, or a detailed map under that key. Tests
-use `before` / `steps` / `after`; modules use `steps`. Durations are always
-milliseconds. No visible step/command IDs.
+V2 is human-editable. Tests use `before`, `steps`, and `after`; modules use
+`steps`. Each step has one command key, with options nested beneath it. Durations
+are milliseconds, and step IDs are not stored in YAML.
 
-Direct-edit loop:
+Make the smallest edit and match nearby syntax. If syntax is unclear, consult
+the v2 format reference at
+https://static.momentic.ai/v2-format-reference.md. Run `npx momentic lint` when
+schema or file-reference risk warrants it; `momentic app` and `momentic run`
+also lint automatically.
 
-1. For a new test, create it with `momentic_test_create`, then edit the YAML in one batch instead of adding known steps one-by-one through MCP.
-2. Make the smallest YAML edit. Preserve style. If you are unsure of syntax, fetch and read what is needed from https://static.momentic.ai/v2-format-reference.md.
-3. Validate only if the user asked, risk warrants it, or the change needs live
-   confirmation.
+After a disk edit, reload the active MCP test if the tool is available;
+otherwise terminate and restart the session. `momentic_test_get` reads persisted
+state but does not refresh an active session unless its description says so.
 
-Common mistakes:
-- Putting options beside the command instead of nesting under it.
-- Using the wrong target-field name for a command.
+# MCP browser workflow
 
-`npx momentic lint` validates v2 schemas and file references. Lint runs
-automatically before `momentic app` and `momentic run`; run it manually if you
-are unsure of syntax after edits or after moving/renaming referenced files.
+Use the tool descriptions and the Step Authoring Guide returned by session start
+for current arguments and step syntax. Do not duplicate that reference material
+from this skill.
 
-State refresh after disk edits:
+## Start and fetch context
 
-- No active MCP session: start a fresh session when ready to validate.
-- Active session plus `momentic_test_reload`: reload before `momentic_run_step`.
-- Active session and no reload tool: terminate and restart the session.
-- `momentic_test_get` inspects persisted state; it does not refresh an active
-  session unless the tool explicitly says so.
+Do not call context tools as session-start boilerplate. Use them on demand and
+follow their descriptions, especially when they offer filters or return large
+project data.
 
-# MCP browser-validation workflow
+- If the test ID is known, start `momentic_session_start` by itself. Its Test
+  Content provides the active steps and runnable IDs.
+- Use `momentic_get_artifacts` only to discover project paths, tests, modules, or
+  environments that are not already known. Avoid redundant refreshes.
+- Use `momentic_test_get` to inspect persisted state before starting, or to read
+  a different test. Prefer active session and splice responses afterward.
+- Use filtered `momentic_get_environment_variables` only when a step needs env
+  data that is not already known.
+- Use `momentic_module_recommend` -> `momentic_module_get` only when evaluating
+  reuse; recommendation invokes AI and is not required to start a session.
 
-Use this for every v1 edit and for v2 work that needs live discovery. The tool
-surface is shared; persistence differs: v1 uses splice, while v2 can use splice
-or direct YAML edit plus reload.
+V2 YAML has no runnable step IDs. Use IDs returned by session start or later
+splice responses.
 
-## Discovery
+Only one browser operation may run per session. Do not issue concurrent preview,
+run, state, or splice operations against the same session.
 
-- `momentic_get_artifacts()`: project context, config path, cwd, and artifact
-  files for tests, modules, environments, etc. Read only what you need.
-- `momentic_test_get({ testId | testPath })`: inspect persisted test state.
-  Before a session, this is useful. During an active session after splicing,
-  prefer the splice response or `returnTest: true`.
-- `momentic_module_recommend({ userRequest })`: find reusable flows.
-- `momentic_module_get({ selector })`: inspect module params, defaults, enums,
-  and steps. Selector is exactly one of `{ id }`, `{ name }`, or `{ path }`.
+## Preview -> splice -> validate
 
-## Sessions
+1. For mid-test work, run through the preceding step once and keep the same
+   session. This avoids authoring against the wrong page state.
+2. Preview forward in logical checkpoints such as login complete, form ready,
+   or submission complete. Checkpoints make the browser state reusable and keep
+   persistence calls reviewable.
+3. Use `momentic_preview_steps` for adjacent steps. It supports the same preset,
+   AI Action, and module steps as `momentic_preview_step`.
+4. Read the returned screenshot first. Request browser state only when the image
+   lacks enough targeting or diagnostic context; request it again once if the
+   page may still be settling.
+5. Splice the successful checkpoint. Attach each returned `CacheId` only to its
+   exact step; cacheless steps are normal. Read the splice response immediately
+   for the active step refs.
+6. Run the next dependent saved step or range. If any preview or run returns a
+   `stepRunnerId`, poll it instead of starting another browser operation.
+7. Before finishing, when safe, run the smallest saved range covering the
+   prerequisites, changed step, and next dependent contract. Reset first when
+   accumulated state could mask a failure.
+8. Terminate the session when finished.
 
-- `momentic_session_start({ testId, ... })`: start browser session. It returns
-  metadata, the Step Authoring Guide artifact, and Test Content with
-  active-session step IDs. Required: `testId`. Call it by itself, not in
-  parallel with other MCP tools. Options include env/config/project overrides,
-  headful mode, and video.
-- Read the Step Authoring Guide before constructing CLI-style steps.
-- `momentic_run_step({ sessionId, fromStep, toStep?, targetSection?,
-  resetSession? })`: run existing active-session steps. Use step IDs from Test
-  Content or splice responses, never raw YAML. Use `parentStepIdChain: []` for
-  top-level steps. Responds with the full result if the run finishes within 30
-  seconds. Otherwise it responds with the `stepRunnerId` and currently
-  executing step while the run continues in the background. Poll
-  `momentic_poll_runner` for the result. Only one run may be active per session;
-  another `momentic_run_step` call fails until it finishes or the session is
-  stopped.
-- `momentic_poll_runner({ sessionId, stepRunnerId?, timeoutSeconds? })`: reports
-  active runs, finished runs, and any newly finished results. Prefer passing the
-  `stepRunnerId` reported by `momentic_run_step` to scope the response to that
-  run. Pass `timeoutSeconds` (0-30, default 0) alongside `stepRunnerId` to wait
-  up to that long for that run to finish before responding. Poll this instead
-  of retrying `momentic_run_step`.
-- If state drifts, restart with `momentic_run_step` and `resetSession: true` on
-  the same `sessionId`; do not reset between every micro-edit.
-- `momentic_session_terminate({ sessionId })`: terminate when done. If started
-  with `video: true`, the response includes the video directory.
+Batch obvious low-risk fields. Preview uncertain locators individually. For
+submit, purchase, delete, send, or other non-idempotent actions, preview setup,
+splice the checkpoint, then run the approved saved action at most once.
 
-## Test authoring loop
-
-Author MCP steps in checkpoint-sized chunks. Preview forward until a logical
-section works, then splice that checkpoint. Good checkpoints are natural flow
-boundaries such as login complete, form submitted, page deleted, etc. Avoid splicing one step at a time, unless it is highly risky and non-idempotent.
-
-- `momentic_preview_step({ sessionId, step })`: execute one step in the browser without
-  persisting. CacheIds are optional; if it returns one, include
-  `--cache-id <CacheId>` when splicing that exact step. If it returns none,
-  splice the original step unchanged. The response screenshot shows the page
-  state after the step. **Never preview an AI action through this MCP
-  tool** — it will be cancelled at the 60s tool-call cap mid-run and its work lost.
-  ALWAYS preview an AI action with the `momentic preview-step` CLI in your terminal
-  (see "CLI mirror of the MCP tools").
-- Prefer `momentic_preview_steps` for adjacent known steps. It executes them in
-  order, stops at the first failure, and returns results in the same order.
-- Use `momentic_locate_multiple_elements` first only when several future
-  element targets are already present and earlier interactions will not replace
-  or materially change them. Apply each returned CacheId only to its exact step,
-  then execute with `momentic_preview_steps`.
-- Many steps intentionally return no CacheId, especially navigation, waits,
-  requests, JavaScript, storage/header setup, and page checks. This is expected;
-  never invent or require a cache before splicing them.
-- If a preview screenshot is not enough to target, call
-  `momentic_get_session_state` with `returnBrowserState: true`, then inspect the
-  artifact for stable names, roles, visible text, and prominent structure to
-  help craft a reliable description. Use sparingly as browser state is large.
-- When the next several steps are obvious and low-risk, such as filling known
-  form fields, splice them together and run that saved range instead of
-  previewing each field one by one.
-- `momentic_test_splice_steps({ sessionId, startIndex, deleteCount, steps,
-  targetSection?, parentStepIdChain?, returnTest? })`: insert, replace, or
-  delete steps and persist. CacheIds are optional; splice cacheless steps
-  unchanged.
-- After splicing, read the response immediately; it is the source of truth for
-  inserted/deleted refs and active-session step IDs.
-- If `returnTest: true`, verify the returned structure before continuing.
-- If downstream steps remain, run the immediate next step to confirm the flow
-  still connects.
-- For non-idempotent actions such as submit, purchase, delete, send, etc.,
-  avoid repeated previews. Preview the setup steps, splice the checkpoint before
-  the risky action, then execute the risky saved step once only when validation
-  requires it.
-- For obvious adjacent low-risk steps, batch them; do not checkpoint after every
-  field unless locator or page state is uncertain.
-- When the requested edit is complete, ask whether to validate from the start by
-  running the relevant saved range with `momentic_run_step`.
-
-## Reading tool output
-
-Sessions are live browser processes. Screenshots and browser states are instant snapshots. If the screenshot does not show expected state after an action, call
-`momentic_get_session_state` once more; the page may still be loading.
-
-MCP tools may return artifact links under `.momentic-mcp/...`. Read linked files
-only when needed:
-
-- UI-state text: refine targeting or debug structure.
-- Screenshots: usually already returned inline as images.
-- Environment files: validate `envKey`, JavaScript/API outputs, or dependent
-  env values.
-- `momentic_get_session_state` returns serialized UI state only with
-  `returnBrowserState: true`; screenshots are returned by default.
-
-## CLI-style step strings
-
-`preview_step` and `splice_steps` use CLI-style strings:
-`--step-type <TYPE> [options]`, e.g. `CLICK`, `TYPE`, `NAVIGATE`,
-`AI_ASSERTION`, `MODULE`, `WAIT_FOR_URL`.
-
-Examples:
-
-- Navigate: `--step-type NAVIGATE --url "https://example.com"`
-- Click: `--step-type CLICK --description "the Sign in button"`
-- Type:
-  `--step-type TYPE --description "Search input" --value "hello" --press-enter`
-- AI assertion:
-  `--step-type AI_ASSERTION --assertion "the page shows a Sign in button" --timeout-seconds 10`
-- Module:
-  `--step-type MODULE --module-id <id> --inputs email=env.USER_EMAIL --inputs password=env.USER_PASSWORD`
-
-Splice example:
-
-```json
-{
-  "sessionId": "SESSION_ID",
-  "startIndex": 0,
-  "deleteCount": 0,
-  "steps": [
-    "--step-type NAVIGATE --url \"https://example.com\"",
-    "--step-type AI_ASSERTION --assertion \"the page shows a Sign in button\" --timeout-seconds 10 --cache-id UUID_FROM_PREVIEW"
-  ],
-  "targetSection": "main"
-}
-```
-
-For conditionals, create the `CONDITIONAL` step with `--assertion-type` and the
-matching assertion fields, then splice nested steps with
-`parentStepIdChain: [conditionalStepId]`.
-
-# CLI mirror of the MCP tools
-
-The CLI provides terminal mirrors for selected MCP tools and runs against the same
-long-lived daemon. When the MCP server is started with `--daemon`, an MCP session
-and a CLI call share the same live browser (keyed by the project config path):
-you can author over MCP and execute over the CLI with the **same** `sessionId`.
-If the server is not in `--daemon` mode, or you are unsure, drive the whole flow
-over the CLI: `session-start`, then preview/splice/run, then `session-terminate`.
-
-Running saved step ranges needs no CLI: `momentic_run_step` responds within 30
-seconds and keeps executing in the background, and `momentic_poll_runner` collects
-the result. The CLI is required for one thing: previewing an AI action
-(`AI_ACTION_DYNAMIC`). Previews are not backgrounded and MCP tool calls are
-cancelled at 60 seconds, which kills the AI action mid-run and loses its work —
-**ALWAYS preview an AI action with `momentic preview-step` in your terminal,
-NEVER with `momentic_preview_step`.**
-
-Pass `--json` on any command for the raw tool result instead of text. Screenshots
-and other artifacts are written under `.momentic/mcp-cli-artifacts/`.
-
-## CLI command reference
-
-All commands also accept `--api-key`, `--server`, `--config`, and `--filter`.
-
-- `momentic session-start <testId> [--env <name>] [--headful-browser] [--video]`
-  — start a session (mirrors `momentic_session_start`). Prints the `sessionId`
-  and the Step Authoring Guide. Use only when not reusing an MCP session.
-- `momentic session-terminate --session <id>` — terminate a session (mirrors
-  `momentic_session_terminate`).
-- `momentic session-state --session <id>` — current session state (mirrors
-  `momentic_get_session_state`).
-- `momentic session-env --session <id>` — environment variables available to the
-  session (mirrors `momentic_get_environment_variables`).
-- `momentic preview-step --session <id> --step "<cli-style step>"` — execute one
-  step without persisting (mirrors `momentic_preview_step`). `--step` takes the
-  same CLI-style step string as MCP; pass `--step "--step-type CLICK --help"` for
-  step authoring help.
-- `momentic run-step --session <id> --from-step <stepId> [--from-parent <ids...>] [--to-step <stepId>] [--to-parent <ids...>] [--section main] [--reset]`
-  — run a saved step range (mirrors `momentic_run_step`), blocking until the
-  range finishes. `--from-parent` / `--to-parent` are the parentStepIdChain
-  (root to immediate parent; omit for top-level). `--reset` resets the browser
-  first.
-- `momentic splice-steps --session <id> --start <index> --delete <count> [--step "<cli-style step>" ...] [--section main] [--parent <ids...>] [--return-test]`
-  — insert/replace/delete steps and persist (mirrors `momentic_test_splice_steps`).
-  Repeat `--step` to splice multiple steps. `--delete 0` inserts, `1` replaces one,
-  `N` deletes N. `--parent` is the parentStepIdChain when splicing into a nested
-  step.
-
-Fully self-contained CLI flow:
-
-```bash
-momentic session-start my-test-id            # prints SESSION_ID
-momentic splice-steps --session "$SESSION_ID" --start 0 --delete 0 \
-  --step "--step-type NAVIGATE --url https://example.com" \
-  --step "--step-type AI_ACTION_DYNAMIC --text \"complete checkout with the saved test card\""
-momentic run-step --session "$SESSION_ID" --from-step "$FIRST_STEP_ID"
-momentic session-terminate --session "$SESSION_ID"
-```
+Do not reset between routine edits. For nested steps, use the parent chain
+returned by the active session or splice response.
 
 # Modules
 
-Default to module-first for logical flows of 4+ steps such as login,
-navigation, setup, or checkout. Call `momentic_module_recommend`, inspect strong
-candidates with `momentic_module_get`, then decide module vs inline.
+For a logical flow of roughly four or more reusable steps, check
+`momentic_module_recommend` -> `momentic_module_get` -> reuse or inline. Reuse
+reduces duplicated setup and keeps tests focused on their unique contract.
 
-Modules cannot contain modules. Splicing a `MODULE` step inside a module fails.
-
-Editing a shared module requires user confirmation. To modify a module through
-MCP, replace the module step with a `MODULE` step carrying the needed metadata
-flags: `--parameters`, `--parameter-enum`, `--default-parameter`,
-`--module-display-name`, `--module-description`, `--module-enabled`. Keys in
-`defaultParameters` and `parameterEnums` must exist in `parameters`.
-
-Module `inputs` values are JavaScript fragments as strings. Quote string
-literals, reference env as `env.X`, and respect enum constraints exactly.
-
-# Validation strategy
-
-- Direct v2 edit with no live validation requested: summarize changes and ask
-  whether to run.
-- Direct v2 edit with active session: reload if available, otherwise restart
-  the session, then run the edited range.
-- MCP-authored edit: preview forward, splice at logical checkpoints, then run the
-  next downstream saved step or range.
-- Long full-test runs and risky actions require confirmation.
-- Terminate MCP sessions when done.
+Modules cannot contain modules. Ask before changing a shared module. Respect its
+declared parameters, defaults, and enum values; module inputs are JavaScript
+fragments, not `{{ }}` templates.
 
 # Troubleshooting
 
 ## Page state and timing
 
-- Wrong page/UI: read latest UI state or call `momentic_get_session_state`.
-- Screenshot not updated: call `momentic_get_session_state` once more.
-- Flaky timing: prefer `AI_ASSERTION`, `checkPageContains`, `checkElement...`,
-  or `waitForUrl` over generic `WAIT`.
-- Long backend job/import/upload: use an assertion or URL/text/element wait with
-  an appropriate timeout instead of sleeps.
-- Weird session state: use `momentic_run_step` with `resetSession: true`.
+- Wrong or stale page: inspect the latest screenshot or session state; retry
+  state capture once if the page is settling.
+- Slow readiness at one checkpoint: add the narrowest page, element, or AI check,
+  or increase the existing check's timeout. Checks already retry; do not poll
+  with JavaScript.
+- Broadly slow targeting across the project: consider increasing
+  `browser.smartWaitingTimeoutMs`. Do not use it to mask one slow assertion.
+- Long jobs or uploads: check for a stable positive result with an appropriate
+  timeout, not a sleep.
+- Drifted session: rerun the required saved range with `resetSession: true`.
 
-## Targeting and cache
+## Browser and host resource pressure
 
-- Element not found: inspect screenshot/UI state. If visible, improve the
-  description using visible text, role, and nearby context; if absent, debug the
-  prerequisite step.
-- Wrong element was hit quickly or without any AI: suspect stale cache, especially when the page structure is similar to a prior run.
-- Dynamic target: change the description to be stable, or disable cache for that
-  step.
-- Playwright stability failure: a target can be found but still not be
-  actionable because it is hidden, detached, outside the viewport, covered, or
-  animating. Prefer fixing page state when possible. Use `--force` only for that
-  step when bypassing actionability is acceptable, or enable project-wide visual
-  actions if coordinate-based interaction is the right tradeoff.
-- Visual actions are enabled in project browser settings with
-  `visualActions: true`. Momentic interacts by X/Y coordinates and tries to
-  preserve element identity best-effort instead of hard-failing like Playwright
-  actionability checks.
-- Quoted text: quoted substrings in descriptions are treated literally by
-  Momentic AI. Use quotes only when that exact text must appear on screen or in
-  the element's accessible name; omit quotes for semantic matching.
+Retry or reset once after a browser, CDP, page-load, screenshot, or snapshot
+timeout. If it persists or affects several browser tools, stop changing the
+test. Do not hide resource pressure with waits, weaker assertions, cache flags,
+or repeated browser calls.
 
-## AI assertion performance
+Signals include an unresponsive page, document-tree or page-execution timeout,
+empty HTML snapshot, browser or inspector crash, and `data-momentic-id` timeout.
+A page-load timeout alone may instead indicate the app or network.
 
-- Ambiguous assertion: make the expected visual/text condition concrete. Include
-  the relevant page region, object, count, or state.
-- Literal text mismatch: quoted strings are treated as text that must appear on
-  screen. Remove quotes when semantic matching is intended. Describe the purpose
-  of elements when possible rather than specific text or labels.
-- Out-of-viewport: visual conditions like color or shape can only be evaluated
-  if the element is in the viewport. Use scroll/hover setup.
-- Visually subtle condition: `AI_ASSERTION` supports VISION_ONLY mode which has
-  better visual reasoning.
-- Repeated bad verdict: reword the assertion so the intended condition is
-  clearer and old memory no longer applies.
-- Transient conditions: AI checks retry multiple times over the configured
-  timeout but each attempt is an instantaneous snapshot. As such, extremely fast
-  changes like toasts that appear and vanish in 1 second can be missed. Also,
-  there is no ability to evaluate changes over time ("the screen is darker than
-  before"). Prefer crafting assertions for stable final state; if necessary
-  client-side JavaScript observers can be used.
+Inspect CPU, memory, and top processes with available host tools. Check the
+browser, Momentic, app server, compiler/bundler, database, and unrelated
+workloads. For completed runs, correlate with
+`attempts/<n>/assets/resource-usage.ndjson` when present.
+
+Report the error, step, URL, retry result, resource pressure, largest consumers,
+and supported cause. If evidence cannot distinguish the host, app, services, or
+Momentic, say so.
+
+## Targeting and assertions
+
+- Element absent: debug the prerequisite. Element visible but not found: use a
+  stable description based on visible text, role, and nearby context.
+- Fast wrong-element match: consider stale cache, then correct the description.
+- In normal mode, errors that an element is hidden, disabled, detached, covered,
+  moving, or outside the viewport originate in Playwright's actionability
+  enforcement, which Momentic surfaces; they are not failures in Momentic's
+  locator AI. Fix the page state or prerequisite. Use force only when bypassing
+  actionability is part of the intended behavior.
+- For controls that intentionally cannot satisfy Playwright actionability, such
+  as some rich-text editors, `browser.visualActions: true` uses coordinate-based
+  actions instead. It avoids those checks but also gives up their stability
+  guarantees. See [Visual actions](https://momentic.ai/docs/configuration/browser#browser-visualactions).
+- Use quoted text only when the exact text must appear; otherwise describe
+  meaning. Make assertions concrete about region, object, count, or state.
+- Scroll visual targets into view. Use vision-only assertion mode for subtle
+  visual conditions.
+- Assert stable final state with step assertions. For brief toasts or
+  change-over-time comparisons, use video-backed
+  [run assertions](https://momentic.ai/docs/core-concepts/writing-assertions#run-assertions).
 
 ## Format and data
 
-- v2 load/run failure: run `npx momentic lint <path>`; broken relative file
-  references are common after moves.
-- Module failure: re-check required params, defaults, enums, and JS-fragment
-  input syntax with `momentic_module_get`.
-- Env value missing: confirm the producing step used `saveAs` / `--env-key` or
-  `setVariable`, and that the consuming syntax is `env.X` vs `{{ env.X }}`.
-- JavaScript failure: confirm the environment. Browser JS cannot use Node
-  helpers; Node JS cannot read live DOM globals.
+- V2 load failure: lint the file and check relative references.
+- Module failure: re-check parameters, defaults, enums, and input expressions.
+- Missing env value: verify the producing save and `env.X` versus
+  `{{ env.X }}` at the consumer.
+- JavaScript failure: verify Node versus Browser context.
 
-After about three attempts on the same problem, stop and ask the user for a
+After about three attempts at the same failure, stop and ask the user for
 direction.
-
-# Decision cheat sheet
-
-- Known v2 sequence: direct YAML edit.
-- v1 or unknown UI state: MCP preview, splice, validate.
-- Need the right step index: use Test Content, splice refs, or `returnTest`;
-  never raw YAML step IDs.
-- Need the browser at step N: run once from start/setup to N-1, then keep using
-  the same session.
-- Single new step idea: `momentic_preview_step`.
-- Adjacent known steps: `momentic_preview_steps`; prelocate only stable,
-  simultaneously present targets with `momentic_locate_multiple_elements`.
-- Persist validated MCP steps: `momentic_test_splice_steps`.
-- Clean restart: `momentic_run_step` with `resetSession: true`.
-- Validate direct v2 edit: `momentic_test_reload` if active, else fresh session.
-- `momentic_run_step` reported the run is still executing after 30s: poll
-  `momentic_poll_runner` until it returns the final result. Do not start
-  another run or use other browser tools on the session until it finishes.
-- Previewing an AI action: **ALWAYS** use the `momentic preview-step` CLI in the
-  terminal, NEVER `momentic_preview_step`, which is cancelled at the 60s MCP
-  tool-call cap mid-run.

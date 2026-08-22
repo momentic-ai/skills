@@ -3,484 +3,326 @@ name: momentic-mobile-test
 description: Create, run, and maintain Momentic mobile E2E tests and modules for Android and iOS. Use Momentic MCP tools for live device validation, and use direct v2 YAML edits only for high-confidence local mobile v2 changes.
 ---
 
-# Momentic Mobile Background
+# Momentic model
 
-## Execution model
+Momentic Mobile turns structured natural language into native and webview
+automation on Android emulators and iOS simulators. Interactive steps resolve
+targets into device actions; assertions can inspect screenshots, native
+hierarchies, and webview state.
 
-Momentic Mobile drives real Android emulators and iOS simulators. Tests are
-ordered lists of structured mobile steps.
+# Project files and formats
 
-- Interactive steps such as taps, typing, swipes, and scrolls use AI to resolve
-  natural-language targets into concrete device actions.
-- Assertions can evaluate visible screen state, native hierarchy, and webview
-  state when available.
-- Goal-based AI actions can perform broader tasks, but native mobile steps are
-  more stable and should be preferred.
+Mobile tests use `*.test.yaml`; modules use `*.module.yaml`. Test IDs live in the
+test file's `id` field. Check `momentic.config.yaml` and test-level metadata
+before assuming project defaults apply.
+
+`fileType: momentic/mobile-test/v2` and
+`fileType: momentic/mobile-module/v2` identify mobile v2. Treat missing or
+different `fileType` as deprecated v1. Never edit v1 YAML directly; persist
+changes through `momentic_test_splice_steps`.
+
+Mobile v2 tests require `platform: ANDROID` or `platform: IOS`. Commands are
+platform-specific.
+
+V2 can reference modules, JavaScript, and injected files with relative paths.
+Paths resolve from the YAML file containing the reference. Use `./...` or
+`../...`, never absolute paths or `~`. Before moving, renaming, or deleting a
+referenced file, grep its path and update or remove every reference. File-backed
+JavaScript is v2-only; v1/MCP step strings carry code inline. Do not add internal
+or generated fields to v2 YAML.
+
+# Choose the workflow
+
+Prefer these compact workflows unless the user requests something else:
+
+- **Known v2 change:** inspect nearby patterns -> edit YAML -> lint when syntax
+  or references are uncertain -> reload or restart if validating -> run the
+  relevant range.
+- **V1, unknown UI, or interactive validation:** start MCP session -> run any
+  prerequisites -> preview a logical checkpoint -> splice it -> validate the
+  saved range -> terminate.
+- **New test:** create with `momentic_test_create` -> author a known v2 sequence
+  in one YAML edit, or use MCP step-by-step when live discovery is needed.
+  `momentic_session_start` only opens an existing test.
+
+Use MCP as the default interactive interface. Preview and run wait 30 seconds by
+default, then return a `stepRunnerId` while work continues. Leave
+`timeoutSeconds` unset for most calls, especially single preset steps. Lower it
+only when the coding agent's tool timeout is shorter; raise it only within a
+larger tool timeout. Poll returned handles with `momentic_poll_runner`.
+
+Prefer the test's configured remote device and app settings. Use local device or
+app overrides only when the user explicitly requests them.
+
+# Setup prerequisites
+
+Run `npx momentic-mobile doctor` for initial setup and launch, driver, device,
+or connectivity failures. Use `--json` when collecting a support report. See
+the [doctor reference](https://momentic.ai/docs/cli-reference/momentic-mobile/commands/doctor).
+
+Remote Android requires adb and `ANDROID_HOME`; local Android also requires
+Java and Android Studio. Local iOS requires macOS and Xcode; remote iOS does not
+once a simulator build is available. Follow the
+[Android](https://momentic.ai/docs/platforms/android/app-setup) or
+[iOS](https://momentic.ai/docs/platforms/ios/app-setup) setup guide rather than
+guessing at missing dependencies.
+
+Android WebView automation requires a build with WebView debugging enabled.
+Debug builds usually provide it; release builds must enable it explicitly.
+Missing debugging commonly appears as `No browser controller is attached to
+the requested webview`. Mobile WebViews run through the device and do not need
+a local Chromium installation.
+
+# Before editing
+
+Confirm the goal, user-visible success criteria, platform, app source, provider,
+auth, and env requirements. Ask before previewing or running any step or AI
+action that may submit, purchase, delete, send, create, or cause another
+non-idempotent side effect. If approved, execute it at most once. Also ask before
+using local device overrides, editing a shared module, restarting a long flow, or
+running an expensive full test.
+
+# Authoring rules
+
+- Prefer natural-language targets. Use coordinates only for surfaces the AI
+  cannot see, such as canvases, maps, games, or non-semantic custom views.
+- Use native mobile steps for device actions and checks. See **JavaScript** under
+  **Test execution behavior** for the exceptions.
+- Do not add an initial launch/open-app step unless the test must switch apps or
+  recover app state.
+- Keep assertions minimal and user-driven. Validate material state changes
+  before dependent actions.
+- Prefer element or screen checks for deterministic state and AI checks for
+  semantic visual state. Use visual-only AI checks only when the condition is
+  fully visible and hierarchy data is unavailable, unreliable, or irrelevant.
+- Use AI actions only when the user requests one or the existing test already
+  uses one.
+- Do not add optional or default-valued fields unless correctness requires them.
+- Keep changes narrow. Preserve unrelated values, comments, ordering, and step
+  style. Do not weaken a test to hide an app, asset, permission, data, or backend
+  failure.
+- Preserve the existing `before` / `steps` / `after` structure unless the test
+  intent requires a change.
+
+# Test execution behavior
 
 ## Cache and memory
 
-Momentic caches resolved mobile step metadata such as native selectors, XML
-nodes, visible text, webview state, and coordinates so most runs avoid repeated
-AI calls. This is critical for speed, but stale cache is a real debugging
-possibility: a step may hit the wrong element. AI checks may also use past-result
-memory to stay consistent across runs; bad memory can explain repeated
-borderline failures.
+Momentic caches native selectors, XML nodes, visible text, webview state,
+coordinates, and other metadata. AI checks may also reuse past-result memory.
+Stale cache or memory can explain a fast wrong-target action or a repeated
+borderline verdict.
 
-Caches are scoped by git metadata, including branch. Cache writes are skipped on
-protected branches, including the configured main branch, unless cache saving is
-forced with `--save-cache` or the `CI` environment variable is set. Cache reads
-can still happen on protected branches. Use `--disable-cache` to bypass cache
-entirely.
+Cache is scoped by git metadata, including branch. Protected branches read cache
+but do not write it unless `--save-cache` is used or `CI` is set.
 
-Ways to force fresh behavior:
+- Change a step description when its intent changes. Never add
+  `DANGEROUS_FORCE_DYNAMIC` or `--disable-cache` to locator steps; built-in cache
+  validation refinds changing targets.
+- Carry a successful preview's `CacheId` into the exact step being spliced.
+- Reword an assertion when old memory no longer matches its intended condition.
 
-- Change the step description/assertion when the intent has changed; this
-  changes the step identity used for cache matching. In v1, splicing a changed
-  step also creates fresh internal UUIDs.
-- Use `--disable-cache` for dynamic targets that should resolve fresh every run,
-  such as today's date or the next available slot.
-- Preserve good previewed cache by carrying `CacheId` into splice with
-  `--cache-id <CacheId>`.
-- Change assertion wording and add disambiguation when previous AI memory is now
-  misleading.
+## Readiness and timing
 
-## Timing
+`emulator.smartWaitingTimeoutMs` budgets readiness before AI locate, cached
+element retries, and other single-interaction waits. `emulator.waitForStability`
+instead waits after each interactive step so its effects land before the next
+step begins. Turn on `waitForStability` for apps that load incrementally,
+animate between screens, or are broadly slow. It does not control pre-targeting
+waits.
 
-Momentic uses smart waiting before targeting steps. It waits up to the
-configured smart-waiting timeout, which defaults to 5 seconds, for device state
-to settle or the target to appear. Within that window, do not add manual waits.
-For slower or more semantic readiness, use a targeted element/screen check, an
-AI check, or a native wait only when the test genuinely needs fixed time.
+Within smart waiting, do not add sleeps. For longer or semantic readiness, use
+an element, screen, or AI check that describes the required positive state.
+Checks retry until their timeout; increase that timeout instead of polling with
+JavaScript. See
+[mobile configuration](https://momentic.ai/docs/configuration/mobile) for
+project-wide timing settings.
 
-## Settings precedence
+## Common execution pitfalls
 
-`momentic.config.yaml` sets project defaults, but many mobile settings can be
-overridden at the test level: platform, default app asset channel/tag, emulator
-provider, local device/app overrides, locale/timezone, geolocation, timeouts,
-headers, and environment. Always check the test's own metadata before assuming
-the project default applies.
+- Keyboard and input animations can race with typing. For slow iOS inputs, use
+  TYPE's keyboard-settling option. For masked or formatted fields that move the
+  cursor, target the input explicitly and add a keypress delay when needed.
+- Scroll describes the content to reveal; swipe describes the finger gesture.
+  Scrolling down finds lower content, while swiping up moves the finger up to
+  reveal it.
 
-For managed mobile assets, treat `channels` from `momentic_get_artifacts()` as
-the source of truth. `settings.defaultChannel` must be a real channel for the
-test platform. `settings.defaultTag` is optional; omit it to use the most recent
-uploaded tag for that channel. Do not assume `"latest"` is special unless that
-literal tag exists.
+## Devices, apps, and settings
+
+Test-level settings can override project platform, app asset, emulator, locale,
+timezone, geolocation, timeout, header, and environment defaults. Inspect both
+levels before changing behavior.
+
+For managed assets, use the `channels` artifact from
+`momentic_get_artifacts` as the source of truth for valid platform channels,
+tags, and aliases. Follow the current tool description for `defaultChannel` and
+`defaultTag` behavior.
 
 ## Test context
 
-Each run has a test-scoped `env` context that persists across steps, including
-modules. Later steps can read values written by earlier steps.
+Each run has a test-scoped `env` that persists across steps and modules.
 
-- v2: use `saveAs` on steps with return values.
-- v1/MCP CLI strings: use `--env-key`.
-- JavaScript: prefer `return` plus `saveAs` / `--env-key`; use
-  `setVariable(name, value)` when setting multiple variables.
-- Use `env.NAME` in JavaScript and module input expressions.
-- Use `{{ env.NAME }}` in string fields. `{{ ... }}` can evaluate JavaScript,
-  but do not use it inside JavaScript step source because `env` is already in
-  scope there.
+- In v2, save returned values with `saveAs`; in MCP step strings, use
+  `--env-key`. Use `setVariable(name, value)` in JavaScript when saving several
+  values.
+- Use `env.NAME` in JavaScript and module input expressions. Use
+  `{{ env.NAME }}` in string fields, but not inside JavaScript source.
+- Module inputs are JavaScript fragments stored as strings. Quote literal
+  strings and use `env.X` for variables.
 
-Module inputs are JavaScript fragments as strings. Quote literal strings and use
-`env.X` for variables; they are not `{{ }}` templates.
+## JavaScript
 
-## JavaScript context
+Use native tap, type, swipe, scroll, wait, and check steps for device behavior.
+They retain Momentic's targeting, smart waiting, cache, and traces. Do not use
+JavaScript to reproduce those actions or poll UI state when a check can retry.
 
-Mobile JavaScript steps run in the mobile execution sandbox. Use them for short
-one-off data prep, API checks, assertions, or context writes that native mobile
-steps cannot express.
+Use mobile JavaScript for test setup, data generation, APIs, databases,
+OTP/email/SMS, assertions, and context writes that no native step expresses.
+Keep one-off code short; for reusable v2 scripts, follow nearby project
+conventions. See the
+[mobile JavaScript command](https://momentic.ai/docs/reference/mobile-commands/javascript)
+for current syntax.
 
-The sandbox commonly provides `env`, `setVariable`, `axios`, `assert`, and other
-Momentic-provided helpers. If exact JS support matters, check the JavaScript
-command docs or the Step Authoring Guide from `momentic_session_start`.
+# Working with mobile v2 YAML
 
-Keep short one-off JavaScript inline. In v2 YAML, reusable utilities and long
-scripts can live in a project script file, following existing project
-conventions. Prefer locations such as
-`$MOMENTIC_PROJECT_ROOT/scripts/mobile-utilities/setup.js` when the project
-already has a `scripts/` pattern. Read nearby scripts first and match their
-module style, helper naming, env usage, and error style.
+Mobile v2 is human-editable. Tests use `before`, `steps`, and `after`; modules use
+`steps`. Each step has one command key, durations are milliseconds, and runnable
+step IDs are not stored in YAML.
 
-# Project State On Disk
+Make the smallest edit and match nearby syntax. Common pitfalls:
 
-Mobile tests are `*.test.yaml` files. Mobile modules are reusable step
-collections stored as `*.module.yaml` files. Test IDs are authoritative and live
-on the test file's `id` field.
+- Android-only commands in iOS tests.
+- Coordinates outside `0..100` in v2 YAML or `0..1` in MCP step strings.
+- Adding IDs, cache blobs, artifacts, or the wrong detailed target field.
 
-There are two major mobile file formats:
+Consult the [v2 test format](https://momentic.ai/docs/core-concepts/test-format)
+when syntax is unclear. Run `npx momentic-mobile lint` when schema or
+file-reference risk warrants it.
 
-- `fileType: momentic/mobile-test/v2` or
-  `fileType: momentic/mobile-module/v2` -> **mobile v2**. Direct YAML editing is
-  preferred for high-confidence localized changes when live device discovery is
-  not needed.
-- Missing `fileType`, or any other value -> **v1**. Never edit v1 YAML
-  directly; persist changes only through `momentic_test_splice_steps`.
+After a disk edit, reload the active MCP test if available; otherwise terminate
+and restart the session. `momentic_test_get` reads persisted state but does not
+refresh an active session.
 
-Mobile v2 tests include a required `platform` value: `ANDROID` or `IOS`.
-Platform-specific command availability matters. Do not add Android-only commands
-to iOS tests.
+# MCP device workflow
 
-`momentic.config.yaml` is the project root config. It stores project defaults
-for agents, AI features, emulator settings, file globs, environments, mobile
-assets, cache behavior, and advanced settings.
+Use tool descriptions and the platform-specific Step Authoring Guide returned by
+session start for current arguments and step syntax. Do not duplicate that
+reference material from this skill.
 
-Mobile v2 steps can reference local files by relative path:
+## Start and fetch context
 
-- Module invocations: `module: ./modules/login.module.yaml`
-- JavaScript steps: `javascript: ./scripts/setup.js`
-- File injection: command-specific local file paths
+Do not call context tools as session-start boilerplate. Use them on demand and
+follow their descriptions, especially when they offer filters or return large
+project data.
 
-Relative paths resolve from the YAML file containing the step, not from the
-project root or importing test. Use `./...` or `../...`; do not use absolute
-paths or `~`. If you move, rename, or delete a referenced file, grep for the old
-path and update every reference.
+- If the test ID is known, start `momentic_session_start` by itself. Its Test
+  Content provides active steps and runnable IDs; the platform comes from the
+  test.
+- Use `momentic_get_artifacts` only to discover unknown tests, modules,
+  environments, local devices, simulators, or managed asset channels. Avoid
+  redundant refreshes.
+- Use `momentic_test_get` to inspect persisted state before starting, or to read
+  a different test. Prefer active session and splice responses afterward.
+- Use filtered `momentic_get_environment_variables` only when a step needs env
+  data that is not already known.
+- Use `momentic_module_recommend` -> `momentic_module_get` only when evaluating
+  reuse; recommendation invokes AI and is not required to start a session.
 
-v1 YAML should still be edited only through MCP. Do not use file-backed
-JavaScript in v1 YAML or MCP CLI step strings; v1 JavaScript steps should carry
-executable code in `code` / `--code`. Use JavaScript file references only in
-mobile v2 YAML.
+Only one device operation may run per session. Do not issue concurrent preview,
+run, state, or splice operations against the same session.
 
-Do not add internal or auto-generated fields to v2 YAML.
+## Preview -> splice -> validate
 
-# Before You Edit
+1. For mid-test work, run through the preceding step once and keep the same
+   session so authoring starts from the correct screen.
+2. Preview forward in logical checkpoints such as login complete, permission
+   handled, form ready, submission complete, or confirmation visible.
+3. Read the returned screenshot first. Request emulator state only when the
+   image lacks enough targeting or diagnostic context; request it again once if
+   the app may still be settling.
+4. Splice the successful checkpoint. Attach each returned `CacheId` only to its
+   exact step, then read the splice response for current step refs.
+5. Run the next dependent saved step or range. If a preview or run returns a
+   `stepRunnerId`, poll it instead of starting another device operation.
+6. Before finishing, when safe, run the smallest saved range covering the
+   prerequisites, changed step, and next dependent contract. Reset first only
+   when accumulated state could mask a failure.
+7. Terminate the session when finished.
 
-Gather only what you need:
+Batch obvious low-risk steps. Preview uncertain targets individually. For a
+non-idempotent action, preview setup, splice the checkpoint, then run the
+approved saved action at most once.
 
-- Test goal and user-visible mobile success criteria.
-- Platform: Android or iOS.
-- App source: managed channel/tag, local APK/.app, or an already-installed app.
-- Provider: remote by default; local only when the user explicitly asks for a
-  local emulator/simulator.
-- Auth requirements and required env vars.
-- Risky actions that must not run twice: submit, purchase, delete, send, create.
-
-For long tasks, inspect nearby mobile tests and modules before authoring.
-Reusing an existing module is usually better than rebuilding a common flow
-inline.
-
-Ask before long-running checks, starting over from scratch, destructive actions,
-local device overrides, or editing a shared module.
-
-# Choose The Workflow
-
-If the user requests a specific workflow, respect it unless it is unsafe or
-impossible. Otherwise, use direct mobile v2 YAML editing when the file is v2, the
-change is localized, the step sequence is known, and live device discovery is
-not required. Good examples: reword an assertion, adjust a target, update an env
-key, fix a file reference, or insert a small known step from a nearby pattern.
-
-Use the MCP device-validation workflow when the file is v1 or unknown, live UI
-state must be discovered, target timing is flaky, the flow is multi-step and
-unclear, the change depends on platform behavior, or the user asks to
-build/validate interactively.
-
-Use `momentic_test_create` for new mobile tests; search for the tool if it is not
-visible. It requires `name`, `platform`, and valid mobile settings. Only pass
-folder/path fields when requested.
-
-`momentic_session_start` requires an existing `testId`; it does not create
-tests.
-
-# Universal Authoring Rules
-
-- Prefer natural-language element descriptions. Use coordinate targets only as a
-  last resort for cases the AI cannot see, such as canvas-like surfaces,
-  non-semantic custom views, maps, games, or a user-requested coordinate target.
-- Prefer native mobile steps over JavaScript. Use JS only when no native step
-  expresses the behavior.
-- Do not add launch/open-app steps at the start unless the test actually needs
-  to switch apps or recover app state.
-- Keep assertions minimal and user-driven. Add readiness checks only when they
-  are needed to make the next dependent action reliable.
-- After an action that should materially change screen state, add an immediate
-  validation before dependent actions. Prefer `ELEMENT_CHECK` or `SCREEN_CHECK`
-  for deterministic text/state, and `AI_CHECK` for semantic visual state.
-- An `AI_CHECK` is multimodal by default (screenshot + accessibility/XML
-  hierarchy). For a screenshot-only check, use its visual-only form (the
-  `assertVisually` YAML key). Reach for it when the hierarchy is unavailable or
-  unreliable, such as a WebView with multiple pages, or when the condition is
-  purely visual. The condition must be fully verifiable from the current
-  viewport, since no hierarchy and nothing offscreen is available.
-- Do not use AI actions unless the user asks or the existing test already uses
-  one.
-- Do not add optional/default fields unless needed for correctness.
-- Keep the delta small. Preserve unrelated params, request bodies, env keys,
-  literal values, quoting, comments, ordering, and step style.
-- Do not work around real app failures. If the app is broken, data is missing,
-  permissions are blocked, the app asset is wrong, or a backend is down, report
-  the failure instead of weakening the test.
-- Do not reorganize `before` / `steps` / `after` or setup / main / teardown
-  unless the test intent requires it.
-
-# Working With Mobile V2 YAML
-
-Mobile v2 is the human-editable format. Steps are compact: each step has one
-top-level command key, such as `tap: Continue`, or a detailed map under that key.
-Tests use `before` / `steps` / `after`; modules use `steps`. Durations are
-always milliseconds. No visible step/command IDs.
-
-Direct-edit loop:
-
-1. Confirm `fileType` and `platform`.
-2. Inspect nearby tests/modules for local command style.
-3. Edit the smallest YAML range.
-4. Run lint or MCP validation when syntax or behavior is uncertain.
-
-Common mistakes:
-
-- Using Android-only commands in iOS tests.
-- Using percent coordinates outside `0..100` in v2 YAML or outside `0..1` in MCP
-  CLI-style step strings.
-- Confusing swipe direction with scroll intent. `SCROLL_TO --direction down`
-  searches lower content; `SWIPE --direction up` moves the finger up and reveals
-  lower content.
-- Adding step IDs, command IDs, cache blobs, or execution artifacts to YAML.
-- Using the wrong detailed target-field name for a command.
-
-`npx momentic-mobile lint` validates mobile v2 schemas and file references. Run
-it when you are unsure of syntax after edits or after moving/renaming referenced
-files.
-
-State refresh after disk edits:
-
-- Active MCP session: use reload if available, otherwise restart the session and
-  run the edited range.
-- No active MCP session: start a fresh session when ready to validate.
-- `momentic_test_get` inspects persisted state; it does not refresh an active
-  session after disk edits.
-
-# MCP Device-Validation Workflow
-
-Use this for every v1 edit and for mobile v2 work that needs live discovery. The
-tool surface is shared; persistence differs: v1 uses splice, while v2 can use
-splice or direct YAML edit plus reload/restart.
-
-## Discovery
-
-- `momentic_get_artifacts()`: project context, config path, cwd, tests, modules,
-  environments, available AVDs, available iOS simulators, and managed mobile
-  asset channels. Read only what you need.
-- `momentic_test_get({ testId | testPath })`: inspect persisted mobile test
-  state. Before a session, this is useful. During an active session after
-  splicing, prefer the splice response or `returnTest: true`.
-- `momentic_module_recommend({ userRequest })`: find reusable flows.
-- `momentic_module_get({ selector })`: inspect module params, defaults, enums,
-  and steps. Selector is exactly one of `{ id }`, `{ name }`, or `{ path }`.
-
-## Sessions
-
-- `momentic_session_start({ testId, ... })`: start a mobile session. It returns
-  metadata, the Step Authoring Guide artifact, active Test Content with session
-  step IDs, an initial screenshot, and installed-apps info. Required: `testId`.
-  Call it by itself, not in parallel with other MCP tools.
-- The platform is inferred from the test. Prefer the test's default emulator
-  settings. Omit provider/device/app overrides unless the user explicitly asks.
-  If a provider must be chosen, prefer `remote`; use `local` only when requested.
-- Session start options include `provider`, `envName`, `localDeviceId`, and
-  `localAppPath`.
-- Read the Step Authoring Guide before constructing CLI-style mobile steps.
-- `momentic_run_step({ sessionId, fromStep, toStep?, targetSection?,
-resetSession? })`: run existing active-session steps. Use step IDs from Test
-  Content or splice responses, never raw YAML. Use `parentStepIdChain: []` for
-  top-level steps. Responds with the full result if the run finishes within 30
-  seconds. Otherwise it responds with the `stepRunnerId` and currently
-  executing step while the run continues in the background. Poll
-  `momentic_poll_runner` for the result. Do not start multiple runs in the same
-  session at once unless you intentionally want overlap; overlapping runs share
-  emulator state and can race each other.
-- `momentic_poll_runner({ sessionId, stepRunnerId?, timeoutSeconds? })`: reports
-  active runs, finished runs, and any newly finished results. Prefer passing the
-  `stepRunnerId` reported by `momentic_run_step` to scope the response to that
-  run. Pass `timeoutSeconds` (0-30, default 0) alongside `stepRunnerId` to wait
-  up to that long for that run to finish before responding. Poll this instead
-  of retrying `momentic_run_step`.
-- If state drifts, restart with `momentic_run_step` and `resetSession: true` on
-  the same `sessionId`; do not reset between every micro-edit.
-- `momentic_session_terminate({ sessionId })`: terminate when done.
-
-## Test authoring loop
-
-Author MCP steps in checkpoint-sized chunks. Preview forward until a logical
-section works, then splice that checkpoint. Good checkpoints are natural mobile
-flow boundaries such as login complete, permission handled, form submitted, item
-created, or confirmation visible. Avoid splicing one step at a time unless each
-step is uncertain, risky, or affects shared module structure.
-
-- `momentic_preview_step({ sessionId, step })`: execute one mobile step without
-  persisting. It is stateful. If it returns `CacheId`, include
-  `--cache-id <CacheId>` when splicing that step. The response screenshot shows
-  device state after the step.
-- If a preview screenshot is not enough to target, call
-  `momentic_get_session_state` with `returnBrowserState: true`, then inspect the
-  emulator-state text or artifact for accessible names, visible text, XML nodes,
-  webview structure, screen bounds, and nearby structure.
-- When the next several steps are obvious and low-risk, such as filling known
-  fields, splice them together and run that saved range instead of previewing
-  each field one by one.
-- `momentic_test_splice_steps({ sessionId, startIndex, deleteCount, steps,
-targetSection?, parentStepIdChain?, returnTest? })`: insert, replace, or
-  delete steps and persist.
-- After splicing, read the response immediately; it is the source of truth for
-  inserted/deleted refs and active-session step IDs.
-- If `returnTest: true`, verify the returned structure before continuing.
-- If downstream steps remain, run the immediate next step or small range to
-  confirm the flow still connects.
-- For non-idempotent actions such as submit, purchase, delete, send, or create,
-  avoid repeated previews. Preview the setup steps, splice the checkpoint before
-  the risky action, then execute the risky saved step once only when validation
-  requires it.
-- For obvious adjacent low-risk steps, batch them; do not checkpoint after every
-  field unless target or device state is uncertain.
-- When the requested edit is complete, ask whether to validate from the start by
-  running the relevant saved range with `momentic_run_step`.
-
-## Reading tool output
-
-Sessions are live emulator/simulator processes. Screenshots and UI snapshots are
-transient. If the screenshot does not show expected state after an action, call
-`momentic_get_session_state` once more; the app may still be loading.
-
-MCP tools may return artifact links under `.momentic-mcp/...`. Read linked files
-only when needed:
-
-- Emulator-state text: refine targeting or debug native/webview structure.
-- Screenshots: usually already returned inline as images.
-- Environment files: validate `envKey`, JavaScript/API outputs, or dependent
-  env values.
-- Installed-apps reports: verify package/bundle state when app launch or install
-  behavior is unclear.
-- `momentic_get_session_state` returns serialized emulator state only with
-  `returnBrowserState: true`; screenshots are returned by default.
-
-## CLI-style step strings
-
-`preview_step` and `splice_steps` use CLI-style strings:
-`--step-type <TYPE> [options]`. The platform-specific Step Authoring Guide
-returned by `momentic_session_start` is authoritative.
-
-Common examples:
-
-- Tap: `--step-type TAP --description "the Continue button"`
-- Type:
-  `--step-type TYPE --description "Email field" --value "user@example.com" --clear-content`
-- AI check:
-  `--step-type AI_CHECK --assertion "the confirmation message is visible" --timeout-seconds 10`
-- Scroll to:
-  `--step-type SCROLL_TO --description "Settings" --direction down`
-- Press:
-  `--step-type PRESS --key HOME`
-- Module:
-  `--step-type MODULE --module-id <id> --inputs email=env.USER_EMAIL`
-
-Splice example:
-
-```json
-{
-  "sessionId": "SESSION_ID",
-  "startIndex": 0,
-  "deleteCount": 0,
-  "steps": [
-    "--step-type TAP --description \"the Continue button\" --cache-id UUID_FROM_PREVIEW",
-    "--step-type AI_CHECK --assertion \"the next screen is visible\" --timeout-seconds 10"
-  ],
-  "targetSection": "main"
-}
-```
-
-For mobile conditionals, create the `CONDITIONAL` step with `--assertion-type`
-and the matching assertion fields, then splice nested steps with
-`parentStepIdChain: [conditionalStepId]`.
+MCP screenshots are the default signal. Request serialized emulator state for
+accessible names, native XML, webview structure, screen bounds, or offscreen
+context. Read environment and installed-app artifacts only when diagnosing data,
+launch, or install behavior.
 
 # Modules
 
-Default to module-first for logical flows of 4+ steps such as login, permission
-handling, setup, navigation inside the app, or checkout. Call
-`momentic_module_recommend`, inspect strong candidates with `momentic_module_get`,
-then decide module vs inline.
+For a logical flow of roughly four or more reusable steps, check
+`momentic_module_recommend` -> `momentic_module_get` -> reuse or inline. Modules
+cannot contain modules. Ask before changing a shared module.
 
-Modules cannot contain modules. Splicing a `MODULE` step inside a module fails.
-
-Editing a shared module requires user confirmation. To modify a module through
-MCP, replace the module step with a `MODULE` step carrying the needed metadata
-flags: `--parameters`, `--parameter-enum`, `--default-parameter`,
-`--module-name`, `--module-description`, `--disabled`. Keys in
-`defaultParameters` and `parameterEnums` must exist in `parameters`.
-
-Module `inputs` values are JavaScript fragments as strings. Quote string
-literals, reference env as `env.X`, and respect enum constraints exactly.
-
-# Validation Strategy
-
-- Direct mobile v2 edit with no live validation requested: summarize changes and
-  ask whether to run.
-- Direct mobile v2 edit with active session: reload if available, otherwise
-  restart the session, then run the edited range.
-- MCP-authored edit: preview forward, splice at logical checkpoints, then run the
-  next downstream saved step or range.
-- Long full-test runs, local device overrides, and risky actions require
-  confirmation.
-- Terminate MCP sessions when done.
+Respect declared parameters, defaults, and enum values. Module inputs are
+JavaScript fragments, not `{{ }}` templates.
 
 # Troubleshooting
 
 ## Device state and timing
 
-- Wrong screen/UI: read latest emulator state or call `momentic_get_session_state`.
-- Screenshot not updated: call `momentic_get_session_state` once more.
-- Flaky timing: prefer `AI_CHECK`, `SCREEN_CHECK`, `ELEMENT_CHECK`, or a targeted
-  `SCROLL_TO` over generic `WAIT`.
-- Long backend job/import/upload: use an assertion or screen/element wait with an
-  appropriate timeout instead of sleeps.
+- Wrong or stale screen: inspect the latest screenshot or emulator state; retry
+  state capture once if the app is settling.
+- Slow readiness at one checkpoint: add the narrowest element, screen, or AI
+  check, or increase the existing check's timeout. Checks already retry; do not
+  poll with JavaScript.
+- Broadly slow targeting across the project: consider increasing
+  `emulator.smartWaitingTimeoutMs`. Do not use it to mask one slow assertion.
+- Long jobs or uploads: check for a stable positive result with an appropriate
+  timeout, not a sleep.
 - Permission dialog or system sheet: handle it explicitly before continuing.
-- Weird session state: use `momentic_run_step` with `resetSession: true`.
+- Drifted session: rerun the required saved range with `resetSession: true`.
 
-## Targeting and cache
+## Infrastructure and app health
 
-- Element not found: inspect screenshot/emulator state. If visible, improve the
-  description using visible text, role/name, and nearby context; if absent,
-  debug the prerequisite step or scroll state.
-- Wrong element was hit quickly or without any AI: suspect stale cache,
-  especially when the screen structure is similar to a prior run.
-- Dynamic target: change the description to be stable, or disable cache for that
-  step.
-- Coordinates: use `--x-fraction` / `--y-fraction` only when semantic targeting
-  is not available. In MCP CLI strings, fractions are `0..1`.
-- Scroll direction: use `SCROLL_TO --direction down` for lower content and
-  `SCROLL_TO --direction up` for earlier content. Use manual `SWIPE` when there
-  is no specific target or `SCROLL_TO` is not appropriate.
-- Quoted text: quoted substrings in descriptions are treated literally by
-  Momentic AI. Use quotes only when that exact text must appear on screen or in
-  the element's name; omit quotes for semantic matching.
+- Treat WDA, Appium, adb, emulator bootstrap or death, provider connectivity,
+  lost webview context, and repeated device-state capture failures as
+  infrastructure or app-environment signals. Start with the doctor check above,
+  inspect logs and device health, and retry from a clean session before editing
+  the test.
+- If the app never becomes idle, continuous animation, video, or background UI
+  work can block iOS accessibility snapshots. Prefer a test-mode switch that
+  disables it; longer waits do not make a permanently busy app idle.
+- Do not weaken assertions or inflate step timeouts to hide infrastructure
+  failures. Report the failing subsystem and supporting evidence separately
+  from test logic.
 
-## AI check performance
+## Targeting and assertions
 
-- Ambiguous assertion: make the expected visual/text condition concrete. Include
-  the relevant screen region, object, count, or state.
-- Literal text mismatch: quoted strings are treated as text that must appear on
-  screen. Remove quotes when semantic matching is intended.
-- Off-screen: visual conditions like color or shape can only be evaluated if
-  the element is visible. Use scroll/gesture setup.
-- Repeated bad verdict: reword the assertion so the intended condition is
-  clearer and old memory no longer applies.
-- Transient conditions: AI checks retry over the configured timeout, but each
-  attempt is an instantaneous snapshot. Prefer stable final-state assertions; if
-  necessary, use a deterministic element/screen check.
+- Element absent: debug the prerequisite or scroll state. Element visible but
+  not found: use visible text, role/name, and nearby context.
+- Fast wrong-target action: consider stale cache, then correct the description.
+- Use coordinate targets only when semantic targeting is unavailable. MCP
+  fractions use `0..1`; v2 YAML uses percentages from `0..100`.
+- Use `SCROLL_TO` when searching for a target. Use manual `SWIPE` only when no
+  target exists or scrolling is not appropriate.
+- Quoted text is literal. Quote only when the exact text must appear; otherwise
+  describe meaning.
+- Make assertions concrete about region, object, count, or state. Visual-only
+  checks cannot inspect offscreen content or hierarchy.
+- AI checks retry instantaneous snapshots until timeout. Prefer stable final
+  state; use deterministic element or screen checks when they express the
+  contract. See
+  [Writing assertions](https://momentic.ai/docs/core-concepts/writing-assertions).
 
 ## Format and data
 
-- Env value missing: confirm the producing step used `saveAs` / `--env-key` or
-  `setVariable`, and that the consuming syntax is `env.X` vs `{{ env.X }}`.
-- Module input error: inputs are JavaScript fragments as strings; quote string
-  literals and match enum constraints exactly.
-- App launch/install issue: inspect test settings, managed channels/tags,
-  installed-apps artifact, and whether the session is remote or local.
-- Platform mismatch: check the test `platform` and the Step Authoring Guide for
-  platform-specific command availability.
+- V2 load failure: lint the file and check platform and relative references.
+- Module failure: re-check parameters, defaults, enums, and input expressions.
+- Missing env value: verify the producing save and `env.X` versus
+  `{{ env.X }}` at the consumer.
+- App launch/install issue: inspect test settings, channels/tags, installed-apps
+  artifacts, and whether the session is remote or local.
 
-# Completion Checklist
-
-- Identify v1 vs mobile v2 and choose MCP vs direct edit.
-- For MCP changes: preview forward to checkpoints, splice with cache IDs, read
-  splice refs, and run the next saved step/range.
-- For v2 direct edits: lint or validate when syntax/behavior is uncertain.
-- Ask before full start-to-end validation unless the user already requested it.
-- End any MCP session you started.
+After about three attempts at the same failure, stop and ask the user for
+direction.

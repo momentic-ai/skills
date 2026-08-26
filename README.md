@@ -83,22 +83,11 @@ knowledge and step-by-step workflows. Skills follow the
 | [momentic-spec](skills/momentic-spec/SKILL.md)                                   | Improve code correctness using Momentic specs in the feature development process                                                                                                                                                                                                                                                                                                     |
 | [momentic-explore-prompt](skills/momentic-explore-prompt/SKILL.md)               | Generate an explore-prompt.md file that gives Momentic's explore agent (`momentic ai explore diff` / `momentic ai explore latest`) repo-specific context — which applications to test, the URLs tests must target, how to authenticate, where to save generated tests, and repo quirks. Use when setting up or improving the prompt file passed via `--prompt-file`.                 |
 
-## Contributing
+## Skill sources
 
-This repository uses [oxfmt](https://www.npmjs.com/package/oxfmt) to format
-Markdown, JSON, and YAML files:
-
-```bash
-pnpm install
-pnpm format        # format in place
-pnpm check-format  # what CI runs
-```
-
-The `skills/` directory is excluded from oxfmt. Most files in this directory
-are synced by a bot from `agent-markdowns` in the
+Most files in `skills/` are synced by a bot from `agent-markdowns` in the
 [Momentic monorepo](https://github.com/momentic-ai/monorepo). The synced skills
 include `momentic-test`, `momentic-mobile-test`, `momentic-maintain`,
 `momentic-explore-prompt`, `momentic-spec`, and the
-`momentic-triage-quarantined-tests.md` file. Edit those files in the monorepo
-and let the sync bot propagate them here. Formatting those files here would
-fight the sync bot. Format all other repository files before opening a change.
+`momentic-triage-quarantined-tests.md` file. Edit those files in the monorepo,
+not here, and let the sync bot propagate them.

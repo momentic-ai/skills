@@ -1,0 +1,14 @@
+{
+  "name": "momentic",
+  "owner": {
+    "name": "Momentic",
+    "url": "https://github.com/momentic-ai/skills"
+  },
+  "plugins": [
+    {
+      "name": "momentic",
+      "source": "./",
+      "description": "Skills for the Momentic end-to-end testing platform"
+    }
+  ]
+}

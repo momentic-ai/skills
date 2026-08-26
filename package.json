@@ -1,0 +1,13 @@
+{
+  "name": "@momentic-ai/skills",
+  "private": true,
+  "description": "Agent skills for using Momentic",
+  "scripts": {
+    "format": "oxfmt --ignore-path .oxfmtignore",
+    "check-format": "oxfmt --check --ignore-path .oxfmtignore"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.41.0"
+  },
+  "packageManager": "pnpm@10.33.4"
+}

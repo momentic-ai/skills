@@ -1,0 +1,25 @@
+{
+  "name": "momentic",
+  "displayName": "Momentic",
+  "version": "1.0.0",
+  "description": "Agent skills for Momentic end-to-end testing — author, run, triage, and repair web and mobile browser and app tests. Also connects the hosted Momentic MCP server.",
+  "author": {
+    "name": "Momentic",
+    "email": "support@momentic.ai"
+  },
+  "homepage": "https://momentic.ai/developers",
+  "repository": "https://github.com/momentic-ai/skills",
+  "keywords": [
+    "momentic",
+    "testing",
+    "e2e",
+    "browser",
+    "android",
+    "ios",
+    "automation",
+    "skills",
+    "mcp"
+  ],
+  "logo": "assets/logo.png",
+  "skills": "./skills/"
+}

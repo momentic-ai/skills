@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "momentic": {
+      "type": "http",
+      "url": "https://api.momentic.ai/mcp"
+    }
+  }
+}

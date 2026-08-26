@@ -10,31 +10,22 @@ can test web applications with a browser, inspect network traffic, run code and
 shell commands, delegate exploration, and report test cases and product bugs.
 Treat its filesystem and environment as remote, not as the user's machine.
 
-## Install and authenticate
+## Setup
 
-```bash
-curl -fsSL https://cli.momentic.ai/mo | sh   # installs to $HOME/.local/bin/mo
-mo --version
-```
+Run `mo --version`. If it fails, read
+[Installation](references/installation.md).
 
-Every command needs an API key. Set `MOMENTIC_API_KEY` in the environment;
-prefer this in CI. For an interactive login, use:
+Assume authentication is already configured. If an operational command reports
+an authentication error, read [Authentication](references/authentication.md).
 
-```bash
-npx @momentic/wizard@latest login
-```
+Use the target implied by the conversation. If it is unclear, ask the user what
+to test. For a local or private target, read
+[Tunneling](references/tunneling.md) and retain its `tunnel_id`. For a public
+target, use its exact URL.
 
-This writes `~/.momentic/auth.json`. Do not pass API keys as command arguments,
-print them, paste them into a session message, or commit them.
+## Write the QA brief
 
-## Write the QA brief first
-
-Treat the brief as the whole input. A vague brief produces a vague bug bash.
-Mo's browser runs outside the developer machine, so the target must be
-reachable from the public internet: use a deployed environment or preview URL,
-never `localhost`.
-
-State in the brief:
+Treat the brief as the whole input. State:
 
 1. **Target URL:** Include the exact path and query the change affects.
 2. **Expected behavior:** Explain what changed and what it should now do in
@@ -74,6 +65,14 @@ web_url=$(jq -r .webUrl <<<"$session_json")
 Starting returns before Mo finishes. Preserve both values: every later command
 needs `session_id`, and the user can watch or join through `web_url`.
 
+Use start settings only when needed:
+
+- `--tunnel "$tunnel_id"` connects the session to a configured tunnel.
+- `--momentic-mode` uses smarter Momentic browser tools; omit it for faster
+  Playwright MCP.
+
+These settings are chosen when the session starts.
+
 ## Follow the turn reliably
 
 Poll the active session with `status`:
@@ -85,7 +84,8 @@ mo status "$session_id"
 It returns the current run state, latest visible message, web URL, and
 structured QA findings. Always inspect `findings.testCases`, `findings.bugs`,
 `findings.controls`, and `findings.verdicts`; they contain more evidence than
-Mo's closing prose.
+Mo's closing prose. Before reporting a bug, check whether the product or the
+brief's expected behavior is stale.
 
 Use `read` when waiting for output or retrieving the transcript and pending
 input. Prefer bounded 30-60 second reads so the caller stays responsive:
@@ -106,22 +106,23 @@ messages. A timeout accepts `0`, milliseconds, seconds, or minutes such as
 `500ms`, `45s`, or `4m`, up to `290s`.
 
 `status.state` reports the backend run state, while `read.state` reports the
-visible turn state.
+visible turn state. They can briefly disagree; use `read.state` to decide
+whether the visible turn reached an attention boundary.
 
-## Continue or stop a session
+## Continue, stop, or archive
 
-Send a follow-up or answer:
+For a follow-up or answer, prefer `--wait` so the next attention boundary is
+returned directly:
 
 ```bash
-mo send --session-id "$session_id" 'Use the staging account and continue'
-mo read "$session_id" --from start --timeout 45s --json
+mo send --session-id "$session_id" \
+  --wait 45s 'Use the staging account and continue'
 ```
 
-If Mo is working, `send` steers the live turn at its next tool-step boundary.
-Otherwise it starts a new turn in the same session. A successful `send` only
-means the message was accepted; confirm that the transcript advances to a new
-assistant reply. After a stopped turn, a new `send` can resume the session, but
-an immediate read may briefly show the previous stopped state.
+If Mo is working, `send` stops the active turn, interrupts in-flight tool work,
+and starts a new turn from saved history. It does not steer the live turn. Send
+only when that interruption is intended. Without `--wait`, success only means
+the message was accepted; confirm a new assistant reply with `read`.
 
 Stop only the active turn:
 
@@ -133,6 +134,15 @@ Allow a few seconds for propagation, then verify with
 `read --from start --timeout 0 --json` that the state is `stopped`. Stopping
 does not delete the session, and already-running sub-agents may finish
 independently.
+
+Archive a finished session when it should leave the active list:
+
+```bash
+mo archive "$session_id"
+```
+
+Archive stops active work. Further `send` calls are rejected until the session
+is unarchived in the web UI; the CLI has no unarchive command.
 
 ## Transfer files
 
@@ -154,12 +164,19 @@ treated as a target filename. Without `--output`, downloads use
 
 ## Command reference
 
-| Command                                                    | Purpose and important arguments                                                                                                      |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `mo start <message>`                                       | Create a cloud session and begin its first turn; return `sessionId` and `webUrl` as JSON.                                            |
-| `mo read <session-id>`                                     | Read transcript and turn state; prefer `--from start --timeout <duration> --json`.                                                   |
-| `mo status <session-id>`                                   | Return the latest message, web URL, backend run state, and structured QA findings.                                                   |
-| `mo send --session-id <id> <message>`                      | Steer active work or start the session's next turn.                                                                                  |
-| `mo stop <session-id>`                                     | Stop the active turn without deleting the session.                                                                                   |
-| `mo upload --session-id <id> <local-source> [destination]` | Upload one local file and print its remote sandbox path. The optional destination is a remote filename.                              |
-| `mo download --session-id <id> <remote-source>`            | Download a sandbox path or durable artifact and print the local path. Use `--output <path>` for a target file or existing directory. |
+Run `mo <command> --help` for exact options. Global `--log-level` accepts
+`debug`, `info`, `warn`, or `error`.
+
+| Command                                              | Purpose and important options                                                                           |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `mo start <message>`                                 | Start a session; `--tunnel`, `--momentic-mode`.                                                         |
+| `mo send <message> --session-id <id>`                | Interrupt active work or start a turn; `--wait` returns the next attention boundary.                    |
+| `mo read <session-id>`                               | Read transcript and visible state; `--from`, `--timeout`, `--json`.                                     |
+| `mo status <session-id>`                             | Read backend state, web URL, latest message, and structured findings.                                   |
+| `mo stop <session-id>`                               | Stop the active turn without deleting the session.                                                      |
+| `mo archive <session-id>`                            | Stop and archive the session; unarchive is web-only.                                                    |
+| `mo upload <source> [destination] --session-id <id>` | Upload one file and print its sandbox path.                                                             |
+| `mo download <source> --session-id <id>`             | Download a sandbox path; `--output` selects the local target.                                           |
+| `mo tunnel start <address...>`                       | Start local/private access; `--foreground` keeps it attached. See [Tunneling](references/tunneling.md). |
+| `mo tunnel list`                                     | List tunnels started by Mo on this machine.                                                             |
+| `mo tunnel stop <tunnel-id>`                         | Stop a tunnel and revoke access.                                                                        |

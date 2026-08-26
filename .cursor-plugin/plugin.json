@@ -1,0 +1,25 @@
+{
+  "name": "momentic",
+  "displayName": "Momentic",
+  "version": "1.0.0",
+  "description": "Skills for Momentic end-to-end testing. They cover writing browser and mobile app tests, running them, and fixing them when they break, and they connect the local Momentic MCP server.",
+  "author": {
+    "name": "Momentic",
+    "email": "support@momentic.ai"
+  },
+  "homepage": "https://momentic.ai/developers",
+  "repository": "https://github.com/momentic-ai/skills",
+  "keywords": [
+    "momentic",
+    "testing",
+    "e2e",
+    "browser",
+    "android",
+    "ios",
+    "automation",
+    "skills",
+    "mcp"
+  ],
+  "logo": "assets/logo.png",
+  "skills": "./skills/"
+}

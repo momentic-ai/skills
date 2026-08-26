@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "momentic": {
+      "command": "npx",
+      "args": ["-y", "momentic", "mcp"]
+    },
+    "momentic-mobile": {
+      "command": "npx",
+      "args": ["-y", "momentic-mobile", "mcp"]
+    }
+  }
+}

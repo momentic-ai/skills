@@ -4,8 +4,8 @@ Agent skills for [Momentic](https://momentic.ai), an end-to-end testing platform
 for web and mobile apps.
 
 The skills teach a coding agent how to write Momentic tests, run them, and fix
-them when they break. The package also wires up the local Momentic MCP server,
-which is what lets the agent drive a real browser or device while it works.
+them when they break. The package also wires up the local Momentic MCP servers,
+which are what let the agent drive a real browser or device while it works.
 
 ## Installation
 
@@ -19,8 +19,8 @@ plugin:
 /plugin install momentic@momentic
 ```
 
-The plugin installs all six skills and registers the local Momentic MCP server.
-Run `/mcp` in Claude Code to confirm the `momentic` server started.
+The plugin installs all six skills and registers the local Momentic MCP servers.
+Run `/mcp` in Claude Code to see which ones started.
 
 ### Cursor
 
@@ -30,7 +30,7 @@ Install the Momentic plugin from the Cursor Marketplace. Search for
 ### Devin
 
 Install the Devin plugin from this repository. It includes all six skills and
-the local Momentic MCP server.
+the local Momentic MCP servers.
 
 ### Other agents
 
@@ -43,11 +43,11 @@ npx skills add momentic-ai/skills
 This repository is also an Agent Plugins v1 package. The manifest is at
 [`plugin.json`](plugin.json).
 
-## MCP server
+## MCP servers
 
 The skills call MCP tools that run tests, inspect live pages, and splice steps
-back into your YAML files. Those tools come from the Momentic CLI over stdio, so
-the server runs on your machine next to your project:
+back into your YAML files. Those tools come from the Momentic CLIs over stdio, so
+the servers run on your machine next to your project:
 
 ```json
 {
@@ -55,21 +55,30 @@ the server runs on your machine next to your project:
     "momentic": {
       "command": "npx",
       "args": ["-y", "momentic", "mcp"]
+    },
+    "momentic-mobile": {
+      "command": "npx",
+      "args": ["-y", "momentic-mobile", "mcp"]
     }
   }
 }
 ```
 
-That is what `.mcp.json` and the Devin manifest install. The server looks for
-`momentic.config.yaml` in the working directory and its parents, so add
-`--config /absolute/path/to/momentic.config.yaml` if your agent starts outside
-the project. Mobile projects use the `momentic-mobile` binary instead of
-`momentic`.
+That is what `.mcp.json` and the Devin manifest install. `momentic` drives
+browsers and `momentic-mobile` drives Android and iOS, so drop whichever one
+your project does not test.
+
+Both servers look for `momentic.config.yaml` in the working directory and its
+parents. Add `--config /absolute/path/to/momentic.config.yaml` if your agent
+starts outside the project, or if the two platforms live in separate
+subdirectories.
 
 Sign in once with `npx @momentic/wizard@latest login`, or set
-`MOMENTIC_API_KEY` in the environment. The wizard can also register the server
+`MOMENTIC_API_KEY` in the environment. The wizard can also register a server
 with Claude Code, Cursor, VS Code, Codex, Windsurf, and a few others if you
-would rather not edit config by hand. See the
+would rather not edit config by hand. Mobile work needs the usual device
+toolchain, and `momentic-mobile mcp` takes `--android-home` and `--java-home`
+when those live somewhere unusual. See the
 [MCP server documentation](https://momentic.ai/docs/coding-agents/mcp-server)
 for the full tool list.
 

@@ -42,6 +42,9 @@ Install the skills with the `skills` CLI:
 npx skills add momentic-ai/skills
 ```
 
+This repository is also an Agent Plugins v1 package. The manifest is at
+[`plugin.json`](plugin.json).
+
 ## Hosted MCP server
 
 The hosted Momentic MCP server uses streamable HTTP and WorkOS AuthKit OAuth:

@@ -5,7 +5,8 @@ end-to-end testing platform for web and mobile apps.
 
 These skills enable AI coding assistants to author, run, triage, and repair
 Momentic browser and app tests. The package also connects to the hosted
-[Momentic MCP server](https://api.momentic.ai/mcp).
+[Momentic MCP server](https://api.momentic.ai/mcp) for cloud run history and
+quarantine tools.
 
 ## Installation
 
@@ -20,6 +21,8 @@ plugin:
 ```
 
 The plugin installs all six skills and connects the hosted Momentic MCP server.
+In Claude Code, type `/mcp` and choose **Authenticate** to sign in with
+WorkOS AuthKit OAuth.
 
 ### Cursor
 
@@ -29,7 +32,7 @@ Install the Momentic plugin from the Cursor Marketplace. Search for
 ### Devin
 
 Install the Devin plugin from this repository. The plugin includes all six
-skills and the hosted Momentic MCP server.
+skills and the hosted Momentic MCP server. The server uses WorkOS AuthKit OAuth.
 
 ### Other agents
 
@@ -41,13 +44,26 @@ npx skills add momentic-ai/skills
 
 ## Hosted MCP server
 
-The hosted Momentic MCP server uses streamable HTTP:
+The hosted Momentic MCP server uses streamable HTTP and WorkOS AuthKit OAuth:
 
 ```text
 https://api.momentic.ai/mcp
 ```
 
-The Claude, Devin, and repository MCP manifests configure this server.
+The Claude, Devin, and repository MCP manifests configure this server. It
+currently provides cloud run history and quarantine tools. It does not provide
+the full browser or mobile test authoring and execution toolset.
+
+For the full local MCP toolset, see the
+[Momentic MCP server documentation](https://momentic.ai/docs/coding-agents/mcp-server)
+and start the local stdio server:
+
+```shell
+npx momentic mcp --config /absolute/path/to/momentic.config.yaml
+```
+
+For mobile projects, use `momentic-mobile mcp` instead. The local server
+requires `MOMENTIC_API_KEY`.
 
 ## Skills
 
@@ -75,8 +91,11 @@ pnpm format        # format in place
 pnpm check-format  # what CI runs
 ```
 
-The `skills/` directory is excluded from oxfmt. A bot syncs these files from
-the `agent-markdowns` directory in the
-[Momentic monorepo](https://github.com/momentic-ai/monorepo). Formatting those
-files here would fight the sync bot. Format all other repository files before
-opening a change.
+The `skills/` directory is excluded from oxfmt. Most files in this directory
+are synced by a bot from `agent-markdowns` in the
+[Momentic monorepo](https://github.com/momentic-ai/monorepo). The synced skills
+include `momentic-test`, `momentic-mobile-test`, `momentic-maintain`,
+`momentic-explore-prompt`, `momentic-spec`, and the
+`momentic-triage-quarantined-tests.md` file. Edit those files in the monorepo
+and let the sync bot propagate them here. Formatting those files here would
+fight the sync bot. Format all other repository files before opening a change.

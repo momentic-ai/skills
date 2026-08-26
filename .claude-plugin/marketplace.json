@@ -12,7 +12,7 @@
     {
       "name": "momentic",
       "source": "./",
-      "description": "Agent skills for Momentic end-to-end testing — author, run, triage, and repair web and mobile browser and app tests. Also connects the hosted Momentic MCP server."
+      "description": "Skills for Momentic end-to-end testing. They cover writing browser and mobile app tests, running them, and fixing them when they break, and they connect the hosted Momentic MCP server."
     }
   ]
 }

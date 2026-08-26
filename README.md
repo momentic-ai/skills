@@ -1,12 +1,12 @@
 # Momentic Agent Skills
 
-A collection of agent skills for [Momentic](https://momentic.ai) — an
-end-to-end testing platform for web and mobile apps.
+Agent skills for [Momentic](https://momentic.ai), an end-to-end testing platform
+for web and mobile apps.
 
-These skills enable AI coding assistants to author, run, triage, and repair
-Momentic browser and app tests. The package also connects to the hosted
-[Momentic MCP server](https://api.momentic.ai/mcp) for cloud run history and
-quarantine tools.
+The skills teach a coding agent how to write Momentic tests, run them, and fix
+them when they break. The package also wires up the hosted
+[Momentic MCP server](https://api.momentic.ai/mcp), which gives the agent cloud
+run history and the quarantine list.
 
 ## Installation
 
@@ -53,11 +53,11 @@ The hosted Momentic MCP server uses streamable HTTP and WorkOS AuthKit OAuth:
 https://api.momentic.ai/mcp
 ```
 
-The Claude, Devin, and repository MCP manifests configure this server. It
-currently provides cloud run history and quarantine tools. It does not provide
-the full browser or mobile test authoring and execution toolset.
+The Claude, Devin, and repository MCP manifests all point at this server. Today
+it only exposes cloud run history and the quarantine list. The tools that author
+and run browser and mobile tests live in the local server, not here.
 
-For the full local MCP toolset, see the
+To get those tools, see the
 [Momentic MCP server documentation](https://momentic.ai/docs/coding-agents/mcp-server)
 and start the local stdio server:
 
@@ -70,8 +70,8 @@ requires `MOMENTIC_API_KEY`.
 
 ## Skills
 
-Skills are Markdown files that provide AI coding assistants with domain-specific
-knowledge and step-by-step workflows. Skills follow the
+Each skill is a Markdown file that gives an agent domain knowledge and a
+step-by-step workflow. They use the
 [`SKILL.md` format](https://docs.cursor.com/context/rules-for-ai).
 
 | Skill                                                                            | Description                                                                                                                                                                                                                                                                                                                                                                          |
@@ -85,9 +85,9 @@ knowledge and step-by-step workflows. Skills follow the
 
 ## Skill sources
 
-Most files in `skills/` are generated upstream and copied here by a bot, so edits
-made directly in this repository are overwritten. This applies to
-`momentic-test`, `momentic-mobile-test`, `momentic-maintain`,
-`momentic-explore-prompt`, `momentic-spec`, and
-`momentic-triage-quarantined-tests.md`. Momentic employees: change these at the
-source. Everyone else: open an issue instead of a pull request.
+A bot copies most files in `skills/` from an upstream source, so anything you
+edit here gets overwritten on the next sync. That covers `momentic-test`,
+`momentic-mobile-test`, `momentic-maintain`, `momentic-explore-prompt`,
+`momentic-spec`, and `momentic-triage-quarantined-tests.md`. If you work at
+Momentic, edit them at the source. If you do not, please open an issue instead
+of a pull request.

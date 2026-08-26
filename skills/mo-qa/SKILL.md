@@ -70,8 +70,16 @@ Use start settings only when needed:
 - `--tunnel "$tunnel_id"` connects the session to a configured tunnel.
 - `--momentic-mode` uses smarter Momentic browser tools; omit it for faster
   Playwright MCP.
+- `--max-concurrency <count>` caps concurrent sub-agents. Omit it by default;
+  pass it only when the user specifies a limit before the session starts.
 
 These settings are chosen when the session starts.
+
+Concurrency cannot be changed on an existing session. A lower value reduces
+parallel model and browser load, which can help when Mo hits provider rate
+limits or overwhelms a local target server. If either happens, stop the current
+session and start a fresh one with a lower `--max-concurrency`; do not try to
+repair the affected chat by sending a lower limit after it has started.
 
 ## Follow the turn reliably
 
@@ -169,7 +177,7 @@ Run `mo <command> --help` for exact options. Global `--log-level` accepts
 
 | Command                                              | Purpose and important options                                                                           |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `mo start <message>`                                 | Start a session; `--tunnel`, `--momentic-mode`.                                                         |
+| `mo start <message>`                                 | Start a session; `--tunnel`, `--momentic-mode`, `--max-concurrency`.                                    |
 | `mo send <message> --session-id <id>`                | Interrupt active work or start a turn; `--wait` returns the next attention boundary.                    |
 | `mo read <session-id>`                               | Read transcript and visible state; `--from`, `--timeout`, `--json`.                                     |
 | `mo status <session-id>`                             | Read backend state, web URL, latest message, and structured findings.                                   |

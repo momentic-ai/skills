@@ -12,7 +12,7 @@
     {
       "name": "momentic",
       "source": "./",
-      "description": "Skills for Momentic end-to-end testing. They cover writing browser and mobile app tests, running them, and fixing them when they break, and they connect the hosted Momentic MCP server."
+      "description": "Skills for Momentic end-to-end testing. They cover writing browser and mobile app tests, running them, and fixing them when they break, and they connect the local Momentic MCP server."
     }
   ]
 }

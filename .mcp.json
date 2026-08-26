@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "momentic": {
-      "type": "http",
-      "url": "https://api.momentic.ai/mcp"
+      "command": "npx",
+      "args": ["-y", "momentic", "mcp"]
     }
   }
 }

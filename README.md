@@ -2,6 +2,11 @@
 
 A set of skills for enabling **[Claude Code](https://docs.claude.com/en/docs/claude-code/overview)** to work with Momentic to build and run web and mobile E2E tests.
 
+## Agent Plugins
+
+This repository is an Agent Plugins v1 package. The manifest is at
+[`plugin.json`](plugin.json), and the plugin skills are under [`skills/`](skills/).
+
 ## Skills
 
 This plugin includes the following skills (see `skills/` for details):

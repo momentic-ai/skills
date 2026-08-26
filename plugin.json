@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "momentic",
+  "version": "1.0.0",
+  "description": "Author, run, triage, and repair Momentic end-to-end tests for web, Android, and iOS. Use these skills when an agent must write a new test from a diff, run a suite, explain why a run failed, classify a result, or heal a broken locator.",
+  "author": {
+    "name": "Momentic",
+    "email": "support@momentic.ai",
+    "url": "https://momentic.ai"
+  },
+  "homepage": "https://momentic.ai/developers",
+  "repository": "https://github.com/momentic-ai/skills",
+  "keywords": [
+    "momentic",
+    "testing",
+    "e2e",
+    "browser",
+    "android",
+    "ios",
+    "automation",
+    "triage"
+  ]
+}

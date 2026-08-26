@@ -85,9 +85,9 @@ knowledge and step-by-step workflows. Skills follow the
 
 ## Skill sources
 
-Most files in `skills/` are synced by a bot from `agent-markdowns` in the
-[Momentic monorepo](https://github.com/momentic-ai/monorepo). The synced skills
-include `momentic-test`, `momentic-mobile-test`, `momentic-maintain`,
-`momentic-explore-prompt`, `momentic-spec`, and the
-`momentic-triage-quarantined-tests.md` file. Edit those files in the monorepo,
-not here, and let the sync bot propagate them.
+Most files in `skills/` are generated upstream and copied here by a bot, so edits
+made directly in this repository are overwritten. This applies to
+`momentic-test`, `momentic-mobile-test`, `momentic-maintain`,
+`momentic-explore-prompt`, `momentic-spec`, and
+`momentic-triage-quarantined-tests.md`. Momentic employees: change these at the
+source. Everyone else: open an issue instead of a pull request.

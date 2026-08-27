@@ -195,9 +195,10 @@ Make the smallest edit and match nearby syntax. Common pitfalls:
 - Coordinates outside `0..100` in v2 YAML or `0..1` in MCP step strings.
 - Adding IDs, cache blobs, artifacts, or the wrong detailed target field.
 
-Consult the [v2 test format](https://momentic.ai/docs/core-concepts/test-format)
-when syntax is unclear. Run `npx momentic-mobile lint` when schema or
-file-reference risk warrants it.
+Consult [File format](https://momentic.ai/docs/core-concepts/file-format) for
+top-level structure and [Steps](https://momentic.ai/docs/core-concepts/steps) for
+step syntax. Run `npx momentic-mobile lint` when schema or file-reference risk
+warrants it.
 
 After a disk edit, reload the active MCP test if available; otherwise terminate
 and restart the session. `momentic_test_get` reads persisted state but does not

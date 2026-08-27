@@ -158,8 +158,10 @@ V2 is human-editable. Tests use `before`, `steps`, and `after`; modules use
 are milliseconds, and step IDs are not stored in YAML.
 
 Make the smallest edit and match nearby syntax. If syntax is unclear, consult
-the v2 format reference at
-https://static.momentic.ai/v2-format-reference.md. Run `npx momentic lint` when
+the generated v2 format reference at
+`infra/scripts/v2-json-schema/build/v2-format-reference.md` when working in the
+Momentic monorepo, or https://static.momentic.ai/v2-format-reference.md in an
+installed skill. Run `npx momentic lint` when
 schema or file-reference risk warrants it; `momentic app` and `momentic run`
 also lint automatically.
 

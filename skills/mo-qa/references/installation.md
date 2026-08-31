@@ -1,6 +1,6 @@
 # Install or update Mo
 
-Read this when `mo --version` fails or Mo must be updated.
+Read this when `mo version` fails, recommends an update, or Mo must be updated.
 
 ## Install or update
 
@@ -12,7 +12,7 @@ The installer writes `mo` to `$HOME/.local/bin`. Add that directory to `PATH`
 if needed, then verify the installation:
 
 ```bash
-mo --version
+mo version
 ```
 
 Rerun the same installer to update Mo.

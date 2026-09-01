@@ -20,6 +20,13 @@ before assuming project defaults apply.
 files. Treat missing or different `fileType` as deprecated v1. Never edit v1
 YAML directly; persist changes through `momentic_test_splice_steps`.
 
+A v2 test selects its environment with `defaultEnv`, and `--env <name>`
+overrides it. There is no fallback to the only environment in the config. The
+base URL comes from `--url-override`, then the test's own `url`, then
+`env.BASE_URL`, so a test that sets `url` keeps it in every environment. With
+no base URL the run fails: "Cannot run test with no base URL and no BASE_URL
+variable defined in its environment".
+
 V2 can reference modules, JavaScript, and auth state with relative paths. Paths
 resolve from the YAML file containing the reference. Use `./...` or `../...`,
 never absolute paths or `~`. Before moving, renaming, or deleting a referenced

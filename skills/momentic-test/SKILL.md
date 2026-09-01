@@ -20,9 +20,9 @@ before assuming project defaults apply.
 files. Treat missing or different `fileType` as deprecated v1. Never edit v1
 YAML directly; persist changes through `momentic_test_splice_steps`.
 
-A v2 test binds to a `momentic.config.yaml` environment with `defaultEnv:
-<name>`; `--env <name>` overrides it. Without either, no environment resolves
-and the run fails for a missing base URL.
+A v2 test binds to a `momentic.config.yaml` environment with its
+`defaultEnv` field; `--env <name>` overrides it. Without either, no environment
+resolves and the run fails for a missing base URL.
 
 V2 can reference modules, JavaScript, and auth state with relative paths. Paths
 resolve from the YAML file containing the reference. Use `./...` or `../...`,

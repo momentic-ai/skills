@@ -24,6 +24,13 @@ changes through `momentic_test_splice_steps`.
 Mobile v2 tests require `platform: ANDROID` or `platform: IOS`. Commands are
 platform-specific.
 
+A mobile v2 test carries its own defaults: `defaultEnv` for environment
+variables, `defaultChannel` for the app channel, and `defaultTag` for a tag or
+an alias such as `nightly`. `--env`, `--channel` and `--tag` override them.
+`defaultTag` is optional: without it, the run installs the latest tag in the
+channel. In the `local` region the test installs `defaultApkFilePath` or
+`defaultAppFilePath` instead.
+
 V2 can reference modules, JavaScript, and injected files with relative paths.
 Paths resolve from the YAML file containing the reference. Use `./...` or
 `../...`, never absolute paths or `~`. Before moving, renaming, or deleting a

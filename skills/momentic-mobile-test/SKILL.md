@@ -24,6 +24,10 @@ changes through `momentic_test_splice_steps`.
 Mobile v2 tests require `platform: ANDROID` or `platform: IOS`. Commands are
 platform-specific.
 
+A v2 test binds to a `momentic.config.yaml` environment with `defaultEnv:
+<name>`; `--env <name>` overrides it. Without either, no environment resolves
+and the run fails for a missing base URL.
+
 V2 can reference modules, JavaScript, and injected files with relative paths.
 Paths resolve from the YAML file containing the reference. Use `./...` or
 `../...`, never absolute paths or `~`. Before moving, renaming, or deleting a

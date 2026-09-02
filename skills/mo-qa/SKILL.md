@@ -141,7 +141,8 @@ mo stop "$session_id"
 Allow a few seconds for propagation, then verify with
 `read --from start --timeout 0 --json` that the state is `stopped`. Stopping
 does not delete the session, and already-running sub-agents may finish
-independently.
+independently. Pass `--subagents` to stop running or concurrency-queued
+sub-agents too without closing their conversations.
 
 Archive a finished session when it should leave the active list:
 
@@ -182,7 +183,7 @@ Run `mo <command> --help` for exact options. Global `--log-level` accepts
 | `mo send <message> --session-id <id>`                | Interrupt active work or start a turn; `--wait` returns the next attention boundary.                    |
 | `mo read <session-id>`                               | Read transcript and visible state; `--from`, `--timeout`, `--json`.                                     |
 | `mo status <session-id>`                             | Read backend state, web URL, latest message, and structured findings.                                   |
-| `mo stop <session-id>`                               | Stop the active turn without deleting the session.                                                      |
+| `mo stop <session-id>`                               | Stop the active turn; `--subagents` also stops active sub-agents without closing them.                  |
 | `mo archive <session-id>`                            | Stop and archive the session; unarchive is web-only.                                                    |
 | `mo upload <source> [destination] --session-id <id>` | Upload one file and print its sandbox path.                                                             |
 | `mo download <source> --session-id <id>`             | Download a sandbox path; `--output` selects the local target.                                           |

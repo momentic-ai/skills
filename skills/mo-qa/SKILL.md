@@ -90,11 +90,11 @@ test-case counts:
 mo status "$session_id"
 ```
 
-Use `--full` when you need the latest message or detailed findings. Before
-summarizing QA results, inspect `findings.testCases`, `findings.bugs`,
-`findings.controls`, and `findings.verdicts`; they contain more evidence than
-Mo's closing prose. Before reporting a bug, check whether the product or the
-brief's expected behavior is stale.
+Use `--full` when you need the latest message or finding summaries. Before
+summarizing QA results or investigating a bug, read
+[Reports](references/reports.md) to download and inspect the detailed findings
+and reproduction videos. Before reporting a bug, check whether the product or
+the brief's expected behavior is stale.
 
 Use `read` when waiting for output or retrieving the transcript and pending
 input. Prefer bounded 30-60 second reads so the caller stays responsive:

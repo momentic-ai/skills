@@ -1,6 +1,6 @@
 ---
 name: mo-qa
-description: Use Momentic's `mo` CLI to run and control Mo, Momentic's cloud autonomous QA agent. Use when starting or continuing Mo sessions, reading their output or status, stopping active work, answering Mo, or moving files between the local machine and Mo's hosted sandbox.
+description: Use Momentic's `mo` CLI to run and control Mo, Momentic's cloud autonomous QA agent. Use when starting or continuing Mo sessions, reading their output or status, stopping active work, answering Mo, transferring files, exporting reports, or finding and fixing bugs in a local codebase with Mo.
 ---
 
 # Run QA with Mo
@@ -9,6 +9,10 @@ Mo is Momentic's autonomous QA engineer. It runs in a hosted sandbox, where it
 can test web applications with a browser, inspect network traffic, run code and
 shell commands, delegate exploration, and report test cases and product bugs.
 Treat its filesystem and environment as remote, not as the user's machine.
+
+When the user asks to fix bugs found by QA, also read
+[Repair loop](references/remediation-loop.md) and continue through diagnosis,
+repair, and verification. Otherwise, run QA without changing application code.
 
 ## Setup
 
@@ -37,8 +41,9 @@ Treat the brief as the whole input. State:
    destructive actions if the brief invites them.
 6. **Acceptance criteria:** List the checks that decide pass or fail.
 
-Ask the user for any missing item before starting Mo. Do not invent scope,
-credentials, test data permissions, or acceptance criteria.
+Use the user request, task specification, and repository context to fill in the
+brief. State reasonable assumptions; ask when missing information materially
+changes the scope or requires credentials or permissions you don't have.
 
 ## Run a session
 
@@ -114,9 +119,10 @@ produced after the read begins, so a fast turn can finish and return no
 messages. A timeout accepts `0`, milliseconds, seconds, or minutes such as
 `500ms`, `45s`, or `4m`, up to `290s`.
 
-`status.state` reports the backend run state, while `read.state` reports the
-visible turn state. They can briefly disagree; use `read.state` to decide
-whether the visible turn reached an attention boundary.
+`status.state` is the shared UI status. `ready` or `sleeping` means no agents are
+running; `needs_you` means input is needed. `read.state` describes the visible
+turn, which can finish while sub-agents are still working. Use `status` and
+`report --require-idle` before consuming a completed QA report.
 
 ## Continue, stop, or archive
 
@@ -184,6 +190,7 @@ Run `mo <command> --help` for exact options. Global `--log-level` accepts
 | `mo send <message> --session-id <id>`                | Interrupt active work or start a turn; `--wait` returns the next attention boundary.                    |
 | `mo read <session-id>`                               | Read transcript and visible state; `--from`, `--timeout`, `--json`.                                     |
 | `mo status <session-id>`                             | Read state, web URL, bug/test-case counts; `--full` adds the latest message and findings.               |
+| `mo report <session-id>`                             | Export full findings and reproduction videos; `--require-idle` rejects incomplete snapshots.            |
 | `mo stop <session-id>`                               | Stop the active turn; `--subagents` also stops active sub-agents without closing them.                  |
 | `mo archive <session-id>`                            | Stop and archive the session; unarchive is web-only.                                                    |
 | `mo upload <source> [destination] --session-id <id>` | Upload one file and print its sandbox path.                                                             |

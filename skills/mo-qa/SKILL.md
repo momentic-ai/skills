@@ -83,14 +83,15 @@ repair the affected chat by sending a lower limit after it has started.
 
 ## Follow the turn reliably
 
-Poll the active session with `status`:
+Poll the active session with `status` for its state, web URL, and bug and
+test-case counts:
 
 ```bash
 mo status "$session_id"
 ```
 
-It returns the current run state, latest visible message, web URL, and
-structured QA findings. Always inspect `findings.testCases`, `findings.bugs`,
+Use `--full` when you need the latest message or detailed findings. Before
+summarizing QA results, inspect `findings.testCases`, `findings.bugs`,
 `findings.controls`, and `findings.verdicts`; they contain more evidence than
 Mo's closing prose. Before reporting a bug, check whether the product or the
 brief's expected behavior is stale.
@@ -182,7 +183,7 @@ Run `mo <command> --help` for exact options. Global `--log-level` accepts
 | `mo start <message>`                                 | Start a session; `--tunnel`, `--momentic-mode`, `--max-concurrency`.                                    |
 | `mo send <message> --session-id <id>`                | Interrupt active work or start a turn; `--wait` returns the next attention boundary.                    |
 | `mo read <session-id>`                               | Read transcript and visible state; `--from`, `--timeout`, `--json`.                                     |
-| `mo status <session-id>`                             | Read backend state, web URL, latest message, and structured findings.                                   |
+| `mo status <session-id>`                             | Read state, web URL, bug/test-case counts; `--full` adds the latest message and findings.               |
 | `mo stop <session-id>`                               | Stop the active turn; `--subagents` also stops active sub-agents without closing them.                  |
 | `mo archive <session-id>`                            | Stop and archive the session; unarchive is web-only.                                                    |
 | `mo upload <source> [destination] --session-id <id>` | Upload one file and print its sandbox path.                                                             |

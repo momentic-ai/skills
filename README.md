@@ -9,6 +9,27 @@ which are what let the agent drive a real browser or device while it works.
 
 ## Installation
 
+### Momentic CLI (recommended)
+
+The `momentic`, `momentic-mobile`, and `mo` CLIs ship these skills. Each CLI
+installs the shared skills plus the one for its platform, with no network
+fetch:
+
+```shell
+npx momentic skills
+npx momentic-mobile skills
+mo skills
+```
+
+Each command detects the coding agents on your machine and asks which ones to
+set up. Pass `--yes` to skip the prompt. After you upgrade a CLI, it asks once
+to reinstall the skills so they match the new version. `momentic init` and the
+setup wizard offer the same step. See
+[Skills](https://momentic.ai/docs/coding-agents/skills).
+
+Use the options below if you want the plugin form, or a skill the CLIs do not
+bundle (`momentic-result-classification`).
+
 ### Claude Code
 
 Add this repository as a Claude Code marketplace, then install the Momentic
@@ -34,7 +55,7 @@ the local Momentic MCP servers.
 
 ### Other agents
 
-Install the skills with the `skills` CLI:
+Install the skills with the `skills` CLI if you do not use a Momentic CLI:
 
 ```shell
 npx skills add momentic-ai/skills
@@ -73,10 +94,11 @@ parents. Add `--config /absolute/path/to/momentic.config.yaml` if your agent
 starts outside the project, or if the two platforms live in separate
 subdirectories.
 
-Sign in once with `npx @momentic/wizard@latest login`, or set
-`MOMENTIC_API_KEY` in the environment. The wizard can also register a server
-with Claude Code, Cursor, VS Code, Codex, Windsurf, and a few others if you
-would rather not edit config by hand. Mobile work needs the usual device
+Sign in once with `npx momentic login` (or `npx momentic-mobile login`), or set
+`MOMENTIC_API_KEY` in the environment. `npx momentic install-mcp` and
+`npx momentic-mobile install-mcp` write the server entry for Claude Code,
+Cursor, VS Code, Codex, Windsurf, and other clients if you would rather not
+edit config by hand. Mobile work needs the usual device
 toolchain, and `momentic-mobile mcp` takes `--android-home` and `--java-home`
 when those live somewhere unusual. See the
 [MCP server documentation](https://momentic.ai/docs/coding-agents/mcp-server)
@@ -95,11 +117,13 @@ step-by-step workflow. They use the
 | [momentic-result-classification](skills/momentic-result-classification/SKILL.md) | Classify or explain Momentic test run results using Momentic MCP tools. Use when the user asks to categorize a failure, understand why a run failed, triage test results, or compare run results to past run results.                                                                                                                                                                |
 | [momentic-maintain](skills/momentic-maintain/SKILL.md)                           | Diagnose, classify, triage, and repair failing Momentic tests with MCP run tools, the Momentic CLI, and manual run artifacts. Use when a developer asks what happened on a branch, DevX or on-call asks why main is red, or the user wants to inspect classifications, de-flake quarantined or recovered tests, reduce retries, re-classify runs, run AI triage, or repair failures. |
 | [momentic-spec](skills/momentic-spec/SKILL.md)                                   | Improve code correctness using Momentic specs in the feature development process                                                                                                                                                                                                                                                                                                     |
+| [mo-qa](skills/mo-qa/SKILL.md)                                                   | Use Momentic's `mo` CLI to run and control Mo, Momentic's cloud autonomous QA agent.                                                                                                                                                                                                                                                                                                 |
+| [momentic-triage](skills/momentic-triage/momentic-triage-quarantined-tests.md)   | Triage and repair Momentic tests that are currently quarantined.                                                                                                                                                                                                                                                                                                                     |
 
 ## Skill sources
 
 A bot copies most files in `skills/` from an upstream source, so anything you
 edit here gets overwritten on the next sync. That covers `momentic-test`,
-`momentic-mobile-test`, `momentic-maintain`, `momentic-spec`, and
+`momentic-mobile-test`, `momentic-maintain`, `momentic-spec`, `mo-qa`, and
 `momentic-triage-quarantined-tests.md`. If you work at Momentic, edit them at
 the source. If you do not, please open an issue instead of a pull request.

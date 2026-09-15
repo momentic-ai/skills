@@ -1,8 +1,20 @@
 # Install or update Mo
 
-Read this when `mo version` fails, recommends an update, or Mo must be updated.
+Read this when Mo is missing, `mo version` fails, or the installed version does
+not support `mo upgrade`.
 
-## Install or update
+## Update
+
+Use the built-in command to update an installed release, then verify it:
+
+```bash
+mo upgrade
+mo version
+```
+
+## Install
+
+If Mo is missing or too old to support `mo upgrade`, run the installer:
 
 ```bash
 curl -fsSL https://cli.momentic.ai/mo | sh
@@ -14,8 +26,6 @@ if needed, then verify the installation:
 ```bash
 mo version
 ```
-
-Rerun the same installer to update Mo.
 
 ## Authenticate after installation
 

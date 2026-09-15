@@ -186,6 +186,7 @@ Run `mo <command> --help` for exact options. Global `--log-level` accepts
 | Command                                              | Purpose and important options                                                                           |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `mo version`                                         | Print the installed version, check the latest release, and recommend updating when they differ.         |
+| `mo upgrade`                                         | Update Mo to the latest release.                                                                        |
 | `mo start <message>`                                 | Start a session; `--tunnel`, `--momentic-mode`, `--max-concurrency`.                                    |
 | `mo send <message> --session-id <id>`                | Interrupt active work or start a turn; `--wait` returns the next attention boundary.                    |
 | `mo read <session-id>`                               | Read transcript and visible state; `--from`, `--timeout`, `--json`.                                     |

@@ -6,11 +6,11 @@ brief. "Fix all" means all bugs in scope; "the three most severe" means three.
 If the limit is unclear, state a reasonable assumption or ask when it matters.
 
 Reuse a supplied session and read its brief with
-`mo read <session-id> --from start --timeout 0 --json`, or start scoped QA with
+`qa read <session-id> --from start --timeout 0 --json`, or start scoped QA with
 the main skill. Keep its target and any tunnel available throughout verification.
 
 1. Read [Reports](reports.md), wait for Mo to settle, and export a baseline with
-   `mo report <session-id> --require-idle`. Answer pending input before retrying.
+   `qa report <session-id> --require-idle`. Answer pending input before retrying.
 2. Select only the bugs in scope. For each one, inspect its expected and actual
    behavior, reproduction steps, and video. Reproduce it against the intended
    revision, trace it into the code, and choose an evidence-backed disposition:
@@ -24,7 +24,7 @@ the main skill. Keep its target and any tunnel available throughout verification
    ask before opening a tunnel and starting a new Mo session against local
    development. Skip the remaining steps when Mo re-verification is not wanted.
 5. Confirm Mo's target URL serves the patched code. Request a recheck or explain
-   a disposition with `mo send --session-id <session-id> '<message>'`. Name the
+   a disposition with `qa send --session-id <session-id> '<message>'`. Name the
    exact bug, original reproduction, target revision, and requested recheck or
    retraction. Wait until Mo is idle before sending because `send` interrupts
    active work.

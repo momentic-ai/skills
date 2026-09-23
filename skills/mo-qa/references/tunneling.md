@@ -8,14 +8,14 @@ on the public internet, such as a local development build.
 Expose only the required `hostname:port` addresses:
 
 ```bash
-tunnel_json=$(mo tunnel start localhost:3000)
+tunnel_json=$(qa tunnel start localhost:3000)
 tunnel_id=$(jq -r .tunnelId <<<"$tunnel_json")
 ```
 
 Pass multiple addresses only when the tested flow needs them:
 
 ```bash
-mo tunnel start localhost:3000 api.internal:8080
+qa tunnel start localhost:3000 api.internal:8080
 ```
 
 Tunnels run in the background by default. Use `--foreground` only when the
@@ -27,14 +27,14 @@ Keep the exact local or private URL in the QA brief, then pass the tunnel ID
 when creating the session:
 
 ```bash
-session_json=$(mo start "$brief" --tunnel "$tunnel_id")
+session_json=$(qa start "$brief" --tunnel "$tunnel_id")
 ```
 
 ## Revoke access
 
 ```bash
-mo tunnel list
-mo tunnel stop "$tunnel_id"
+qa tunnel list
+qa tunnel stop "$tunnel_id"
 ```
 
 Always stop a tunnel after its last session. If setup fails, do not expose more

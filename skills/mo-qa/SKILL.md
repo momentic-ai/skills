@@ -1,6 +1,6 @@
 ---
 name: mo-qa
-description: Use Momentic's `mo` CLI to run and control Mo, Momentic's cloud autonomous QA agent. Use when starting or continuing Mo sessions, reading their output or status, stopping active work, answering Mo, transferring files, exporting reports, or finding and fixing bugs in a local codebase with Mo.
+description: Use Momentic's `qa` CLI to run and control Mo, Momentic's cloud autonomous QA agent. Use when starting or continuing Mo sessions, reading their output or status, stopping active work, answering Mo, transferring files, exporting reports, or finding and fixing bugs in a local codebase with Mo.
 ---
 
 # Run QA with Mo
@@ -16,7 +16,7 @@ repair, and verification. Otherwise, run QA without changing application code.
 
 ## Setup
 
-Run `mo version`. If it fails or recommends an update, read
+Run `qa version`. If it fails or recommends an update, read
 [Installation](references/installation.md).
 
 Assume authentication is already configured. If an operational command reports
@@ -62,7 +62,7 @@ Acceptance criteria:
 - Standard checkout still works.
 EOF
 )
-session_json=$(mo start "$brief")
+session_json=$(qa start "$brief")
 session_id=$(jq -r .sessionId <<<"$session_json")
 web_url=$(jq -r .webUrl <<<"$session_json")
 ```
@@ -92,7 +92,7 @@ Poll the active session with `status` for its state, web URL, and bug and
 test-case counts:
 
 ```bash
-mo status "$session_id"
+qa status "$session_id"
 ```
 
 Use `--full` when you need the latest message or finding summaries. Before
@@ -105,7 +105,7 @@ Use `read` when waiting for output or retrieving the transcript and pending
 input. Prefer bounded 30-60 second reads so the caller stays responsive:
 
 ```bash
-mo read "$session_id" --from start --timeout 45s --json
+qa read "$session_id" --from start --timeout 45s --json
 ```
 
 Use `--from start` for reliable polling. It replays the visible transcript, so
@@ -130,7 +130,7 @@ For a follow-up or answer, prefer `--wait` so the next attention boundary is
 returned directly:
 
 ```bash
-mo send --session-id "$session_id" \
+qa send --session-id "$session_id" \
   --wait 45s 'Use the staging account and continue'
 ```
 
@@ -142,7 +142,7 @@ the message was accepted; confirm a new assistant reply with `read`.
 Stop only the active turn:
 
 ```bash
-mo stop "$session_id"
+qa stop "$session_id"
 ```
 
 Allow a few seconds for propagation, then verify with
@@ -154,7 +154,7 @@ sub-agents too without closing their conversations.
 Archive a finished session when it should leave the active list:
 
 ```bash
-mo archive "$session_id"
+qa archive "$session_id"
 ```
 
 Archive stops active work. Further `send` calls are rejected until the session
@@ -167,11 +167,11 @@ Send that returned path to Mo; a local path is meaningless inside its hosted
 machine.
 
 ```bash
-remote_path=$(mo upload --session-id "$session_id" ./fixture.csv fixture.csv)
-mo send --session-id "$session_id" "Use the sandbox file at $remote_path."
+remote_path=$(qa upload --session-id "$session_id" ./fixture.csv fixture.csv)
+qa send --session-id "$session_id" "Use the sandbox file at $remote_path."
 
 mkdir -p .momentic-artifacts
-mo download --session-id "$session_id" --output .momentic-artifacts "$remote_path"
+qa download --session-id "$session_id" --output .momentic-artifacts "$remote_path"
 ```
 
 If `--output` names a directory, create it first. A nonexistent output path is
@@ -180,22 +180,22 @@ treated as a target filename. Without `--output`, downloads use
 
 ## Command reference
 
-Run `mo <command> --help` for exact options. Global `--log-level` accepts
+Run `qa <command> --help` for exact options. Global `--log-level` accepts
 `debug`, `info`, `warn`, or `error`.
 
 | Command                                              | Purpose and important options                                                                           |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `mo version`                                         | Print the installed version, check the latest release, and recommend updating when they differ.         |
-| `mo upgrade`                                         | Update Mo to the latest release.                                                                        |
-| `mo start <message>`                                 | Start a session; `--tunnel`, `--momentic-mode`, `--max-concurrency`.                                    |
-| `mo send <message> --session-id <id>`                | Interrupt active work or start a turn; `--wait` returns the next attention boundary.                    |
-| `mo read <session-id>`                               | Read transcript and visible state; `--from`, `--timeout`, `--json`.                                     |
-| `mo status <session-id>`                             | Read state, web URL, bug/test-case counts; `--full` adds the latest message and findings.               |
-| `mo report <session-id>`                             | Export full findings and reproduction videos; `--require-idle` rejects incomplete snapshots.            |
-| `mo stop <session-id>`                               | Stop the active turn; `--subagents` also stops active sub-agents without closing them.                  |
-| `mo archive <session-id>`                            | Stop and archive the session; unarchive is web-only.                                                    |
-| `mo upload <source> [destination] --session-id <id>` | Upload one file and print its sandbox path.                                                             |
-| `mo download <source> --session-id <id>`             | Download a sandbox path; `--output` selects the local target.                                           |
-| `mo tunnel start <address...>`                       | Start local/private access; `--foreground` keeps it attached. See [Tunneling](references/tunneling.md). |
-| `mo tunnel list`                                     | List tunnels started by Mo on this machine.                                                             |
-| `mo tunnel stop <tunnel-id>`                         | Stop a tunnel and revoke access.                                                                        |
+| `qa version`                                         | Print the installed version, check the latest release, and recommend updating when they differ.         |
+| `qa upgrade`                                         | Update Mo to the latest release.                                                                        |
+| `qa start <message>`                                 | Start a session; `--tunnel`, `--momentic-mode`, `--max-concurrency`.                                    |
+| `qa send <message> --session-id <id>`                | Interrupt active work or start a turn; `--wait` returns the next attention boundary.                    |
+| `qa read <session-id>`                               | Read transcript and visible state; `--from`, `--timeout`, `--json`.                                     |
+| `qa status <session-id>`                             | Read state, web URL, bug/test-case counts; `--full` adds the latest message and findings.               |
+| `qa report <session-id>`                             | Export full findings and reproduction videos; `--require-idle` rejects incomplete snapshots.            |
+| `qa stop <session-id>`                               | Stop the active turn; `--subagents` also stops active sub-agents without closing them.                  |
+| `qa archive <session-id>`                            | Stop and archive the session; unarchive is web-only.                                                    |
+| `qa upload <source> [destination] --session-id <id>` | Upload one file and print its sandbox path.                                                             |
+| `qa download <source> --session-id <id>`             | Download a sandbox path; `--output` selects the local target.                                           |
+| `qa tunnel start <address...>`                       | Start local/private access; `--foreground` keeps it attached. See [Tunneling](references/tunneling.md). |
+| `qa tunnel list`                                     | List tunnels started by Mo on this machine.                                                             |
+| `qa tunnel stop <tunnel-id>`                         | Stop a tunnel and revoke access.                                                                        |

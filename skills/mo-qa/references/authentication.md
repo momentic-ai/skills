@@ -6,10 +6,10 @@ authentication error.
 ## Sign in
 
 ```bash
-mo login
+qa login
 ```
 
-Use `mo login --no-browser` when the environment cannot open a browser. Login
+Use `qa login --no-browser` when the environment cannot open a browser. Login
 saves the API key and server URL to `~/.momentic/auth.json`.
 
 In CI, set `MOMENTIC_API_KEY` instead. It takes precedence over the saved login.
@@ -19,7 +19,7 @@ it after an authentication failure or when they explicitly request it.
 ## Sign out
 
 ```bash
-mo logout
+qa logout
 ```
 
 This removes only the saved login. It does not unset `MOMENTIC_API_KEY`. Never

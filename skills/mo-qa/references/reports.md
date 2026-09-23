@@ -3,7 +3,7 @@
 Use `status` for polling. Export the detailed evidence once the session is ready:
 
 ```bash
-mo report <session-id> --require-idle
+qa report <session-id> --require-idle
 ```
 
 `--require-idle` checks once and exits without writing unless Mo is idle and its
@@ -31,7 +31,7 @@ servers. The current categories are:
 Use each bug's text and matching recording together. A bug without a manifest
 artifact has no downloaded video; an `error` explains a failed download. Raw
 sub-agent transcripts, standalone screenshots, and browser traces are not part
-of the structured report, so use `mo read` or ask Mo for more evidence when the
+of the structured report, so use `qa read` or ask Mo for more evidence when the
 report is insufficient.
 
 For a recheck, ask Mo to rerun the exact reproduction, wait for the new turn to

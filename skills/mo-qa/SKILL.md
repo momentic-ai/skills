@@ -66,7 +66,7 @@ and report unfinished coverage.
 
 ## Start the session
 
-Pass the brief as one argument:
+Pass the brief as one argument after `qa` (option flags follow the brief):
 
 ```bash
 brief=$(cat <<'EOF'
@@ -82,7 +82,7 @@ Pass criteria:
 - Standard checkout still works.
 EOF
 )
-session_json=$(qa start --granularity low "$brief")
+session_json=$(qa start "$brief" --granularity low)
 session_id=$(jq -r .sessionId <<<"$session_json")
 web_url=$(jq -r .webUrl <<<"$session_json")
 created_at=$(jq -r '.createdAt // empty' <<<"$session_json")
@@ -105,7 +105,9 @@ not accept `NAME=value`. Never put the secret value in the command or brief.
 Use `--tunnel` for private access. Set `--max-concurrency` only when the target
 or test account limits parallel users. It is fixed at session start. If the
 target overloads, run `qa stop --subagents` and start a new session with a lower
-value.
+value. `--granularity <low|medium|high>` sets how specific explore-agent test
+discovery should be. `--interaction-speed <default|human>` slows browser
+interaction to a human pace when the target needs it.
 
 ## Follow the session
 

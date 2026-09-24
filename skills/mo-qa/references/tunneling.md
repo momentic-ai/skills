@@ -18,7 +18,7 @@ qa tunnel start localhost:3000 api.internal:8080
 Keep the exact private URL in the brief. Pass the tunnel ID at start:
 
 ```bash
-session_json=$(qa start --tunnel "$tunnel_id" "$brief")
+session_json=$(qa start "$brief" --tunnel "$tunnel_id")
 ```
 
 In Codex, a service started with host-network escalation may be unreachable from

@@ -295,8 +295,10 @@ Momentic, say so.
   guarantees. See [Visual actions](https://momentic.ai/docs/configuration/browser#browser-visualactions).
 - Use quoted text only when the exact text must appear; otherwise describe
   meaning. Make assertions concrete about region, object, count, or state.
-- Scroll visual targets into view. Use vision-only assertion mode for subtle
-  visual conditions.
+- Use `assertVisually` when the condition is visual and fully inside the
+  current viewport, e.g. an event block sitting in the 11:30–12:00 row of a
+  calendar grid, or a detail inside a video frame or canvas drawing. Scroll the
+  target into view if necessary before calling it; otherwise use `assert`.
 - Assert stable final state with step assertions. For brief toasts or
   change-over-time comparisons, use video-backed
   [run assertions](https://momentic.ai/docs/core-concepts/writing-assertions#run-assertions).

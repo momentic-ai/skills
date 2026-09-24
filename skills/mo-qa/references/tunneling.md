@@ -1,41 +1,31 @@
-# Tunneling local or private applications
+# Connect Mo to a private target
 
-Use this when Mo needs access to a local or private service that is unavailable
-on the public internet, such as a local development build.
+Use a tunnel when Mo cannot reach the target from the public internet.
 
-## Start a tunnel
-
-Expose only the required `hostname:port` addresses:
+Expose only the required address:
 
 ```bash
 tunnel_json=$(qa tunnel start localhost:3000)
 tunnel_id=$(jq -r .tunnelId <<<"$tunnel_json")
 ```
 
-Pass multiple addresses only when the tested flow needs them:
+Pass more addresses only when the tested flow needs them:
 
 ```bash
 qa tunnel start localhost:3000 api.internal:8080
 ```
 
-Tunnels run in the background by default. Use `--foreground` only when the
-current terminal should own the tunnel process.
-
-## Start Mo with tunnel access
-
-Keep the exact local or private URL in the QA brief, then pass the tunnel ID
-when creating the session:
+Keep the exact private URL in the brief. Pass the tunnel ID at start:
 
 ```bash
-session_json=$(qa start "$brief" --tunnel "$tunnel_id")
+session_json=$(qa start --tunnel "$tunnel_id" "$brief")
 ```
 
-## Revoke access
+In Codex, a service started with host-network escalation may be unreachable from
+a sandboxed command even when it is healthy. Run the health check, tunnel, and
+session commands in the same host context. Do not restart a healthy service to
+work around that namespace boundary.
 
-```bash
-qa tunnel list
-qa tunnel stop "$tunnel_id"
-```
-
-Always stop a tunnel after its last session. If setup fails, do not expose more
-addresses, deploy the application, or share credentials without user direction.
+After the last session, run `qa tunnel stop "$tunnel_id"`. If setup fails, do
+not expose more addresses, deploy the app, or share credentials without user
+direction.

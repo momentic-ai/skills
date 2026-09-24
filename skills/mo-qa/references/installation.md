@@ -30,7 +30,4 @@ if needed, then verify the installation:
 qa version
 ```
 
-## Authenticate after installation
-
-After a fresh installation, read [Authentication](authentication.md) and sign
-in before running an operational command.
+After a new installation, read [Authentication](authentication.md).

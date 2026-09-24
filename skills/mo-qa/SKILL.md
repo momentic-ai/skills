@@ -1,201 +1,227 @@
 ---
 name: mo-qa
-description: Use Momentic's `qa` CLI to run and control Mo, Momentic's cloud autonomous QA agent. Use when starting or continuing Mo sessions, reading their output or status, stopping active work, answering Mo, transferring files, exporting reports, or finding and fixing bugs in a local codebase with Mo.
+description: Run and control Mo QA sessions with Momentic's `qa` CLI. Use for bug bashes, status checks, report export, replies to Mo, file transfer, or repairs based on Mo findings.
 ---
 
 # Run QA with Mo
 
-Mo is Momentic's autonomous QA engineer. It runs in a hosted sandbox, where it
-can test web applications with a browser, inspect network traffic, run code and
-shell commands, delegate exploration, and report test cases and product bugs.
-Treat its filesystem and environment as remote, not as the user's machine.
+Mo runs browser QA in a hosted sandbox. Its files and processes are remote.
 
-When the user asks to fix bugs found by QA, also read
-[Repair loop](references/remediation-loop.md) and continue through diagnosis,
-repair, and verification. Otherwise, run QA without changing application code.
+## Work while Mo runs
 
-## Setup
+Keep the tested revision stable through the initial QA pass and its
+reproductions. Do not change anything the target serves or hot-reloads, restart
+the app, deploy to its URL, or mutate shared test data while Mo uses it. Other
+work, such as code review, is fine. For isolated bug fixes during a longer run,
+follow [Repair loop](references/remediation-loop.md).
 
-Run `qa version`. If it fails or recommends an update, read
-[Installation](references/installation.md).
+Findings arrive through `qa status "$session_id" --full`. A `kind: "bug"`
+entry has been independently reproduced. A `kind: "flag"` entry is a static,
+single-frame mistake such as a typo, recorded without reproduction. Test-case
+verdicts are `verified`, `issues_found`, or `blocked`. When you report a finding
+to the user, include its name, evidence, status, and `web_url`.
 
-Assume authentication is already configured. If an operational command reports
-an authentication error, read [Authentication](references/authentication.md).
+If Mo is blocked, answer from the brief, repository, or authorized environment
+data when you can. Otherwise ask the user for the missing access, permission,
+or decision, then send the answer to root Mo. Root Mo relays context to its
+internal sub-agents. Never invent or reveal a secret.
 
-Use the target implied by the conversation. If it is unclear, ask the user what
-to test. For a local or private target, read
-[Tunneling](references/tunneling.md) and retain its `tunnel_id`. For a public
-target, use its exact URL.
+## Prepare the brief
 
-## Write the QA brief
+Run `qa version`. If Mo is missing or outdated, read
+[Installation](references/installation.md). Read
+[Authentication](references/authentication.md) after an authentication error.
 
-Treat the brief as the whole input. State:
+Use the target from the request. For a local or private target, read
+[Tunneling](references/tunneling.md).
 
-1. **Target URL:** Include the exact path and query the change affects.
-2. **Expected behavior:** Explain what changed and what it should now do in
-   product terms.
-3. **Sign-in instructions:** Name the login method and test account to use.
-4. **Test data rules:** State what Mo may create and what it must not touch.
-5. **Out-of-bounds actions:** Call out deletions, payments, emails, production
-   data, bulk operations, and any other destructive action. Mo may take
-   destructive actions if the brief invites them.
-6. **Acceptance criteria:** List the checks that decide pass or fail.
+The brief is Mo's specification. Include:
 
-Use the user request, task specification, and repository context to fill in the
-brief. State reasonable assumptions; ask when missing information materially
-changes the scope or requires credentials or permissions you don't have.
+1. The exact target URL, including the affected path and query.
+2. Expected behavior and pass criteria.
+3. The login method, test account label, and allowed test data.
+4. Prohibited actions and data that Mo must not change.
+5. The product areas and user flows in scope, plus explicit exclusions.
+6. Any non-default browser setup. Read
+   [Browser settings](references/browser-settings.md) when needed.
 
-## Run a session
+Fill gaps from the request and repository. Ask only when missing scope, access,
+or permission would change the run.
 
-Write the brief before invoking the CLI, then pass it as one quoted argument:
+### Set scope and detail
+
+The brief sets scope. `--granularity` sets detail within that scope:
+
+- `low` for an early smoke pass: main happy paths and important failure states.
+- `medium` when changed flows work: every meaningful interaction and important
+  failure state.
+- `high` for release-ready coverage: every in-scope path, alternate, failure
+  state, and operable control.
+
+Pass the setting explicitly because the default is `high`. For a happy-path-only
+smoke test, tell Mo to skip failure states. Mo has no session-wide time or test
+count option. For a hard time or spend cap, narrow the brief, monitor wall time
+or `qa cost <session-id>`, run `qa stop <session-id> --subagents` at the cap,
+and report unfinished coverage.
+
+## Start the session
+
+Pass the brief as one argument:
 
 ```bash
 brief=$(cat <<'EOF'
-Target URL: https://preview.example.com/checkout?variant=express
-Expected behavior: Express checkout now keeps the selected shipping method when the customer returns from payment.
-Sign-in: Use the staging QA buyer account already provisioned for Mo.
-Test data: Create test carts and orders only. Do not modify shared catalog data.
-Out of bounds: Do not submit payment, send emails, delete data, or run bulk operations.
-Acceptance criteria:
-- The selected shipping method remains selected after returning from payment.
-- The order total does not change.
+Target: https://preview.example.com/checkout?variant=express
+Goal: Keep the selected shipping method after returning from payment.
+Sign in: Use the staging QA buyer account.
+Test data: Create test carts and orders only.
+Do not: Submit payment, send email, delete data, or change the shared catalog.
+Coverage: Smoke the express-checkout happy path and standard checkout. Skip other flows and failure states.
+Pass criteria:
+- The shipping method stays selected.
+- The total does not change.
 - Standard checkout still works.
 EOF
 )
-session_json=$(qa start "$brief")
+session_json=$(qa start --granularity low "$brief")
 session_id=$(jq -r .sessionId <<<"$session_json")
 web_url=$(jq -r .webUrl <<<"$session_json")
+created_at=$(jq -r '.createdAt // empty' <<<"$session_json")
 ```
 
-Starting returns before Mo finishes. Preserve both values: every later command
-needs `session_id`, and the user can watch or join through `web_url`.
+Starting returns before Mo finishes. Preserve these values: every later command
+needs `session_id`, the user can watch or join through `web_url`, and
+`created_at` records when the session began. `createdAt` can be absent when the
+server runs an earlier API version.
 
-Use start settings only when needed:
+A Momentic environment groups a `BASE_URL` with reusable non-secret variables
+under a name such as `staging`. `--environment NAME` selects one created under
+**Environments** in the Momentic dashboard, not one from the shell or
+`momentic.config.yaml`. Mo copies its variables into the session at start.
 
-- `--tunnel "$tunnel_id"` connects the session to a configured tunnel.
-- `--momentic-mode` uses smarter Momentic browser tools; omit it for faster
-  Playwright MCP.
-- `--max-concurrency <count>` caps concurrent sub-agents. Omit it by default;
-  pass it only when the user specifies a limit before the session starts.
+Use repeatable `--env-file` or `--env-var NAME` options for local values and
+secrets; they override matching environment variables. `--env-var` forwards a
+variable that is already present in the `qa start` process environment; it does
+not accept `NAME=value`. Never put the secret value in the command or brief.
+Use `--tunnel` for private access. Set `--max-concurrency` only when the target
+or test account limits parallel users. It is fixed at session start. If the
+target overloads, run `qa stop --subagents` and start a new session with a lower
+value.
 
-These settings are chosen when the session starts.
+## Follow the session
 
-Concurrency cannot be changed on an existing session. A lower value reduces
-parallel model and browser load, which can help when Mo hits provider rate
-limits or overwhelms a local target server. If either happens, stop the current
-session and start a fresh one with a lower `--max-concurrency`; do not try to
-repair the affected chat by sending a lower limit after it has started.
-
-## Follow the turn reliably
-
-Poll the active session with `status` for its state, web URL, and bug and
-test-case counts:
+Run this watcher in the background. It prints one line per new finding or state
+change and exits when Mo needs input or the session ends:
 
 ```bash
-qa status "$session_id"
+seen=""
+while :; do
+  snapshot=$(qa status "$session_id" --full) ||
+    { echo "status request failed"; sleep 30; continue; }
+  events=$(jq -r '"displayState \(.displayState // .state)",
+    (.findings.bugs[] | "\(.kind) \(.name)"),
+    (.findings.verdicts[] | "verdict \(.status) \(.testCaseName // "-")")' \
+    <<<"$snapshot" | sort)
+  comm -13 <(printf '%s\n' "$seen") <(printf '%s\n' "$events")
+  seen=$events
+  case $(jq -r '.displayState // .state' <<<"$snapshot") in
+    needs_you | ready | sleeping | cancelled | failed_start) break ;;
+  esac
+  sleep 30
+done
 ```
 
-Use `--full` when you need the latest message or finding summaries. Before
-summarizing QA results or investigating a bug, read
-[Reports](references/reports.md) to download and inspect the detailed findings
-and reproduction videos. Before reporting a bug, check whether the product or
-the brief's expected behavior is stale.
+Run the watcher in one of two ways:
 
-Use `read` when waiting for output or retrieving the transcript and pending
-input. Prefer bounded 30-60 second reads so the caller stays responsive:
+- **Background command.** Run it yourself with a host tool that notifies you on
+  each output line, such as Claude Code's `Monitor`, and re-arm it when it
+  expires. Without one, start it as a background session and check its output
+  between other tasks.
+- **Runner sub-agent.** Give a sub-agent the `session_id`, the watcher, and this
+  skill. It messages you on each event and keeps watching. Use this only when
+  a running sub-agent can message you, such as Codex with `multi_agent_v2`
+  enabled (`send_message` to `/root`, then `wait_agent` in the parent). Claude
+  Code and default Codex sub-agents report only when they finish.
+
+In Codex without a runner sub-agent, keep the watcher in the foreground of a
+long-running `exec_command`, retain its returned session ID, and drain it with
+`write_stdin`. Do not append `&`, detach it, or finish the turn while it runs.
+Shell variables do not persist across separate commands, so interpolate the
+literal Mo session ID or start the watcher in the same shell that set it.
+
+Either way, you answer blockers and send Mo the user's decisions.
+
+`status.displayState` describes the whole session for display and polling.
+`status.state` is its legacy alias:
+
+| State               | Meaning                                                    |
+| ------------------- | ---------------------------------------------------------- |
+| `running`           | Root Mo is working.                                        |
+| `waiting_on_agents` | Root Mo is idle; its internal sub-agents are working.      |
+| `needs_you`         | Mo asked a question. Answer it with `qa send`.             |
+| `ready`             | No agent is running and results are available.             |
+| `sleeping`          | No agent is running and there is no report or final reply. |
+| `cancelled`         | Work was stopped.                                          |
+| `failed_start`      | The session never started. Start a new one.                |
+
+`status.sessionState` is the lifecycle state shared by `read`, `status`, and
+`report`: `starting`, `working`, `waitingOnUser`, `waitingOnAgents`, `idle`, or
+`stopped`. `createdAt` is the session creation time, and `lastActivityAt` is the
+last persisted update. `latestTurn` contains the most recent persisted
+assistant timing metadata: `startedAt`, `completedAt`, and `durationMs`. A
+partial timing uses `null`. Servers running an earlier API can omit these new
+fields.
+
+Use this bounded read for Mo's questions and replies, not findings:
 
 ```bash
 qa read "$session_id" --from start --timeout 45s --json
 ```
 
-Use `--from start` for reliable polling. It replays the visible transcript, so
-deduplicate messages when automating. Repeat until the expected assistant reply
-appears and `state` is `idle`, `waitingOnUser`, or `stopped`. A `timedOut: true`
-response means Mo is still working. If `pendingInput` is present, answer it with
-`send`.
+It omits messages Mo sends during a running turn until that turn ends.
+`--from latest` also misses a turn that finishes before the read begins. In a
+`read` response, prefer `sessionState`; use its legacy alias `state` when the
+server omits it. `timedOut: true` means Mo is still working.
 
-Do not rely on `--from latest` after `start` or `send`: it only captures output
-produced after the read begins, so a fast turn can finish and return no
-messages. A timeout accepts `0`, milliseconds, seconds, or minutes such as
-`500ms`, `45s`, or `4m`, up to `290s`.
+With `--json`, `read` writes one JSON response to stdout and no progress text.
+Without `--json`, a read that waits longer than two seconds prints liveness to
+stderr. Returned messages stay on stdout, while timeout or stopped status text
+stays on stderr.
 
-`status.state` is the shared UI status. `ready` or `sleeping` means no agents are
-running; `needs_you` means input is needed. `read.state` describes the visible
-turn, which can finish while sub-agents are still working. Use `status` and
-`report --require-idle` before consuming a completed QA report.
+`qa wait "$session_id" --json` returns when root Mo's turn finishes, stops, or
+needs input. Exit code `2` means Mo needs input; `4` means it was stopped.
+Internal sub-agents can still be running, so confirm `status.displayState` is
+`ready` or `sleeping` before treating the session as done.
 
-## Continue, stop, or archive
-
-For a follow-up or answer, prefer `--wait` so the next attention boundary is
-returned directly:
+Never send a message to ask for progress. Use `status`, `read`, or `wait`.
+Send only to answer a blocker or deliberately steer or recheck work. Prefer to
+send while Mo is idle or waiting:
 
 ```bash
-qa send --session-id "$session_id" \
-  --wait 45s 'Use the staging account and continue'
+qa send --session-id "$session_id" --wait 45s "Use the staging account."
 ```
 
-If Mo is working, `send` stops the active turn, interrupts in-flight tool work,
-and starts a new turn from saved history. It does not steer the live turn. Send
-only when that interruption is intended. Without `--wait`, success only means
-the message was accepted; confirm a new assistant reply with `read`.
+Sending while active stops root Mo's current turn and in-flight tool call. Do
+that only when the new direction should take priority. Without `--wait`, confirm
+the reply with `read`.
 
-Stop only the active turn:
+## Finish or repair
 
-```bash
-qa stop "$session_id"
-```
+Before presenting final results, read [Reports](references/reports.md). Confirm
+that the brief still describes the product's expected behavior.
 
-Allow a few seconds for propagation, then verify with
-`read --from start --timeout 0 --json` that the state is `stopped`. Stopping
-does not delete the session, and already-running sub-agents may finish
-independently. Pass `--subagents` to stop running or concurrency-queued
-sub-agents too without closing their conversations.
+If the user asked for fixes, read
+[Repair loop](references/remediation-loop.md). Otherwise, do not change app code.
 
-Archive a finished session when it should leave the active list:
+Choose how to stop:
 
-```bash
-qa archive "$session_id"
-```
+- `qa stop <session-id>` interrupts root Mo only. Sub-agents keep testing,
+  filing findings, and billing. Root Mo stays stopped until your next
+  `qa send`. Use it to redirect Mo without losing in-flight tests.
+- `qa stop <session-id> --subagents` also stops every running sub-agent. Use it
+  to end spending. `qa send` can still resume the session.
+- `qa archive <session-id>` cancels all work, hides the session, and rejects
+  further `qa send`. Unarchive is web-only.
 
-Archive stops active work. Further `send` calls are rejected until the session
-is unarchived in the web UI; the CLI has no unarchive command.
-
-## Transfer files
-
-`upload` needs an existing session and prints the authoritative sandbox path.
-Send that returned path to Mo; a local path is meaningless inside its hosted
-machine.
-
-```bash
-remote_path=$(qa upload --session-id "$session_id" ./fixture.csv fixture.csv)
-qa send --session-id "$session_id" "Use the sandbox file at $remote_path."
-
-mkdir -p .momentic-artifacts
-qa download --session-id "$session_id" --output .momentic-artifacts "$remote_path"
-```
-
-If `--output` names a directory, create it first. A nonexistent output path is
-treated as a target filename. Without `--output`, downloads use
-`MOMENTIC_ARTIFACTS_DIR`, then `<current-directory>/.momentic-artifacts`.
-
-## Command reference
-
-Run `qa <command> --help` for exact options. Global `--log-level` accepts
-`debug`, `info`, `warn`, or `error`.
-
-| Command                                              | Purpose and important options                                                                           |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `qa version`                                         | Print the installed version, check the latest release, and recommend updating when they differ.         |
-| `qa upgrade`                                         | Update Mo to the latest release.                                                                        |
-| `qa start <message>`                                 | Start a session; `--tunnel`, `--momentic-mode`, `--max-concurrency`.                                    |
-| `qa send <message> --session-id <id>`                | Interrupt active work or start a turn; `--wait` returns the next attention boundary.                    |
-| `qa read <session-id>`                               | Read transcript and visible state; `--from`, `--timeout`, `--json`.                                     |
-| `qa status <session-id>`                             | Read state, web URL, bug/test-case counts; `--full` adds the latest message and findings.               |
-| `qa report <session-id>`                             | Export full findings and reproduction videos; `--require-idle` rejects incomplete snapshots.            |
-| `qa stop <session-id>`                               | Stop the active turn; `--subagents` also stops active sub-agents without closing them.                  |
-| `qa archive <session-id>`                            | Stop and archive the session; unarchive is web-only.                                                    |
-| `qa upload <source> [destination] --session-id <id>` | Upload one file and print its sandbox path.                                                             |
-| `qa download <source> --session-id <id>`             | Download a sandbox path; `--output` selects the local target.                                           |
-| `qa tunnel start <address...>`                       | Start local/private access; `--foreground` keeps it attached. See [Tunneling](references/tunneling.md). |
-| `qa tunnel list`                                     | List tunnels started by Mo on this machine.                                                             |
-| `qa tunnel stop <tunnel-id>`                         | Stop a tunnel and revoke access.                                                                        |
+`qa upload` returns a sandbox path. Send that path to Mo because local paths do
+not exist in its sandbox. Create the destination directory before `qa download`
+when `--output` names a directory. Run `qa <command> --help` for syntax.

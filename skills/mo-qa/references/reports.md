@@ -1,39 +1,39 @@
 # Read a Mo report
 
-Use `status` for polling. Export the detailed evidence once the session is ready:
+Use `qa wait` when incremental updates are unnecessary. Then export the
+session's evidence:
 
 ```bash
 qa report <session-id> --require-idle
 ```
 
-`--require-idle` checks once and exits without writing unless Mo is idle and its
-sub-agents are done. It does not wait. Omit it only when an in-progress snapshot
-is useful. Every export downloads the attached bug recordings.
+`--require-idle` checks once. It writes nothing while Mo or an internal
+sub-agent is working. It does not wait. Every successful export downloads the
+attached bug recordings.
 
-The command prints the output directory. Read `report.json` there first. It contains:
+Read `report.json` first, then inspect every finding file it names. Do not infer
+finding filenames by listing the directory.
 
-- `sessionId`: the source Mo session.
-- `findings`: a map from each finding category to its JSON filename.
-- `artifacts`: each recording download as either `{ bugName, path }` or
-  `{ bugName, error }`.
+`report.json` contains the source `sessionId`, a `summary`, a map of finding
+categories to filenames, and each recording download under `artifacts`. The CLI
+always writes `summary.generatedAt`, `counts`, `verdictsByStatus`, and
+`verdictsByScope`. When the server provides them, it also writes `sessionState`,
+`createdAt`, `lastActivityAt`, and `latestTurn`. Those server-supplied fields can
+be absent when exporting from a server running an earlier API.
 
-Only read finding files named by the manifest; do not infer the current report
-by listing the directory. Read every category, including ones added by newer
-servers. The current categories are:
+| File             | Contents                                                       |
+| ---------------- | -------------------------------------------------------------- |
+| `bugs.json`      | Reproduced bugs and static flags, with evidence and timestamps |
+| `testCases.json` | Planned coverage, setup, steps, and pass criteria              |
+| `verdicts.json`  | Verification results and coverage gaps                         |
+| `triage.json`    | Human dispositions; no entry means the bug is open             |
 
-- `bugs.json`: reviewed bugs with expected and actual behavior, reproduction
-  steps, recording metadata, provenance, and timestamps.
-- `testCases.json`: the intended coverage, setup, steps, and acceptance criteria.
-- `verdicts.json`: verification outcomes, confirmed behavior, and coverage gaps.
-- `triage.json`: human dispositions such as accepted, duplicate, works as
-  intended, or cannot reproduce. A bug with no triage entry is open.
+Pair each bug with its recording. A missing manifest artifact means no video
+was downloaded. An artifact `error` explains a failed download. The report does
+not include raw sub-agent transcripts, standalone screenshots, or browser
+traces. Inspect the transcript with `qa read`. Ask Mo only when missing evidence
+blocks the requested work.
 
-Use each bug's text and matching recording together. A bug without a manifest
-artifact has no downloaded video; an `error` explains a failed download. Raw
-sub-agent transcripts, standalone screenshots, and browser traces are not part
-of the structured report, so use `qa read` or ask Mo for more evidence when the
-report is insufficient.
-
-For a recheck, ask Mo to rerun the exact reproduction, wait for the new turn to
-finish, and export again. Use `--output <directory>` if you want to retain a
-separate baseline for comparison. Exporting by itself does not rerun anything.
+For a recheck, ask Mo to repeat the exact reproduction. Wait for completion,
+then export again. Use `--output <directory>` to preserve the baseline.
+Exporting alone does not rerun the test.

@@ -58,11 +58,19 @@ The brief sets scope. `--granularity` sets detail within that scope:
 - `high` for release-ready coverage: every in-scope path, alternate, failure
   state, and operable control.
 
-Pass the setting explicitly because the default is `high`. For a happy-path-only
-smoke test, tell Mo to skip failure states. Mo has no session-wide time or test
-count option. For a hard time or spend cap, narrow the brief, monitor wall time
-or `qa cost <session-id>`, run `qa stop <session-id> --subagents` at the cap,
-and report unfinished coverage.
+Pass the setting explicitly because the default is `high`. A light bug bash
+means narrow scope and low granularity, with Mo's normal sub-agent architecture.
+Allow roughly 5–25 concurrent agents according to the task's complexity and the
+site's capacity; do not serialize a smoke test or tell Mo not to delegate just
+because the request says "light." Reduce concurrency below that range only for
+a concrete target, account, or user constraint.
+
+For a happy-path-only smoke test, tell Mo to skip failure states. Mo has no
+session-wide time or test count option. If the user specifies a hard time or
+spend cap, narrow the brief, monitor wall time or `qa cost <session-id>`, run
+`qa stop <session-id> --subagents` at the cap, and report unfinished coverage.
+Do not infer a hard deadline from "light" or stop before core assertions are
+verified solely to keep the run short.
 
 ## Start the session
 
@@ -102,9 +110,9 @@ Use repeatable `--env-file` or `--env-var NAME` options for local values and
 secrets; they override matching environment variables. `--env-var` forwards a
 variable that is already present in the `qa start` process environment; it does
 not accept `NAME=value`. Never put the secret value in the command or brief.
-Use `--tunnel` for private access. Set `--max-concurrency` only when the target
-or test account limits parallel users. It is fixed at session start. If the
-target overloads, run `qa stop --subagents` and start a new session with a lower
+Use `--tunnel` for private access. Leave normal concurrency available or set
+`--max-concurrency` within the range above for the task and site. The limit is
+fixed at session start. If the target overloads, run `qa stop --subagents` and start a new session with a lower
 value. `--granularity <low|medium|high>` sets how specific explore-agent test
 discovery should be. `--interaction-speed <default|human>` slows browser
 interaction to a human pace when the target needs it.

@@ -110,21 +110,24 @@ Momentic is true end-to-end validation, not the coding agent's inner feedback
 loop. Do not run affected Momentic tests after every file edit, implementation
 step, commit, or small refactor.
 
-Do not execute Momentic tests by default. Editing and linting Momentic tests is
-allowed without confirmation, but test execution can take time and consume
-credits. At a durable checkpoint:
+Editing and linting Momentic tests is allowed without confirmation. Before a
+long-running Momentic test or suite, get confirmation based on the expected
+duration and scope. If the duration is unknown, treat the run as long-running.
+At a durable checkpoint:
 
-1. Stop before running Momentic.
+1. Stop before a long-running Momentic run.
 2. Tell the user exactly which tests or command you propose to run and, when
-   known, the expected duration or credit impact.
+   known, the expected duration.
 3. Ask the user to confirm whether to run them.
 4. Run only after explicit confirmation. A direct request to run the specified
    tests counts as confirmation.
 
-Confirmation covers only the proposed run. Ask again before another Momentic
-execution unless the user explicitly authorized iterative reruns. If the user
-declines or does not confirm, continue with non-Momentic checks and report the
-tests as not run.
+Confirmation covers only the proposed long-running run. Ask again before
+another long-running Momentic execution unless the user explicitly authorized
+iterative reruns. Short, focused runs may proceed without confirmation when
+they are the normal validation step for the requested work. If the user declines
+or does not confirm a long-running run, continue with non-Momentic checks and
+report the tests as not run.
 
 Use faster repository checks such as unit tests, typechecking, and linting while
 building. Run Momentic when the app has reached a logical checkpoint that is
@@ -139,11 +142,12 @@ durable and usable through the real UI:
   question is whether a user can exercise the intended behavior through the
   product and observe the specified outcome.
 
-At each checkpoint, propose the smallest affected test set. After confirmation,
-run it once, diagnose failures, and make a coherent fix. Request confirmation
-again before rerunning unless iterative reruns were already authorized, and
-rerun only when there is a reasonable expectation that the end-to-end outcome
-changed. Keep future specifications disabled until their checkpoint exists.
+At each checkpoint, propose the smallest affected test set. For a long-running
+set, run it once after confirmation, diagnose failures, and make a coherent fix.
+Request confirmation again before a long-running rerun unless iterative reruns
+were already authorized. Rerun only when there is a reasonable expectation that
+the end-to-end outcome changed. Keep future specifications disabled until their
+checkpoint exists.
 
 ## Own the test data and application state
 

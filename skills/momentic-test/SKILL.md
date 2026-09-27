@@ -79,8 +79,8 @@ shared module, restarting a long flow, or running an expensive full test.
   change, validate the contract before dependent actions.
 - Prefer `waitForUrl` for URL contracts, page/element checks for stable text or
   structure, and AI assertions for semantic visual state.
-- Prefer AI Action V3 for new tests unless the exact interaction sequence is
-  part of the contract.
+- Prefer AI Action V3 for new tests. Use granular steps when checkpoints need
+  individual control; for rapid sequences, see **Time-sensitive interactions**.
 - Do not add optional or default-valued fields unless correctness requires them.
 - Keep changes narrow. Preserve unrelated values, comments, ordering, and step
   style. Do not weaken a test to hide a broken app or service.
@@ -98,9 +98,24 @@ AI Action V3 takes a natural-language goal and determines the browser steps.
   workflows, exploratory tests, and other dynamic or nondeterministic behavior.
 
 Treat “make sure you can do X” as goal-based testing unless the user specifies a
-route. Use granular steps when controls, order, intermediate assertions,
-deterministic replay, speed, or a risky side effect is itself under test. Keep
+route. Use granular steps when controls, intermediate assertions,
+deterministic replay, or a risky side effect needs individual control. Keep
 existing granular tests granular unless asked to change strategy.
+
+### Time-sensitive interactions
+
+For rapid sequences such as back-to-back sends or interrupting during startup,
+prefer one focused AI Action with explicit ordering and instructions not to wait
+between interactions. Separate targeting steps can outlast the window being
+tested. Keep prerequisite setup and stable final checks outside that action;
+pair it with video-backed run assertions for transient UI states.
+
+AI Action does not guarantee timing. Inspect action timestamps and recorded
+evidence to verify the intended state was actually exercised. A successful final
+result, or an assertion that infers a transient state without observing it, is
+not proof of coverage. If the exact race window matters and cannot be reliably
+exercised, use deterministic tests or controlled test fixtures rather than
+claiming coverage from a passing end state.
 
 # Test execution behavior
 

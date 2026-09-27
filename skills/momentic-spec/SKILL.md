@@ -90,6 +90,12 @@ Keep goals short, specific, and outcome-oriented. Pair an `act:` step with the
 same assertion style used by nearby tests so the test verifies the result, not
 only that the agent stopped.
 
+For rapid or timing-sensitive sequences, prefer one focused AI Action with
+explicit ordering and no-wait instructions, paired with video-backed run
+assertions. Follow [Time-sensitive interactions](../momentic-test/SKILL.md#time-sensitive-interactions)
+to verify the intended state was actually exercised; AI Action alone does not
+guarantee timing or race coverage.
+
 AI action V3 caches generated steps after a successful run and self-heals when a
 cached step misses:
 

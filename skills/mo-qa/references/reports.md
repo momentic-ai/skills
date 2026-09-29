@@ -17,9 +17,11 @@ finding filenames by listing the directory.
 `report.json` contains the source `sessionId`, a `summary`, a map of finding
 categories to filenames, and each recording download under `artifacts`. The CLI
 always writes `summary.generatedAt`, `counts`, `verdictsByStatus`, and
-`verdictsByScope`. When the server provides them, it also writes `sessionState`,
-`createdAt`, `lastActivityAt`, and `latestTurn`. Those server-supplied fields can
-be absent when exporting from a server running an earlier API.
+`verdictsByScope`. When the server provides them, it also writes `state` and `sessionState` (the lifecycle
+state), `displayState` (the same session state `qa status` reports),
+`createdAt`, `lastActivityAt`, and `latestTurn`.
+Those server-supplied fields can be absent when exporting from a server running
+an earlier API.
 
 | File             | Contents                                                       |
 | ---------------- | -------------------------------------------------------------- |

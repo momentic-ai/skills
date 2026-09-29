@@ -160,8 +160,8 @@ literal Mo session ID or start the watcher in the same shell that set it.
 
 Either way, you answer blockers and send Mo the user's decisions.
 
-`status.displayState` describes the whole session for display and polling.
-`status.state` is its legacy alias:
+`displayState` is the session's state as the UI shows it. `status`, `read`,
+and `report` all report the same word there:
 
 | State               | Meaning                                                    |
 | ------------------- | ---------------------------------------------------------- |
@@ -173,13 +173,15 @@ Either way, you answer blockers and send Mo the user's decisions.
 | `cancelled`         | Work was stopped.                                          |
 | `failed_start`      | The session never started. Start a new one.                |
 
-`status.sessionState` is the lifecycle state shared by `read`, `status`, and
-`report`: `starting`, `working`, `waitingOnUser`, `waitingOnAgents`, `idle`, or
-`stopped`. `createdAt` is the session creation time, and `lastActivityAt` is the
-last persisted update. `latestTurn` contains the most recent persisted
-assistant timing metadata: `startedAt`, `completedAt`, and `durationMs`. A
-partial timing uses `null`. Servers running an earlier API can omit these new
-fields.
+`sessionState` is the lifecycle state (`starting`, `working`,
+`waitingOnUser`, `waitingOnAgents`, `idle`, or `stopped`), also identical
+across all three commands. `state` is the legacy field, an alias of
+`sessionState` wherever it appears. `createdAt` is the session creation time,
+and `lastActivityAt` is the last persisted update. `latestTurn` contains the
+most recent persisted assistant timing metadata: `startedAt`, `completedAt`,
+and `durationMs`. A partial timing uses `null`. Servers running an earlier API
+can omit `displayState` on `read` and `report`; use `qa status` for the
+display word on those.
 
 Use this bounded read for Mo's questions and replies, not findings:
 
@@ -189,8 +191,10 @@ qa read "$session_id" --from start --timeout 45s --json
 
 It omits messages Mo sends during a running turn until that turn ends.
 `--from latest` also misses a turn that finishes before the read begins. In a
-`read` response, prefer `sessionState`; use its legacy alias `state` when the
-server omits it. `timedOut: true` means Mo is still working.
+`read` response, `displayState` matches the `status` word, while `state` and
+`sessionState` carry the lifecycle state. Servers running an earlier API omit
+`displayState`; use `qa status` for the display word on those.
+`timedOut: true` means Mo is still working.
 
 With `--json`, `read` writes one JSON response to stdout and no progress text.
 Without `--json`, a read that waits longer than two seconds prints liveness to
@@ -199,7 +203,7 @@ stays on stderr.
 
 `qa wait "$session_id" --json` returns when root Mo's turn finishes, stops, or
 needs input. Exit code `2` means Mo needs input; `4` means it was stopped.
-Internal sub-agents can still be running, so confirm `status.displayState` is
+Internal sub-agents can still be running, so confirm `qa status` reports
 `ready` or `sleeping` before treating the session as done.
 
 Never send a message to ask for progress. Use `status`, `read`, or `wait`.

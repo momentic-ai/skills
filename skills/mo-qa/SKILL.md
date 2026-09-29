@@ -50,16 +50,16 @@ or permission would change the run.
 
 ### Set scope and detail
 
-The brief sets scope. `--granularity` sets detail within that scope:
+Set scope and detail in the brief:
 
-- `low` for an early smoke pass: main happy paths and important failure states.
-- `medium` when changed flows work: every meaningful interaction and important
+- For an early smoke pass, request main happy paths and important failure states.
+- When changed flows work, request every meaningful interaction and important
   failure state.
-- `high` for release-ready coverage: every in-scope path, alternate, failure
+- For release-ready coverage, request every in-scope path, alternate, failure
   state, and operable control.
 
-Pass the setting explicitly because the default is `high`. A light bug bash
-means narrow scope and low granularity, with Mo's normal sub-agent architecture.
+A light bug bash means a narrow scope and a smoke pass, with Mo's normal
+sub-agent architecture.
 Allow roughly 5–25 concurrent agents according to the task's complexity and the
 site's capacity; do not serialize a smoke test or tell Mo not to delegate just
 because the request says "light." Reduce concurrency below that range only for
@@ -90,7 +90,7 @@ Pass criteria:
 - Standard checkout still works.
 EOF
 )
-session_json=$(qa start "$brief" --granularity low)
+session_json=$(qa start "$brief")
 session_id=$(jq -r .sessionId <<<"$session_json")
 web_url=$(jq -r .webUrl <<<"$session_json")
 created_at=$(jq -r '.createdAt // empty' <<<"$session_json")
@@ -113,8 +113,7 @@ not accept `NAME=value`. Never put the secret value in the command or brief.
 Use `--tunnel` for private access. Leave normal concurrency available or set
 `--max-concurrency` within the range above for the task and site. The limit is
 fixed at session start. If the target overloads, run `qa stop --subagents` and start a new session with a lower
-value. `--granularity <low|medium|high>` sets how specific explore-agent test
-discovery should be. `--interaction-speed <default|human>` slows browser
+value. `--interaction-speed <default|human>` slows browser
 interaction to a human pace when the target needs it.
 
 ## Follow the session

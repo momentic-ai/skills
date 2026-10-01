@@ -238,3 +238,21 @@ Choose how to stop:
 `qa upload` returns a sandbox path. Send that path to Mo because local paths do
 not exist in its sandbox. Create the destination directory before `qa download`
 when `--output` names a directory. Run `qa <command> --help` for syntax.
+
+## Fallback: provide source context without repository access
+
+Prefer setting up Git access in Mo for repository context. If access is
+unavailable, tell the user and recommend configuring it.
+
+When Git access cannot be configured, prepare a temporary source snapshot
+containing only the files Mo needs. Review its contents before uploading;
+exclude `.env` files, credentials, private keys, tokens, `node_modules`, build
+output, and unrelated customer data. Include relevant local changes or a
+reviewed patch when testing uncommitted work.
+
+After starting the session, upload the snapshot with `qa upload` and send Mo
+the returned sandbox path with `qa send`. Remove the temporary local snapshot
+after upload. Tell Mo to use it as read-only context, which paths are
+authoritative, whether it represents baseline or modified code, and which
+commands or dependency files explain how to use it. Local paths do not work
+inside Mo's sandbox.

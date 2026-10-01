@@ -15,6 +15,17 @@ qa version
 For an npm-installed copy, update with `npm install -g qa@latest` instead;
 `qa upgrade` prints that instruction itself.
 
+## Legacy mo installations
+
+The command is `qa`. Older standalone installations can still be named `mo`.
+Run `mo upgrade`, then check `qa --version`. If `qa` is still missing, run
+`mo upgrade` again. The first run can execute an older updater that keeps the
+`mo` filename; the second run uses the new updater to rename it. Run `hash -r`
+if your shell remembers the old path.
+
+For npm installations, use `npm install -g qa@latest`. Do not use `npx mo`;
+that npm package is a different project.
+
 ## Install
 
 If Mo is missing or too old to support `qa upgrade`, run the installer:

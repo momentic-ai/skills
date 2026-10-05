@@ -22,8 +22,8 @@ the report has been reproduced.
    local investigation while Mo works.
 3. Fix confirmed defects and run focused local checks.
 4. Make the patched revision available at Mo's target. Reuse its tunnel when
-   present. Ask before publishing to shared staging, opening a new tunnel, or
-   deploying outside existing authority.
+   present. Ask before publishing or opening access outside the user's
+   existing authorization.
 5. Send the exact bug name, original reproduction, target revision, and recheck
    request. Prefer to wait for idle; sending while active interrupts root Mo's
    current work. Keep the target stable during the recheck.
@@ -32,8 +32,7 @@ the report has been reproduced.
    fix verified only when new evidence shows the original reproduction passes.
 
 Report one disposition and its evidence for every selected bug. Include
-unresolved findings and coverage gaps. Stop for a product decision, missing
-access, or repeated infrastructure failure. Do not broaden access or deploy only
-to complete verification.
+unresolved findings and coverage gaps. Ask for decisions or access needed to
+proceed, and report persistent infrastructure blockers.
 
 A local disposition does not update `triage.json` in Momentic.

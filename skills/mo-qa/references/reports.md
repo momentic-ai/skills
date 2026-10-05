@@ -8,8 +8,8 @@ qa report <session-id> --require-idle
 ```
 
 `--require-idle` checks once. It writes nothing while Mo or an internal
-sub-agent is working. It does not wait. Every successful export downloads the
-attached bug recordings.
+sub-agent is working. It does not wait. The export attempts to download attached
+bug recordings; inspect `artifacts` for failures.
 
 Read `report.json` first, then inspect every finding file it names. Do not infer
 finding filenames by listing the directory.
@@ -30,10 +30,10 @@ an earlier API.
 | `verdicts.json`  | Verification results and coverage gaps                         |
 | `triage.json`    | Human dispositions; no entry means the bug is open             |
 
-Pair each bug with its recording. A missing manifest artifact means no video
-was downloaded. An artifact `error` explains a failed download. The report does
-not include raw sub-agent transcripts, standalone screenshots, or browser
-traces. Inspect the transcript with `qa read`. Ask Mo only when missing evidence
+Inspect each finding's evidence. Reproduced bugs can have recordings; static
+flags have screenshots. An artifact `error` explains a failed video download.
+The export does not download screenshot files or include raw sub-agent
+transcripts or browser traces. Inspect the transcript with `qa read`. Ask Mo only when missing evidence
 blocks the requested work.
 
 For a recheck, ask Mo to repeat the exact reproduction. Wait for completion,

@@ -29,7 +29,7 @@ If the user supplies an auth-state file, upload it and send root Mo the returned
 sandbox path. You cannot message Mo's internal sub-agents directly. Uploading a
 credential file does not add its values to the session environment.
 
-If Mo needs a new environment variable, ask the user and start a new session
-with the authorized value.
+The CLI supplies variables only at start. For an existing session, add an
+authorized secret through Mo's web composer, or restart with that value.
 
 Never expose secrets in a brief, Mo message, URL, command, or commit.

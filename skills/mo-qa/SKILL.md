@@ -35,46 +35,43 @@ Run `qa version`. If Mo is missing or outdated, read
 Use the target from the request. For a local or private target, read
 [Tunneling](references/tunneling.md).
 
-The brief is Mo's specification. Include:
+Give Mo the testing goal and operating boundaries. Include what applies:
 
-1. The exact target URL, including the affected path and query.
-2. Expected behavior and pass criteria.
+1. The target URL when known, including any relevant path and query.
+2. The user's goal, relevant product intent, and known requirements.
 3. The login method, test account label, and allowed test data.
 4. Prohibited actions and data that Mo must not change.
-5. The product areas and user flows in scope, plus explicit exclusions.
+5. What the user wants tested and any requested exclusions.
 6. Any non-default browser setup. Read
    [Browser settings](references/browser-settings.md) when needed.
 
-Fill gaps from the request and repository. Ask only when missing scope, access,
-or permission would change the run.
+Supply factual context from the request and repository without turning it into
+a prescribed test plan. Ask only when missing scope, access, or permission would
+change the run.
 
-### Set scope and detail
+### Set high level parameters, let Mo plan by default
 
-Set scope and detail in the brief:
+Let Mo choose flows, test cases, sub-agent orchestration, etc. within the right
+scope and budget for the user's request. Describe what the user wants tested.
+Preserve user-specified coverage; otherwise do not prescribe a checklist,
+interaction steps, or a case count. Supply implementation facts as context.
 
-- For an early smoke pass, request main happy paths and important failure states.
-- When changed flows work, request every meaningful interaction and important
-  failure state.
-- For release-ready coverage, request every in-scope path, alternate, failure
-  state, and operable control.
+You own target setup, authentication, and actions Mo cannot perform remotely.
+Before starting, remove unrequested testing restrictions. Leave normal
+concurrency available; reduce `--max-concurrency` only for an explicit request
+or a demonstrated target limitation, and record the reason.
 
-A light bug bash means a narrow scope and a smoke pass, with Mo's normal
-sub-agent architecture.
-Allow roughly 5–25 concurrent agents according to the task's complexity and the
-site's capacity; do not serialize a smoke test or tell Mo not to delegate just
-because the request says "light." Reduce concurrency below that range only for
-a concrete target, account, or user constraint.
-
-For a happy-path-only smoke test, tell Mo to skip failure states. Mo has no
-session-wide time or test count option. If the user specifies a hard time or
-spend cap, narrow the brief, monitor wall time or `qa cost <session-id>`, run
-`qa stop <session-id> --subagents` at the cap, and report unfinished coverage.
-Do not infer a hard deadline from "light" or stop before core assertions are
-verified solely to keep the run short.
+Give Mo the agreed duration or spend budget and let it prioritize coverage.
+"Light" does not imply a case limit or serial execution. Mo has no session-wide
+time or test-count option. For a user-specified hard cap, monitor wall time or
+`qa cost <session-id>`, stop with `qa stop <session-id> --subagents` at the cap,
+and report unfinished coverage.
 
 ## Start the session
 
-Pass the brief as one argument after `qa` (option flags follow the brief):
+Pass the brief as one argument to `qa start`.
+For a user requesting express-checkout smoke coverage and a standard-checkout
+regression check:
 
 ```bash
 brief=$(cat <<'EOF'
@@ -101,6 +98,97 @@ needs `session_id`, the user can watch or join through `web_url`, and
 `created_at` records when the session began. `createdAt` can be absent when the
 server runs an earlier API version.
 
+For example, when testing an unreleased CLI that Mo cannot build or run:
+
+> Ask me to start sessions with the branch's unreleased QA CLI. Send the required
+> arguments and wait for a session URL, then verify it in the web UI.
+
+For a GitHub PR, use PR mode instead of placing its reference only in the brief.
+Pass the deployment URL you created or verified with `--url`; any HTTP or HTTPS
+preview host works:
+
+```bash
+session_json=$(qa start "$brief" --pr https://github.com/acme/shop/pull/412 --url https://preview.example.com)
+```
+
+`--pr` accepts a full GitHub PR URL, including comment permalinks and links with
+query parameters. Mo keeps the repository and PR number, dropping the query and
+fragment. `owner/repo#number` also works. Name the PR explicitly;
+do not infer it from the current branch or remote. Mo captures the remote PR
+revision and tests its changed app behavior and regressions. Omit the brief to
+use that default scope. Changes with no testable app behavior finish without
+launching testing agents.
+
+For PR sessions, let Mo identify changed behavior and affected flows from the
+PR context. Plan for about 10 minutes of aggregate interaction time and about
+20 minutes elapsed, including planning and reproduction. Mo's PR instructions
+guide it toward focused verification and fewer explorers. Follow explicit
+user scope, duration, and concurrency requests instead of these defaults.
+These are planning targets, not enforced limits; monitor and stop the session
+when the user supplies a hard cap.
+
+An environment supplies the target without requiring a preview URL. Otherwise,
+Mo looks for a preview tied to the PR commit in Vercel, Cloudflare Pages, or
+Netlify bot posts. Failed or ambiguous discovery does not block startup: Mo
+can inspect the PR or ask for the target. Don't invent a URL from a branch name.
+Use `--tunnel` as well when the chosen deployment is local or private.
+Without `--pr`, `--url` and `--patch` are ignored; put a general session's
+target URL in its brief.
+
+Each PR session posts a GitHub comment with its session link and updates that
+comment with the results. A new session collapses older Mo comments as outdated;
+their session and report links remain available. The Mo check on the same
+commit follows the latest request. Use the session report for findings instead
+of treating a superseded comment as the current result.
+
+For local changes, commit and push to that PR before starting whenever authorized.
+If pushing is disallowed, pass a curated Git patch with `--patch FILE` from the
+PR checkout. The CLI uses local `HEAD` as the base; it must match the published
+PR head or startup is rejected. Use a target serving those local changes,
+with `--url` when known and `--tunnel` if needed.
+A patch gives Mo source context; it does not deploy the changes.
+
+Select only files and hunks needed to test the change, including relevant
+untracked files. Review the patch before sending it. Exclude secrets,
+credentials, logs, temporary files, large blobs, and unrelated changes or
+customer data. Do not collect the entire working tree or force-add
+ignored files. Patches must be text-only Git diffs of at most 256 KiB.
+
+To include tracked and untracked files without changing your real Git
+index, use a temporary index and an explicit file list. Verify that local HEAD
+matches the named PR head before running this example, then replace its paths
+with the files you reviewed:
+
+```bash
+patch_base=$(git rev-parse --verify HEAD)
+patch_file=$(mktemp)
+(
+  set -eu
+  patch_index=$(mktemp)
+  rm "$patch_index"
+  trap 'rm -f "$patch_index"' EXIT
+  export GIT_INDEX_FILE="$patch_index"
+  git read-tree "$patch_base"
+  git add -- src/checkout.ts src/discount.ts
+  git diff --cached --no-renames --no-ext-diff --no-textconv "$patch_base" -- src/checkout.ts src/discount.ts > "$patch_file"
+)
+git apply --stat "$patch_file"
+```
+
+Read every hunk in `patch_file` with your file-reading tool before starting Mo.
+Remove any excluded content, then start the session:
+
+```bash
+qa start "$brief" --pr https://github.com/acme/shop/pull/412 --url https://preview.example.com --patch "$patch_file"
+rm -f "$patch_file"
+```
+
+Send the patch in the initial start request. Do not start a session and upload it
+afterward: Mo may begin reading code before that upload finishes. Mo uses the PR
+revision plus the supplied patch for source investigation. Keep the target and
+patch stable throughout testing and reproduction. Clean patch runs produce a
+neutral GitHub check because their source includes unpublished changes.
+
 A Momentic environment groups a `BASE_URL` with reusable non-secret variables
 under a name such as `staging`. `--environment NAME` selects one created under
 **Environments** in the Momentic dashboard, not one from the shell or
@@ -110,16 +198,15 @@ Use repeatable `--env-file` or `--env-var NAME` options for local values and
 secrets; they override matching environment variables. `--env-var` forwards a
 variable that is already present in the `qa start` process environment; it does
 not accept `NAME=value`. Never put the secret value in the command or brief.
-Use `--tunnel` for private access. Leave normal concurrency available or set
-`--max-concurrency` within the range above for the task and site. The limit is
-fixed at session start. If the target overloads, run `qa stop --subagents` and start a new session with a lower
-value. `--interaction-speed <default|human>` slows browser
+Use `--tunnel` for private access. The concurrency limit is fixed at session
+start. If target overload requires a lower limit, run `qa stop --subagents`
+and start a new session. `--interaction-speed <default|human>` slows browser
 interaction to a human pace when the target needs it.
 
 ## Follow the session
 
-Run this watcher in the background. It prints one line per new finding or state
-change and exits when Mo needs input or the session ends:
+Use this watcher to print new bug names, verdict states, and display-state
+changes. It exits when Mo needs input or reports a terminal state:
 
 ```bash
 seen=""
@@ -133,23 +220,18 @@ while :; do
   comm -13 <(printf '%s\n' "$seen") <(printf '%s\n' "$events")
   seen=$events
   case $(jq -r '.displayState // .state' <<<"$snapshot") in
-    needs_you | ready | sleeping | cancelled | failed_start) break ;;
+    needs_you | ready | sleeping | cancelled | failed_start | failed | waitingOnUser | idle | stopped) break ;;
   esac
   sleep 30
 done
 ```
 
-Run the watcher in one of two ways:
+On older lifecycle-only responses, `idle` or `stopped` does not establish that
+sub-agents finished; confirm completion in the web session.
 
-- **Background command.** Run it yourself with a host tool that notifies you on
-  each output line, such as Claude Code's `Monitor`, and re-arm it when it
-  expires. Without one, start it as a background session and check its output
-  between other tasks.
-- **Runner sub-agent.** Give a sub-agent the `session_id`, the watcher, and this
-  skill. It messages you on each event and keeps watching. Use this only when
-  a running sub-agent can message you, such as Codex with `multi_agent_v2`
-  enabled (`send_message` to `/root`, then `wait_agent` in the parent). Claude
-  Code and default Codex sub-agents report only when they finish.
+Use a host tool that reports watcher output while you work, or a runner
+sub-agent when the environment supports messages from running agents.
+Otherwise retain the command session and check its output between tasks.
 
 In Codex without a runner sub-agent, keep the watcher in the foreground of a
 long-running `exec_command`, retain its returned session ID, and drain it with
@@ -157,7 +239,7 @@ long-running `exec_command`, retain its returned session ID, and drain it with
 Shell variables do not persist across separate commands, so interpolate the
 literal Mo session ID or start the watcher in the same shell that set it.
 
-Either way, you answer blockers and send Mo the user's decisions.
+You answer blockers and send Mo the user's decisions.
 
 `displayState` is the session's state as the UI shows it. `status`, `read`,
 and `report` all report the same word there:
@@ -171,9 +253,10 @@ and `report` all report the same word there:
 | `sleeping`          | No agent is running and there is no report or final reply. |
 | `cancelled`         | Work was stopped.                                          |
 | `failed_start`      | The session never started. Start a new one.                |
+| `failed`            | The session failed. Inspect its transcript.                |
 
 `sessionState` is the lifecycle state (`starting`, `working`,
-`waitingOnUser`, `waitingOnAgents`, `idle`, or `stopped`), also identical
+`waitingOnUser`, `waitingOnAgents`, `idle`, `stopped`, or `failed`), also identical
 across all three commands. `state` is the legacy field, an alias of
 `sessionState` wherever it appears. `createdAt` is the session creation time,
 and `lastActivityAt` is the last persisted update. `latestTurn` contains the
@@ -188,7 +271,8 @@ Use this bounded read for Mo's questions and replies, not findings:
 qa read "$session_id" --from start --timeout 45s --json
 ```
 
-It omits messages Mo sends during a running turn until that turn ends.
+It reads persisted conversation messages and user-facing messages streamed
+during the wait.
 `--from latest` also misses a turn that finishes before the read begins. In a
 `read` response, `displayState` matches the `status` word, while `state` and
 `sessionState` carry the lifecycle state. Servers running an earlier API omit
@@ -220,7 +304,8 @@ the reply with `read`.
 ## Finish or repair
 
 Before presenting final results, read [Reports](references/reports.md). Confirm
-that the brief still describes the product's expected behavior.
+coverage against the user's scope. An idle session or zero bugs alone does not
+establish passing QA.
 
 If the user asked for fixes, read
 [Repair loop](references/remediation-loop.md). Otherwise, do not change app code.

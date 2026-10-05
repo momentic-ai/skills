@@ -34,7 +34,7 @@ If Mo is missing or too old to support `qa upgrade`, run the installer:
 curl -fsSL https://cli.momentic.ai/qa | sh
 ```
 
-The installer writes `qa` to `$HOME/.local/bin`. Add that directory to `PATH`
+By default, the installer writes `qa` to `$HOME/.local/bin`. Add that directory to `PATH`
 if needed, then verify the installation:
 
 ```bash

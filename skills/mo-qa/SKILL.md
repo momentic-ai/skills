@@ -219,9 +219,11 @@ while :; do
     <<<"$snapshot" | sort)
   comm -13 <(printf '%s\n' "$seen") <(printf '%s\n' "$events")
   seen=$events
-  case $(jq -r '.displayState // .state' <<<"$snapshot") in
-    needs_you | ready | sleeping | cancelled | failed_start | failed | waitingOnUser | idle | stopped) break ;;
-  esac
+  if [[ $(jq -r '.attentionPending // false' <<<"$snapshot") != true ]] || [[ $(jq -r '.displayState // .state' <<<"$snapshot") == needs_you ]]; then
+    case $(jq -r '.displayState // .state' <<<"$snapshot") in
+      needs_you | blocked | findings | incomplete | replied | ready | sleeping | cancelled | failed_start | failed | waitingOnUser | idle | stopped) break ;;
+    esac
+  fi
   sleep 30
 done
 ```
@@ -244,16 +246,21 @@ You answer blockers and send Mo the user's decisions.
 `displayState` is the session's state as the UI shows it. `status`, `read`,
 and `report` all report the same word there:
 
-| State               | Meaning                                                    |
-| ------------------- | ---------------------------------------------------------- |
-| `running`           | Root Mo is working.                                        |
-| `waiting_on_agents` | Root Mo is idle; its internal sub-agents are working.      |
-| `needs_you`         | Mo asked a question. Answer it with `qa send`.             |
-| `ready`             | No agent is running and results are available.             |
-| `sleeping`          | No agent is running and there is no report or final reply. |
-| `cancelled`         | Work was stopped.                                          |
-| `failed_start`      | The session never started. Start a new one.                |
-| `failed`            | The session failed. Inspect its transcript.                |
+| State               | Meaning                                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
+| `running`           | Root Mo is working.                                                                                 |
+| `waiting_on_agents` | Root Mo is idle; its internal sub-agents are working.                                               |
+| `needs_you`         | Mo needs access, a decision, or an answer. Read its reply and respond with `qa send`.               |
+| `blocked`           | The request hit a tool, access, quota, or agent failure. Inspect the reply and resolve the blocker. |
+| `findings`          | No agent is running; bugs or issues need review.                                                    |
+| `incomplete`        | No agent is running; report coverage is blocked or unverified.                                      |
+| `replied`           | No agent is running; Mo replied without a complete QA report.                                       |
+| `checking`          | Mo is checking its latest reply. Keep polling for the outcome.                                      |
+| `ready`             | No agent is running; the saved report is complete and clean.                                        |
+| `sleeping`          | No agent is running and there is no report or final reply.                                          |
+| `cancelled`         | Work was stopped.                                                                                   |
+| `failed_start`      | The session never started. Start a new one.                                                         |
+| `failed`            | The session failed. Inspect its transcript.                                                         |
 
 `sessionState` is the lifecycle state (`starting`, `working`,
 `waitingOnUser`, `waitingOnAgents`, `idle`, `stopped`, or `failed`), also identical
@@ -286,8 +293,11 @@ stays on stderr.
 
 `qa wait "$session_id" --json` returns when root Mo's turn finishes, stops, or
 needs input. Exit code `2` means Mo needs input; `4` means it was stopped.
-Internal sub-agents can still be running, so confirm `qa status` reports
-`ready` or `sleeping` before treating the session as done.
+Internal sub-agents can still be running. Confirm `qa status` no longer reports
+`running`, `waiting_on_agents`, or `checking`, then inspect the outcome. `needs_you` and
+`blocked` require attention; `findings`, `incomplete`, and `replied` are settled
+outcomes that do not establish passing QA. Saved partial reports remain
+exportable with `qa report --require-idle` once all work has settled.
 
 Never send a message to ask for progress. Use `status`, `read`, or `wait`.
 Send only to answer a blocker or deliberately steer or recheck work. Prefer to

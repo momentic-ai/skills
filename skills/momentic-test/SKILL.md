@@ -173,6 +173,9 @@ conventions for reusable v2 scripts. See the
 [JavaScript guide](https://momentic.ai/docs/integrations/javascript) for runtime
 APIs and timeout details.
 
+Playwright `evaluate` callbacks run in the browser and cannot close over Node
+values. Pass values as callback arguments or use `customWindow._momentic`.
+
 # Working with v2 YAML
 
 V2 is human-editable. Tests use `before`, `steps`, and `after`; modules use
@@ -229,9 +232,9 @@ run, state, or splice operations against the same session.
    persistence calls reviewable.
 3. Use `momentic_preview_steps` for adjacent steps. It supports the same preset,
    AI Action, and module steps as `momentic_preview_step`.
-4. Read the returned screenshot first. Request browser state only when the image
-   lacks enough targeting or diagnostic context; request it again once if the
-   page may still be settling.
+4. Treat preview and run screenshots as the primary result. Request browser
+   state only when the screenshot or locator result is insufficient; request it
+   again once if the page may still be settling.
 5. Splice the successful checkpoint. Attach each returned `CacheId` only to its
    exact step; cacheless steps are normal. Read the splice response immediately
    for the active step refs.

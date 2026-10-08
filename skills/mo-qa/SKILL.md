@@ -300,16 +300,15 @@ outcomes that do not establish passing QA. Saved partial reports remain
 exportable with `qa report --require-idle` once all work has settled.
 
 Never send a message to ask for progress. Use `status`, `read`, or `wait`.
-Send only to answer a blocker or deliberately steer or recheck work. Prefer to
-send while Mo is idle or waiting:
+Send only to answer a blocker or deliberately steer or recheck work:
 
 ```bash
 qa send --session-id "$session_id" --wait 45s "Use the staging account."
 ```
 
-Sending while active stops root Mo's current turn and in-flight tool call. Do
-that only when the new direction should take priority. Without `--wait`, confirm
-the reply with `read`.
+Sending while active steers root Mo between tool calls while in-flight work
+continues. When Mo is idle, the message starts its next turn. Without `--wait`,
+confirm the reply with `read`.
 
 ## Finish or repair
 

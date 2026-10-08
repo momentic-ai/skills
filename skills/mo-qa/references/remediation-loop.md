@@ -25,8 +25,8 @@ the report has been reproduced.
    present. Ask before publishing or opening access outside the user's
    existing authorization.
 5. Send the exact bug name, original reproduction, target revision, and recheck
-   request. Prefer to wait for idle; sending while active interrupts root Mo's
-   current work. Keep the target stable during the recheck.
+   request. Sending while active steers root Mo between tool calls. Keep the
+   target stable during the recheck.
 6. Wait for completion and export to a different directory. Compare the verdict
    status, `updatedAt`, summary, and recording with the baseline. Call the
    fix verified only when new evidence shows the original reproduction passes.

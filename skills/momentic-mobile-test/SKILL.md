@@ -104,6 +104,10 @@ running an expensive full test.
   fully visible and hierarchy data is unavailable, unreliable, or irrelevant.
 - Use AI actions only when the user requests one or the existing test already
   uses one.
+- AI actions are cached by default: a successful flow is saved and replayed,
+  self-healing failed replay steps. Add `--disable-cache` to an `AI_ACTION` to
+  run the agent fresh each time; prefer this for chats, agentic workflows,
+  exploratory tests, and other dynamic or nondeterministic behavior.
 - Do not add optional or default-valued fields unless correctness requires them.
 - Keep changes narrow. Preserve unrelated values, comments, ordering, and step
   style. Do not weaken a test to hide an app, asset, permission, data, or backend

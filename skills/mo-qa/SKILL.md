@@ -17,7 +17,7 @@ follow [Repair loop](references/remediation-loop.md).
 
 Findings arrive through `qa status "$session_id" --full`. A `kind: "bug"`
 entry has been independently reproduced. A `kind: "flag"` entry is a static,
-single-frame mistake such as a typo, recorded without reproduction. Test-case
+single-frame mistake such as a typo, recorded without reproduction. Agent
 verdicts are `verified`, `issues_found`, or `blocked`. When you report a finding
 to the user, include its name, evidence, status, and `web_url`.
 
@@ -51,10 +51,10 @@ change the run.
 
 ### Set high level parameters, let Mo plan by default
 
-Let Mo choose flows, test cases, sub-agent orchestration, etc. within the right
+Let Mo choose flows and sub-agent orchestration within the right
 scope and budget for the user's request. Describe what the user wants tested.
 Preserve user-specified coverage; otherwise do not prescribe a checklist,
-interaction steps, or a case count. Supply implementation facts as context.
+interaction steps, or a fixed number of checks. Supply implementation facts as context.
 
 You own target setup, authentication, and actions Mo cannot perform remotely.
 Before starting, remove unrequested testing restrictions. Leave normal
@@ -62,8 +62,8 @@ concurrency available; reduce `--max-concurrency` only for an explicit request
 or a demonstrated target limitation, and record the reason.
 
 Give Mo the agreed duration or spend budget and let it prioritize coverage.
-"Light" does not imply a case limit or serial execution. Mo has no session-wide
-time or test-count option. For a user-specified hard cap, monitor wall time or
+"Light" does not imply a fixed number of checks or serial execution. Mo has no
+session-wide time or test-count option. For a user-specified hard cap, monitor wall time or
 `qa cost <session-id>`, stop with `qa stop <session-id> --subagents` at the cap,
 and report unfinished coverage.
 
@@ -215,7 +215,7 @@ while :; do
     { echo "status request failed"; sleep 30; continue; }
   events=$(jq -r '"displayState \(.displayState // .state)",
     (.findings.bugs[] | "\(.kind) \(.name)"),
-    (.findings.verdicts[] | "verdict \(.status) \(.testCaseName // "-")")' \
+    (.findings.verdicts[] | "verdict \(.status)")' \
     <<<"$snapshot" | sort)
   comm -13 <(printf '%s\n' "$seen") <(printf '%s\n' "$events")
   seen=$events

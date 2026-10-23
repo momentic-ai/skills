@@ -21,19 +21,18 @@ finding filenames by listing the directory.
 `report.json` contains the source `sessionId`, a `summary`, a map of finding
 categories to filenames, a `bugs` index of per-bug detail JSON and issue drafts,
 and each evidence download under `artifacts`. The CLI
-always writes `summary.generatedAt`, `counts`, `verdictsByStatus`, and
-`verdictsByScope`. When the server provides them, it also writes `state` and `sessionState` (the lifecycle
+always writes `summary.generatedAt`, `counts`, and
+`verdictsByStatus`. When the server provides them, it also writes `state` and `sessionState` (the lifecycle
 state), `displayState` (the same session state `qa status` reports),
 `createdAt`, `lastActivityAt`, and `latestTurn`.
 Those server-supplied fields can be absent when exporting from a server running
 an earlier API.
 
-| File             | Contents                                                       |
-| ---------------- | -------------------------------------------------------------- |
-| `bugs.json`      | Reproduced bugs and static flags, with evidence and timestamps |
-| `testCases.json` | Planned coverage, setup, steps, and pass criteria              |
-| `verdicts.json`  | Verification results and coverage gaps                         |
-| `triage.json`    | Human dispositions; no entry means the bug is open             |
+| File            | Contents                                                       |
+| --------------- | -------------------------------------------------------------- |
+| `bugs.json`     | Reproduced bugs and static flags, with evidence and timestamps |
+| `verdicts.json` | Verification results and coverage gaps                         |
+| `triage.json`   | Human dispositions; no entry means the bug is open             |
 
 Inspect each finding's evidence. Reproduced bugs can have recordings; static
 flags have screenshots. Read the JSON and Markdown paths in `report.bugs`.

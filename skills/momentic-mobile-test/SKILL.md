@@ -127,9 +127,12 @@ borderline verdict.
 Cache is scoped by git metadata, including branch. Protected branches read cache
 but do not write it unless `--save-cache` is used or `CI` is set.
 
-- Change a step description when its intent changes. Never add
-  `DANGEROUS_FORCE_DYNAMIC` or `--disable-cache` to locator steps; built-in cache
-  validation refinds changing targets.
+- Change a step description when its intent changes. In general, do not add
+  `DANGEROUS_FORCE_DYNAMIC` or `--disable-cache` to locator steps; built-in
+  cache validation refinds changing targets. Disabling the cache is not a
+  substitute for clarifying a vague description or fixing a timing or race
+  condition. Add it only when told to, or when a cached locator already caused a
+  failure that neither fix resolves.
 - Carry a successful preview's `CacheId` into the exact step being spliced.
 - Reword an assertion when old memory no longer matches its intended condition.
 

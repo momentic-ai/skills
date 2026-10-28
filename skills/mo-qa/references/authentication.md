@@ -2,11 +2,8 @@
 
 ## Authenticate Mo
 
-```bash
-qa login
-```
-
-Use `qa login --no-browser` when the environment cannot open a browser. Login
+Run `qa login`, or `qa login --no-browser` when the environment cannot open a
+browser. Login
 saves the API key and server URL in `~/.momentic/auth.json`.
 
 In CI, set `MOMENTIC_API_KEY`. It overrides the saved login. Preserve an
@@ -14,12 +11,17 @@ existing value unless authentication fails or the user asks to replace it.
 
 ## Authenticate the application
 
-Pass credentials at session start with `--env-file` or `--env-var NAME`.
+A Momentic environment groups a `BASE_URL` with reusable non-secret variables
+under a name such as `staging`. `--environment NAME` selects one created under
+**Environments** in the Momentic dashboard, not one from the shell or
+`momentic.config.yaml`. Mo copies its variables into the session at start.
+
+Pass local values and secrets at session start with repeatable `--env-file` or
+`--env-var NAME` options; they override matching environment variables.
 `--env-var` forwards a variable already present in the `qa start` process
-environment; it does not accept `NAME=value`. Never include the value in the
-command or brief. `--environment` selects non-secret variables from a Momentic
-dashboard environment. Put variable names and a non-secret account label in the
-brief. Root Mo supplies authentication to its internal sub-agents.
+environment; it does not accept `NAME=value`. Put variable names and a
+non-secret account label in the brief. Root Mo supplies authentication to its
+internal sub-agents.
 
 A browser auth-state file uses Playwright `storageState` JSON: cookies and
 `localStorage` by origin. Momentic `AUTH_SAVE` may add `sessionStorage` and a

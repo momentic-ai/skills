@@ -15,11 +15,11 @@ across commands, interpolate the literal Mo session ID.
 
 Working. Keep polling:
 
-| Status              | Meaning                                                                |
-| ------------------- | ---------------------------------------------------------------------- |
-| `running`           | Root Mo is working.                                                    |
-| `waiting_on_agents` | Root Mo is idle or stopped; its internal sub-agents are still working. |
-| `checking`          | Mo is checking whether its latest reply needs you.                     |
+| Status              | Meaning                                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `running`           | Root Mo is working.                                                                                                                        |
+| `waiting_on_agents` | Root Mo is idle or stopped; its internal sub-agents are still working. After a stop is issued, they may still be shutting down gracefully. |
+| `checking`          | Mo is checking whether its latest reply needs you.                                                                                         |
 
 Waiting on you:
 
@@ -66,7 +66,7 @@ Internal sub-agents can still be running. Confirm `qa status` no longer reports
   `qa send`. Use it to redirect Mo without losing in-flight tests.
 - `qa stop <session-id> --subagents` also stops every running sub-agent. Use it
   to end spending. It returns right away; sub-agents can take a minute or more
-  to shut down, and you don't need to wait before exporting. `qa send` can
+  to shut down, and you don't need to wait for them. `qa send` can
   still resume the session.
 - `qa archive <session-id>` cancels all work, hides the session, and rejects
   further `qa send`. Restore it with `qa unarchive <session-id>`.

@@ -16,15 +16,22 @@ EOF
 )
 ```
 
+If the user's request prescribes how Mo should test, such as reproducing each
+bug three times or covering the happy path, failure cases, edge cases, and page
+reloads for every flow, warn them that this can lower Mo's results. Mo is good
+at deciding what is most important to test. Keep the instructions they still
+want after the warning.
+
 ## Effort
 
 `qa start --effort <level>` sets active testing time and sub-agent concurrency:
 
-| Effort             | Testing time | Use for                                     |
-| ------------------ | -----------: | ------------------------------------------- |
-| `low`              |       15 min | A quick check of one flow.                  |
-| `medium` (default) |       30 min | A normal feature or PR pass.                |
-| `high`             |       60 min | A broad bug bash; Mo can fork coordinators. |
-| `max`              |      120 min | A whole-app pass; Mo can fork coordinators. |
+| Effort             | Testing time | Max sub-agents | Use for                                     |
+| ------------------ | -----------: | -------------: | ------------------------------------------- |
+| `low`              |       15 min |             10 | A quick check of one flow.                  |
+| `medium` (default) |       30 min |             20 | A normal feature or PR pass.                |
+| `high`             |       60 min |             30 | A broad bug bash; Mo can fork coordinators. |
+| `max`              |      120 min |             40 | A whole-app pass; Mo can fork coordinators. |
 
-Pick it from the requested depth or duration.
+If the user didn't choose an effort, pick a reasonable one from the request's
+scope and ask them to confirm it with its testing time and sub-agent limit.

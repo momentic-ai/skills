@@ -19,7 +19,7 @@ Working. Keep polling:
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `running`           | Root Mo is working.                                                                                                                        |
 | `waiting_on_agents` | Root Mo is idle or stopped; its internal sub-agents are still working. After a stop is issued, they may still be shutting down gracefully. |
-| `checking`          | Mo is checking whether its latest reply needs you.                                                                                         |
+| `checking`          | Momentic doesn't know how Mo's last turn ended. It often clears within a minute; if not, it stays until you send Mo a message.             |
 
 Waiting on you:
 
@@ -56,8 +56,8 @@ timeout or stopped status text stays on stderr.
 `qa wait "$session_id" --json` returns when root Mo's turn finishes, stops, or
 needs input. Exit code `2` means Mo needs input; `4` means it was stopped.
 Internal sub-agents can still be running. Confirm `qa status` no longer reports
-`running`, `waiting_on_agents`, or `checking`, then inspect the outcome.
-`needs_you` and `blocked` require attention.
+`running` or `waiting_on_agents`, then inspect the outcome. `checking` means the
+outcome is unknown; `needs_you` and `blocked` require attention.
 
 ## Stop
 

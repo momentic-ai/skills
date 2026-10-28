@@ -23,12 +23,11 @@ Run these phases in order:
    [follow the session](#follow-the-session) and read Mo's questions and replies
    with `qa read "$session_id" --from start --timeout 45s --json`.
    `qa <command> --help` shows the JSON a command prints.
-4. **Answer questions.** `needs_you` means Mo is waiting on you;
-   `attentionPending: true` alone means its reply is still being classified.
-   Answer with `qa send "$session_id" --wait 45s "<answer>"`. A
-   plain `qa send` answers the oldest open question card. To answer a specific
-   card, add `--question-id <id>`; answer each card in `qa read`'s
-   `pendingQuestions` (`pendingInput` is the oldest).
+4. **Answer questions.** `needs_you` means Mo is waiting on you. Answer with
+   `qa send "$session_id" --wait 45s "<answer>"`. A plain `qa send` answers the
+   oldest open question card. To answer a specific card, add
+   `--question-id <id>`; answer each card in `qa read`'s `pendingQuestions`
+   (`pendingInput` is the oldest).
 5. **Finish.** Check coverage, export with
    `qa report "$session_id" --output <dir>`, then end spending with
    `qa stop "$session_id" --subagents`; see [Finish](#finish). After the
@@ -59,8 +58,8 @@ sub-agent orchestration within the right scope and budget. Ask only when
 missing scope, access, or permission would change the run.
 
 You own target setup, authentication, and actions Mo cannot perform remotely.
-Before starting, pick `--effort` for the agreed duration and let Mo prioritize
-coverage.
+Before starting, pick `--effort` as [Brief](references/brief.md#effort)
+describes and confirm it with the user unless they chose it.
 
 ## Start the session
 
@@ -82,9 +81,9 @@ Poll `qa status "$session_id" --full` about every 30 seconds. Report new
 `findings.bugs` names (`kind` is `bug` or `flag`) and `status` changes as they
 appear. Read one bug's
 details with `qa bugs describe "$session_id" <bug-id>`. Keep polling while
-`status` is `running`, `waiting_on_agents`, or `checking`, or while
-`attentionPending` is true and `status` is not `needs_you`. Stop on any
-other state and act on it as Session control describes. Stop and tell the user
+`status` is `running`, `waiting_on_agents`, or `checking`; if `checking` lasts
+over a minute, Mo's last outcome is unknown, so read its last reply and tell the
+user. Stop on any other state and act on it as Session control describes. Stop and tell the user
 after 3 failed status calls in a row, or once the session has run twice its
 effort's testing time.
 

@@ -1,129 +1,95 @@
-# Momentic Agent Skills
+# Momentic agent skills
 
-Agent skills for [Momentic](https://momentic.ai), an end-to-end testing platform
-for web and mobile apps.
+Use one Momentic coding-agent plugin for browser and mobile test authoring,
+maintenance, and Mo bug bashes.
 
-The skills teach a coding agent how to write Momentic tests, run them, and fix
-them when they break. The package also wires up the local Momentic MCP servers,
-which are what let the agent drive a real browser or device while it works.
-
-## Installation
-
-### Momentic CLI (recommended)
-
-The `momentic`, `momentic-mobile`, and `mo` CLIs ship these skills. Each CLI
-installs the shared skills plus the one for its platform, with no network
-fetch:
-
-```shell
-npx momentic skills
-npx momentic-mobile skills
-mo skills
-```
-
-Each command detects the coding agents on your machine and asks which ones to
-set up. Pass `--yes` to skip the prompt. After you upgrade a CLI, it asks once
-to reinstall the skills so they match the new version. `momentic init` and the
-setup wizard offer the same step. See
-[Skills](https://momentic.ai/docs/coding-agents/skills).
-
-Use the options below if you want the plugin form, or a skill the CLIs do not
-bundle (`momentic-result-classification`).
+## Install the plugin
 
 ### Claude Code
 
-Add this repository as a Claude Code marketplace, then install the Momentic
-plugin:
+Add the catalog and install Momentic:
 
-```shell
+```text
 /plugin marketplace add momentic-ai/skills
 /plugin install momentic@momentic
 ```
 
-The plugin installs all the skills and registers the local Momentic MCP servers.
-Run `/mcp` in Claude Code to see which ones started.
-
 ### Cursor
 
-Install the Momentic plugin from the Cursor Marketplace. Search for
-**Momentic** under **Customize → Plugins**.
+In Cursor, open **Customize > Plugins**, search for **Momentic**, and install
+the plugin.
 
 ### Devin
 
-Install the Devin plugin from this repository. It includes all the skills and
-the local Momentic MCP servers.
+Install the Momentic plugin from this repository.
 
-### Other agents
+The plugin bundles the repository-test skills, `mo-qa`, and local browser and
+mobile MCP servers. Mo-only work uses `mo-qa` and the `qa` CLI; it does not
+require local MCP setup or local MCP authentication.
 
-Install the skills with the `skills` CLI if you do not use a Momentic CLI:
+## Install skills without the plugin
 
-```shell
-npx skills add momentic-ai/skills
+Use a Momentic CLI to install the shared skills in supported coding agents:
+
+```bash
+npx momentic skills
+npx momentic-mobile skills
+qa skills
 ```
 
-This repository is also an Agent Plugins v1 package. The manifest is at
-[`plugin.json`](plugin.json).
+Each command asks which coding agents to configure. Pass `--yes` to skip the
+prompt. Use the `skills` CLI to install the skills from the public catalog:
 
-## MCP servers
-
-The skills call MCP tools that run tests, inspect live pages, and splice steps
-back into your YAML files. Those tools come from the Momentic CLIs over stdio, so
-the servers run on your machine next to your project:
-
-```json
-{
-  "mcpServers": {
-    "momentic": {
-      "command": "npx",
-      "args": ["-y", "momentic", "mcp"]
-    },
-    "momentic-mobile": {
-      "command": "npx",
-      "args": ["-y", "momentic-mobile", "mcp"]
-    }
-  }
-}
+```bash
+npx skills add https://github.com/momentic-ai/skills
 ```
 
-That is what `.mcp.json` and the Devin manifest install. `momentic` drives
-browsers and `momentic-mobile` drives Android and iOS, so drop whichever one
-your project does not test.
+Install the standalone `mo-qa` skill for the lighter Mo-only path. It uses the
+same source as the plugin:
 
-Both servers look for `momentic.config.yaml` in the working directory and its
-parents. Add `--config /absolute/path/to/momentic.config.yaml` if your agent
-starts outside the project, or if the two platforms live in separate
-subdirectories.
+```bash
+npx skills add https://github.com/momentic-ai/skills --skill mo-qa
+```
 
-Sign in once with `npx momentic login` (or `npx momentic-mobile login`), or set
-`MOMENTIC_API_KEY` in the environment. `npx momentic install-mcp` and
-`npx momentic-mobile install-mcp` write the server entry for Claude Code,
-Cursor, VS Code, Codex, Windsurf, and other clients if you would rather not
-edit config by hand. Mobile work needs the usual device
-toolchain, and `momentic-mobile mcp` takes `--android-home` and `--java-home`
-when those live somewhere unusual. See the
-[MCP server documentation](https://momentic.ai/docs/coding-agents/mcp-server)
-for the full tool list.
+## Choose a path
+
+| Task                                                      | Use                                                        |
+| --------------------------------------------------------- | ---------------------------------------------------------- |
+| Exploratory Mo bug bash, PR testing, or private-target QA | `qa` CLI and `mo-qa`                                       |
+| Write or maintain repository browser tests                | `momentic-test` and the local `momentic` MCP               |
+| Write or maintain repository mobile tests                 | `momentic-mobile-test` and the local `momentic-mobile` MCP |
+| ChatGPT, Claude, or Gemini                                | The hosted Momentic connector at `https://mcp.momentic.ai` |
+
+See the
+[local MCP server guide](https://momentic.ai/docs/coding-agents/mcp-server) for
+setup. The hosted connector cannot reach localhost, private networks, or local
+files.
+
+Keep an existing connection when it supports the task. Do not authenticate a
+second connection or start another paid session after uncertain delivery without
+checking the original session.
+
+## Hosted connector
+
+The hosted connector uses Momentic OAuth. Keep credentials out of chat and
+uploads; use a Momentic environment or session-page secrets instead.
+
+See the [hosted connector guide](https://momentic.ai/docs/mo/chatgpt-and-claude)
+for connection setup, files, findings, and retests.
 
 ## Skills
 
-Each skill is a Markdown file that gives an agent domain knowledge and a
-step-by-step workflow. They use the
-[`SKILL.md` format](https://docs.cursor.com/context/rules-for-ai).
+| Skill                                                                          | Description                                        |
+| ------------------------------------------------------------------------------ | -------------------------------------------------- |
+| [momentic-test](skills/momentic-test/SKILL.md)                                 | Create, run, and maintain Momentic browser tests.  |
+| [momentic-mobile-test](skills/momentic-mobile-test/SKILL.md)                   | Create, run, and maintain Momentic mobile tests.   |
+| [momentic-maintain](skills/momentic-maintain/SKILL.md)                         | Diagnose and repair failing Momentic tests.        |
+| [mo-qa](skills/mo-qa/SKILL.md)                                                 | Use the `qa` CLI to run and control Mo bug bashes. |
+| [momentic-spec](skills/momentic-spec/SKILL.md)                                 | Improve code correctness with Momentic specs.      |
+| [momentic-triage](skills/momentic-triage/momentic-triage-quarantined-tests.md) | Triage and repair quarantined tests.               |
 
-| Skill                                                                            | Description                                                                                                                                                                                                                                                                                                                                                                          |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [momentic-test](skills/momentic-test/SKILL.md)                                   | Create, run, and maintain Momentic browser E2E tests and modules stored as `*.test.yaml` and `*.module.yaml` files.                                                                                                                                                                                                                                                                  |
-| [momentic-mobile-test](skills/momentic-mobile-test/SKILL.md)                     | Create, run, and maintain Momentic mobile E2E tests and modules for Android and iOS. Use Momentic MCP tools for live device validation, and use direct v2 YAML edits only for high-confidence local mobile v2 changes.                                                                                                                                                               |
-| [momentic-result-classification](skills/momentic-result-classification/SKILL.md) | Classify or explain Momentic test run results using Momentic MCP tools. Use when the user asks to categorize a failure, understand why a run failed, triage test results, or compare run results to past run results.                                                                                                                                                                |
-| [momentic-maintain](skills/momentic-maintain/SKILL.md)                           | Diagnose, classify, triage, and repair failing Momentic tests with MCP run tools, the Momentic CLI, and manual run artifacts. Use when a developer asks what happened on a branch, DevX or on-call asks why main is red, or the user wants to inspect classifications, de-flake quarantined or recovered tests, reduce retries, re-classify runs, run AI triage, or repair failures. |
-| [momentic-spec](skills/momentic-spec/SKILL.md)                                   | Improve code correctness using Momentic specs in the feature development process                                                                                                                                                                                                                                                                                                     |
-| [mo-qa](skills/mo-qa/SKILL.md)                                                   | Use Momentic's `mo` CLI to run and control Mo, Momentic's cloud autonomous QA agent.                                                                                                                                                                                                                                                                                                 |
-| [momentic-triage](skills/momentic-triage/momentic-triage-quarantined-tests.md)   | Triage and repair Momentic tests that are currently quarantined.                                                                                                                                                                                                                                                                                                                     |
+## Sources
 
-## Skill sources
-
-A bot copies most files in `skills/` from an upstream source, so anything you
-edit here gets overwritten on the next sync. That covers `momentic-test`,
-`momentic-mobile-test`, `momentic-maintain`, `momentic-spec`, `mo-qa`, and
-`momentic-triage-quarantined-tests.md`. If you work at Momentic, edit them at
-the source. If you do not, please open an issue instead of a pull request.
+The plugin manifests, marketplace catalogs, and skills are synced from upstream
+sources. Momentic contributors should edit them upstream. Others should open an
+issue instead of a pull request.

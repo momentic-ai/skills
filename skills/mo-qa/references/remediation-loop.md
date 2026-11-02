@@ -6,7 +6,8 @@ before they are fully verified through video or browser reproduction; a
 session, first recover its brief with
 `qa read <session-id> --from start --timeout 0 --json`. Skip bugs a person
 marked duplicate, works as intended, or cannot reproduce in the report's
-`triage.json`.
+`triage.json`. See [finding status](reports.md#finding-status) for the lifecycle
+and core triage commands.
 
 1. Wait for Mo's run to finish before changing the app it tests; edits can
    hot-reload the app under Mo. You can study findings and prepare fixes
@@ -15,8 +16,10 @@ marked duplicate, works as intended, or cannot reproduce in the report's
    `qa report <session-id> --output <dir>`.
 3. Make the fixed version available at Mo's target. Reuse its tunnel when
    present.
-4. Ask Mo to recheck each fixed bug by name with its original steps. Do not
-   change the target until Mo finishes.
-5. Export to a new directory and compare Mo's recheck reply and `verdicts.json`
-   with the baseline.
+4. Record the fix with `qa bugs fix <session-id> <bug-id>` once the bug is Open.
+   If a recheck is authorized, ask Mo to retest it by name with its original
+   steps. Keep the target unchanged until Mo finishes. A reproduced Fixed bug
+   reopens; a completed retest marks an Open bug Fixed if it no longer reproduces.
+5. After a recheck, export to a new directory and compare Mo's reply and
+   `verdicts.json` with the baseline.
    Call a fix verified only when Mo's recheck passes the original steps.

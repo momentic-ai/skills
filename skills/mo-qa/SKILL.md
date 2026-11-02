@@ -80,7 +80,9 @@ Starting returns before Mo finishes. The user watches or joins through
 Poll `qa status "$session_id" --full` about every 30 seconds. Report new
 `findings.bugs` names (`kind` is `bug` or `flag`) and `status` changes as they
 appear. Read one bug's
-details with `qa bugs describe "$session_id" <bug-id>`. Keep polling while
+details with `qa bugs describe "$session_id" <bug-id>`. Findings expose
+`lifecycleStatus`: Needs review, Open, Fixed, or Dismissed. Core commands are in
+[reports](references/reports.md). Keep polling while
 `status` is `running`, `waiting_on_agents`, or `checking`; if `checking` lasts
 over a minute, Mo's last outcome is unknown, so read its last reply and tell the
 user. Stop on any other state and act on it as Session control describes. Stop and tell the user
@@ -107,8 +109,10 @@ internal sub-agents. Never invent or reveal a secret.
 For routine progress, use `status`, `read`, or `wait`. Send a message to answer
 a blocker, to steer or recheck work, or to ask Mo for a summary. Sending while
 active steers root Mo between tool calls while in-flight work continues. When
-Mo is idle, the message starts its next turn. Without `--wait`, confirm the
-reply with `read`.
+Mo is idle, the message starts its next turn.
+
+Add `--wait <duration>` when your next step depends on Mo's reply. Otherwise,
+send without waiting and continue independent work while following the session.
 
 ## Work while Mo runs
 

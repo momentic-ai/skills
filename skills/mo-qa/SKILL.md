@@ -7,39 +7,32 @@ description: Run and control Mo QA sessions with Momentic's `qa` CLI. Use for bu
 
 Mo runs browser QA in a hosted sandbox. Its files and processes are remote.
 
+Use the CLI in coding agents and CI; use the
+[hosted connector](https://momentic.ai/docs/mo/chatgpt-and-claude) for chat without
+a shell. Keep an existing connection if it supports the task.
+
+For an existing session, skip to [Follow the session](#follow-the-session).
+For findings only, read [Reports](references/reports.md). Don't start, message
+or stop work for a read-only request.
+
 ## Workflow at a glance
 
-Run these phases in order:
-
-1. **Install and authenticate.** Run `qa version`. If Mo is missing or
-   outdated, read [Installation](references/installation.md). After a `qa`
-   login error, read [Authentication](references/authentication.md#authenticate-mo).
-2. **Start.** Read [Brief](references/brief.md) for a worked example and how
-   to pick `--effort`. Then [prepare the brief](#prepare-the-brief) and
-   [start the session](#start-the-session) with `qa start "$brief"`.
-3. **Follow the session.** First read
-   [Session control](references/session-control.md): it explains each
-   `status` and how to run the poll. Then
-   [follow the session](#follow-the-session) and read Mo's questions and replies
-   with `qa read "$session_id" --from start --timeout 45s --json`.
-   `qa <command> --help` shows the JSON a command prints.
-4. **Answer questions.** `needs_you` means Mo is waiting on you. Answer with
-   `qa send "$session_id" --wait 45s "<answer>"`. A plain `qa send` answers the
-   oldest open question card. To answer a specific card, add
-   `--question-id <id>`; answer each card in `qa read`'s `pendingQuestions`
-   (`pendingInput` is the oldest).
-5. **Finish.** Check coverage, export with
-   `qa report "$session_id" --output <dir>`, then end spending with
-   `qa stop "$session_id" --subagents`; see [Finish](#finish). After the
-   last session, run `qa tunnel stop "$tunnel_id"` if you started a tunnel.
+1. Prepare access and the brief; confirm effort before `qa start "$brief" --effort "$effort"`.
+2. [Follow the session](#follow-the-session) and read replies with `qa read "$session_id" --from start --timeout 45s --json`.
+3. For `needs_you`, answer with `qa send "$session_id" --wait 45s "<answer>"`.
+4. Check coverage and export with `qa report "$session_id" --output <dir>`.
+5. End spending with `qa stop "$session_id" --subagents`, even if export fails. After the last session, use `qa tunnel stop "$tunnel_id"` for tunnels you started.
 
 ## Prepare the brief
 
-Give Mo the testing goal and operating boundaries. Include what applies: the
-target URL from the request, with any relevant path and query; the user's goal,
-relevant product intent, and known requirements; the login method, test account
-label, and allowed test data; prohibited actions and data that Mo must not
-change; and what the user wants tested, with any requested exclusions.
+Keep passwords and tokens out of commands and tool arguments, even if the user
+pastes them into chat. Don't copy them into shell assignments, heredocs or
+file-edit payloads. Before handling credentials, read
+[Authentication](references/authentication.md#authenticate-the-application)
+for secure provisioning and `--env-file` / `--env-var` examples.
+
+Include the exact target URL, goal, requirements, login method, test account
+label, allowed data, prohibited actions and coverage exclusions.
 
 Read a reference when it applies:
 
@@ -51,22 +44,21 @@ Read a reference when it applies:
 - Any change to Mo's browser or how fast it interacts:
   [Browser settings](references/browser-settings.md).
 
-Supply factual context from the request and repository, not a prescribed test
-plan. Preserve user-specified coverage; otherwise do not prescribe a checklist,
-interaction steps, or a fixed number of checks. Let Mo choose flows and
-sub-agent orchestration within the right scope and budget. Ask only when
-missing scope, access, or permission would change the run.
+Preserve user-specified coverage; otherwise let Mo choose flows and sub-agents.
+Supply facts, not a test checklist. Ask only when missing scope, access or
+permission would change the run.
 
-You own target setup, authentication, and actions Mo cannot perform remotely.
-Before starting, pick `--effort` as [Brief](references/brief.md#effort)
-describes and confirm it with the user unless they chose it.
+You own target setup and actions Mo cannot perform remotely. Read
+[Brief](references/brief.md) and confirm `--effort` unless the user chose it.
 
 ## Start the session
 
-Pass the brief as one argument and keep the returned values:
+Run `qa version`; see [Installation](references/installation.md) if missing or
+outdated, or [Authentication](references/authentication.md#authenticate-mo)
+after a login error. Set `effort` to the confirmed level and keep these values:
 
 ```bash
-session_json=$(qa start "$brief")
+session_json=$(qa start "$brief" --effort "$effort")
 session_id=$(jq -r .sessionId <<<"$session_json")
 web_url=$(jq -r .webUrl <<<"$session_json")
 created_at=$(jq -r '.createdAt // empty' <<<"$session_json")
@@ -75,9 +67,13 @@ created_at=$(jq -r '.createdAt // empty' <<<"$session_json")
 Starting returns before Mo finishes. The user watches or joins through
 `web_url`; `created_at` can be absent on older servers.
 
+After an uncertain start, check the session page or dashboard before trying
+again. Don't switch to hosted MCP or start a replacement blindly.
+
 ## Follow the session
 
-Poll `qa status "$session_id" --full` about every 30 seconds. Report new
+Read [Session control](references/session-control.md) for status meanings and
+the polling runner. Poll `qa status "$session_id" --full` about every 30 seconds. Report new
 `findings.bugs` names (`kind` is `bug` or `flag`) and `status` changes as they
 appear. Read one bug's
 details with `qa bugs describe "$session_id" <bug-id>`. Findings expose
@@ -89,30 +85,27 @@ user. Stop on any other state and act on it as Session control describes. Stop a
 after 3 failed status calls in a row, or once the session has run twice its
 effort's testing time.
 
-Run the poll with a host tool that reports output while you work, a runner
-sub-agent, or the fallback in
-[Session control](references/session-control.md#polling).
-
 `ready` and `sleeping` are settled but do not establish passing QA.
 
 ## Read and answer Mo
 
-Use the bounded `qa read --from start` above for Mo's questions and replies,
-not findings; `--from latest` misses a turn that finishes before the read
-begins, and `timedOut: true` means Mo is still working.
+Read questions and replies with
+`qa read "$session_id" --from start --timeout 45s --json`.
+`--from latest` can miss completed turns; `timedOut: true` means Mo is still
+working. Use [Reports](references/reports.md) for findings and
+`qa <command> --help` for output schemas.
 
-If Mo is blocked, answer from the brief, repository, or authorized environment
-data when you can. Otherwise ask the user for the missing access, permission,
-or decision, then send the answer to root Mo, which relays context to its
-internal sub-agents. Never invent or reveal a secret.
+For `needs_you`, answer each card in `pendingQuestions` with
+`qa send "$session_id" --question-id <id> --wait 45s "<answer>"`.
+Without `--question-id`, it answers the oldest card (`pendingInput`).
 
-For routine progress, use `status`, `read`, or `wait`. Send a message to answer
-a blocker, to steer or recheck work, or to ask Mo for a summary. Sending while
-active steers root Mo between tool calls while in-flight work continues. When
-Mo is idle, the message starts its next turn.
+Answer from authorized context or ask the user for missing access, permission
+or decisions. Send answers to root Mo; it relays them to sub-agents. Never
+invent or reveal a secret.
 
-Add `--wait <duration>` when your next step depends on Mo's reply. Otherwise,
-send without waiting and continue independent work while following the session.
+Use `status`, `read` or `wait` for progress. Messages steer active work between
+tool calls or start an idle Mo's next turn; in-flight work continues. Add
+`--wait <duration>` only when your next step depends on the reply.
 
 ## Work while Mo runs
 
@@ -132,3 +125,5 @@ the session again. Then read [Reports](references/reports.md) and export with
 `qa stop "$session_id" --subagents`, even if the export failed. Then give the
 user the findings, any coverage gaps, the export path, and `web_url`. If
 `qa report` warned that the report may be partial, tell the user.
+After the last session, stop any tunnel you started with
+`qa tunnel stop "$tunnel_id"`.

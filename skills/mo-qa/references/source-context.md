@@ -5,12 +5,11 @@ repository access.
 
 ## PR sessions
 
-For a GitHub PR, use PR mode instead of placing its reference only in the brief.
-Pass the deployment URL you created or verified with `--url`; any HTTP or HTTPS
-preview host works:
+For a GitHub PR, use `--pr`, not a PR link in the brief. Mo discovers a preview
+for the PR commit. Pass a verified deployment URL with `--url` to select one:
 
 ```bash
-session_json=$(qa start "$brief" --pr https://github.com/acme/shop/pull/412 --url https://preview.example.com)
+session_json=$(qa start "$brief" --effort "$effort" --pr https://github.com/acme/shop/pull/412 --url https://preview.example.com)
 ```
 
 `--pr` accepts a full GitHub PR URL, including comment permalinks and links with
@@ -28,10 +27,10 @@ toward focused verification and fewer explorers. Follow explicit user scope
 and duration requests instead of these defaults. These are
 planning targets, not enforced limits.
 
-An environment supplies the target without requiring a preview URL. Otherwise,
-Mo looks for a preview tied to the PR commit in Vercel, Cloudflare Pages, or
-Netlify bot posts. Failed or ambiguous discovery does not block startup: Mo can
-inspect the PR or ask for the target. Don't invent a URL from a branch name.
+If preview discovery fails or is ambiguous, supply a verified deployment URL
+with `--url`. Check for an existing session before retrying an uncertain start.
+An environment supplies test accounts, but its base URL does not replace the PR
+preview. Don't invent a URL from a branch name.
 Use `--tunnel` as well when the chosen deployment is local or private. Without
 `--pr`, `--url` and `--patch` are ignored; put a general session's target URL
 in its brief.
@@ -81,7 +80,7 @@ Read every hunk in `patch_file` with your file-reading tool before starting Mo.
 Remove any excluded content, then start the session:
 
 ```bash
-qa start "$brief" --pr https://github.com/acme/shop/pull/412 --url https://preview.example.com --patch "$patch_file"
+qa start "$brief" --effort "$effort" --pr https://github.com/acme/shop/pull/412 --url https://preview.example.com --patch "$patch_file"
 rm -f "$patch_file"
 ```
 

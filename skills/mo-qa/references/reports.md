@@ -61,7 +61,11 @@ Legacy `set-status open` still resets review; `accepted` confirms a bug.
 Retesting is optional. Completed retests preserve the finding: reproduced Fixed
 bugs reopen; Open bugs that no longer reproduce become Fixed. Blocked attempts
 leave status unchanged. Tracker links and PR allowances are separate.
-The CLI does not file tracker issues or review knowledge entries.
+Only change triage or resolution when the user requests it. Recording a fix is
+not proof that a retest passed. The CLI does not file tracker issues or review
+knowledge entries.
+
+## Evidence
 
 Artifacts include available MP4 videos, screenshots, raw compressed rrweb and
 network files, and mobile recording metadata and video segments. Browser

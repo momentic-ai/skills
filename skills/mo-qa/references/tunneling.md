@@ -2,7 +2,10 @@
 
 Use a tunnel when Mo cannot reach the target from the public internet.
 
-Expose only the required address:
+Reuse an existing Connector with `qa start "$brief" --tunnel "<connector-name>"`.
+Check that it reaches the required target. Don't stop a Connector you didn't start.
+
+Otherwise, expose only the required address:
 
 ```bash
 tunnel_json=$(qa tunnel start localhost:3000)

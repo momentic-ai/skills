@@ -1,6 +1,8 @@
 # Configure Mo's browser
 
-Put required overrides in the brief so Mo applies them before browser work.
+Put non-secret overrides in the brief so Mo applies them before browser work.
+For credential-bearing headers or Basic authentication, pass values through
+the [authentication options](authentication.md) and refer to variable names.
 
 `qa start --interaction-speed <default|human>` slows browser interaction to a
 human pace when the target needs it.

@@ -4,11 +4,15 @@
     "name": "Momentic",
     "url": "https://github.com/momentic-ai/skills"
   },
+  "metadata": {
+    "description": "Agent skills for Momentic tests and Mo bug bashes",
+    "version": "1.0.0"
+  },
   "plugins": [
     {
       "name": "momentic",
       "source": "./",
-      "description": "Skills for the Momentic end-to-end testing platform"
+      "description": "Bug bash with Mo and write, run and maintain Momentic browser and mobile tests."
     }
   ]
 }

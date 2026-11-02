@@ -5,14 +5,14 @@
     "email": "support@momentic.ai"
   },
   "metadata": {
-    "description": "Agent skills for Momentic end-to-end testing",
+    "description": "Agent skills for Momentic tests and Mo bug bashes",
     "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "momentic",
       "source": "./",
-      "description": "Skills for Momentic end-to-end testing. They cover writing browser and mobile app tests, running them, and fixing them when they break, and they connect the local Momentic MCP server."
+      "description": "Bug bash with Mo and write, run and maintain Momentic browser and mobile tests."
     }
   ]
 }

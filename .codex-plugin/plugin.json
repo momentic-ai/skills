@@ -1,0 +1,25 @@
+{
+  "name": "momentic",
+  "version": "1.0.0",
+  "description": "Bug bash with Mo and write, run and maintain Momentic browser and mobile tests.",
+  "author": {
+    "name": "Momentic",
+    "email": "support@momentic.ai",
+    "url": "https://momentic.ai"
+  },
+  "homepage": "https://momentic.ai/developers",
+  "repository": "https://github.com/momentic-ai/skills",
+  "license": "LicenseRef-Momentic-Integration",
+  "keywords": [
+    "momentic",
+    "mo",
+    "bug-bash",
+    "testing",
+    "e2e",
+    "browser",
+    "mobile",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

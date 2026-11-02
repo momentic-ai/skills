@@ -1,0 +1,23 @@
+Momentic integration license
+
+Copyright (c) 2026 Momentic, Inc. All rights reserved.
+
+This license applies only to Momentic-authored files in this integration package.
+
+You may install, copy, use, and configure this package, including adapting its
+skills, solely to connect supported AI clients to Momentic. Use of Momentic's
+services is governed by https://momentic.ai/legal/tos or your separate written
+agreement with Momentic.
+
+Plugin directories and marketplaces authorized by Momentic may copy, host, and
+redistribute unmodified versions of this package for that integration, retaining
+this notice. Brand assets may be displayed only to identify this integration.
+
+No license is granted to Momentic's hosted services, backend source code, or other
+software outside this package. Except for the permissions above, no rights are
+granted to copy, modify, distribute, sublicense, or sell this package.
+
+EXCEPT AS PROVIDED IN YOUR WRITTEN AGREEMENT WITH MOMENTIC, THIS PACKAGE IS
+PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+NONINFRINGEMENT.

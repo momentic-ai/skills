@@ -1,8 +1,8 @@
 # Momentic connector
 
 Use the hosted Momentic connector from ChatGPT, Claude, or Gemini to bug bash
-deployed apps and GitHub pull requests with Mo. Bug bashing ships in the first
-release.
+deployed apps and GitHub pull requests with Mo, and to review your workspace's
+Momentic test runs and quarantines.
 
 This package is proprietary. The [integration license](LICENSE) permits client
 setup and distribution through authorized directories. It does not license Mo or
@@ -67,7 +67,8 @@ Use these public details in Google Connected Console:
 
 - Name: Momentic
 - Description: Bug bash deployed web apps and GitHub pull requests with Mo,
-  review findings, and request retests from a conversation.
+  review findings and request retests, and list Momentic test runs and
+  quarantines from a conversation.
 - Icon: [assets/logo.png](assets/logo.png) (512 by 512 PNG)
 - Website: https://momentic.ai/mo
 - Terms: https://momentic.ai/legal/tos

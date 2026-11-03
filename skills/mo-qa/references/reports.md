@@ -50,12 +50,14 @@ them Fixed. Dismissed findings keep a reason.
 
 ```bash
 qa bugs accept <session-id> <bug-id>
-qa bugs fix <session-id> <bug-id>
-qa bugs reopen <session-id> <bug-id>
+qa bugs describe <session-id> <bug-id>
+qa bugs fix <session-id> <bug-id> [--pr <url>] [--commit <sha>]
+qa bugs reopen <session-id> <bug-id> [--pr <url>] [--commit <sha>]
 qa bugs dismiss <session-id> <bug-id> works-as-intended
 qa bugs review <session-id> <bug-id>
 ```
 
+Describe the finding before fixing; pass the PR URL and commit SHA when available.
 Dismiss reasons: `works-as-intended`, `cannot-reproduce`, `duplicate`.
 Legacy `set-status open` still resets review; `accepted` confirms a bug.
 Retesting is optional. Completed retests preserve the finding: reproduced Fixed

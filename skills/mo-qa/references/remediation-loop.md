@@ -16,7 +16,9 @@ and core triage commands.
    `qa report <session-id> --output <dir>`.
 3. Make the fixed version available at Mo's target. Reuse its tunnel when
    present.
-4. Record the fix with `qa bugs fix <session-id> <bug-id>` once the bug is Open.
+4. Pull the finding with `qa bugs describe <session-id> <bug-id>` before fixing.
+   Record the fix with `qa bugs fix <session-id> <bug-id>` once the bug is Open;
+   add `--pr <url>` and `--commit <sha>` when available.
    If a recheck is authorized, ask Mo to retest it by name with its original
    steps. Keep the target unchanged until Mo finishes. A reproduced Fixed bug
    reopens; a completed retest marks an Open bug Fixed if it no longer reproduces.

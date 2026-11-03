@@ -9,15 +9,18 @@ marked duplicate, works as intended, or cannot reproduce in the report's
 `triage.json`. See [finding status](reports.md#finding-status) for the lifecycle
 and core triage commands.
 
-1. Wait for Mo's run to finish before changing the app it tests; edits can
-   hot-reload the app under Mo. You can study findings and prepare fixes
-   meanwhile.
-2. When Mo is idle, export a baseline with
+1. Before drafting a fix, pull the finding with
+   `qa bugs describe <session-id> <bug-id>`. While Mo runs, investigate verified
+   findings and draft fixes in an isolated worktree or as patch files outside
+   the target's served or watched files.
+   Keep the running target and shared test data unchanged so Mo can finish
+   testing and reproducing the original behavior.
+2. Once the initial bug bash and its reproductions have finished, confirm no
+   agents are still working and export a baseline with
    `qa report <session-id> --output <dir>`.
-3. Make the fixed version available at Mo's target. Reuse its tunnel when
-   present.
-4. Pull the finding with `qa bugs describe <session-id> <bug-id>` before fixing.
-   Record the fix with `qa bugs fix <session-id> <bug-id>` once the bug is Open;
+3. Apply the prepared fixes to the tested branch and make the fixed version
+   available at Mo's target. Reuse its tunnel when present.
+4. Record the fix with `qa bugs fix <session-id> <bug-id>` once the bug is Open;
    add `--pr <url>` and `--commit <sha>` when available.
    If a recheck is authorized, ask Mo to retest it by name with its original
    steps. Keep the target unchanged until Mo finishes. A reproduced Fixed bug

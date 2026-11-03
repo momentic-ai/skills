@@ -109,12 +109,13 @@ tool calls or start an idle Mo's next turn; in-flight work continues. Add
 
 ## Work while Mo runs
 
-Keep the tested revision stable through the initial QA pass and its
-reproductions. Do not change anything the target serves or hot-reloads, restart
-the app, deploy to its URL, or mutate shared test data while Mo uses it. Other
-work, such as code review, is fine. For bug fixes during the run, or if the
-user asked for fixes, read [Repair loop](references/remediation-loop.md).
-Otherwise, do not change app code.
+When fixes are in scope, use the time while Mo tests to investigate findings
+and draft fixes in an isolated worktree or as patch files outside the target's
+served or watched files. Apply the drafts after the initial bug bash and its
+reproductions finish; see [Repair loop](references/remediation-loop.md).
+
+Keep the tested revision and shared test data stable during that pass. Drafts
+must not hot-reload the target, restart its app, or deploy to its URL.
 
 ## Finish
 

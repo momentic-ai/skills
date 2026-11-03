@@ -59,7 +59,7 @@ evidence before treating a finding list or session state as a verified result.
 
 ## Google Connected Apps
 
-Google discovers the nine tools from the same MCP endpoint. Live OAuth
+Google discovers the eleven tools from the same MCP endpoint. Live OAuth
 verification and Google review are still pending; this is not a published
 listing.
 
@@ -101,7 +101,7 @@ Use the exact app-specific redirect URIs from the console, not a wildcard copied
 from an example. Keep client secrets and reviewer credentials in the provider or
 Google's secure console fields, not in this package or chat.
 
-Sync all nine tools and require confirmation for writes. In
+Sync all eleven tools and require confirmation for writes. In
 [Gemini Developer Mode](https://developers.google.com/connected-apps/mcp/dev-mode),
 verify read-only requests do not start paid work, PR QA uses the preview,
 uncertain delivery does not start another session, and file uploads respect the

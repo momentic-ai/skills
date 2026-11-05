@@ -21,6 +21,8 @@ a sandboxed command even when it is healthy. Run the health check, tunnel, and
 session commands in the same host context. Do not restart a healthy service to
 work around that namespace boundary.
 
+Resume an offline named tunnel with `qa tunnel start --name "$tunnel_id"`.
+
 After the last session, run `qa tunnel stop "$tunnel_id"`. If setup fails, do
 not expose more addresses, deploy the app, or share credentials without user
 direction.

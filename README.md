@@ -23,9 +23,10 @@ the plugin.
 
 Install the Momentic plugin from this repository.
 
-The plugin bundles the repository-test skills, `mo-qa`, and local browser and
-mobile MCP servers. Mo-only work uses `mo-qa` and the `qa` CLI; it does not
-require local MCP setup or local MCP authentication.
+The plugin bundles the repository-test skills, `mo-qa`, the local `momentic` and
+`momentic-mobile` MCP servers, and the hosted `momentic-hosted` MCP server at
+`https://mcp.momentic.ai`. Mo-only work uses `mo-qa` and the `qa` CLI; it does
+not require local MCP setup or hosted OAuth sign-in.
 
 ## Install skills without the plugin
 

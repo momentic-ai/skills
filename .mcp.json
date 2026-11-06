@@ -7,6 +7,10 @@
     "momentic-mobile": {
       "command": "npx",
       "args": ["-y", "momentic-mobile", "mcp"]
+    },
+    "momentic-hosted": {
+      "type": "http",
+      "url": "https://mcp.momentic.ai"
     }
   }
 }

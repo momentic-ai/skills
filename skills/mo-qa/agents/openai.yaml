@@ -1,4 +1,4 @@
 interface:
   display_name: "QA"
-  short_description: "Test apps with Mo through the qa CLI"
+  short_description: "Test apps with Mo, Momentic's QA agent"
   default_prompt: "Use $mo-qa to run and follow a QA session with Mo, Momentic's QA agent."

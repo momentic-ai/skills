@@ -1,19 +1,22 @@
 ---
 name: mo-qa
-description: Run and control Mo QA sessions with Momentic's `qa` CLI. Use for bug bashes, status checks, report export, replies to Mo, file transfer, or repairs based on Mo findings.
+description: Run and control Mo QA sessions with the hosted Momentic tools, or with Momentic's `qa` CLI for localhost and private targets that need a tunnel. Use for bug bashes, status checks, report export, replies to Mo, file transfer, triage and retests, or repairs based on Mo findings.
 ---
 
 # Run QA with Mo
 
 Mo runs browser QA in a hosted sandbox. Its files and processes are remote.
 
-Use the CLI in coding agents and CI; use the
-[hosted connector](https://momentic.ai/docs/mo/chatgpt-and-claude) for chat without
-a shell. Keep an existing connection if it supports the task.
+Use the hosted `momentic_mo_*` tools by default; see
+[Hosted tools](references/hosted-tools.md). Use the `qa` CLI and the steps below
+for a localhost or private target that needs a tunnel, or when the hosted tools
+aren't connected.
 
-For an existing session, skip to [Follow the session](#follow-the-session).
-For findings only, read [Reports](references/reports.md). Don't start, message
-or stop work for a read-only request.
+Continue a session with the tools that started it: the hosted tools for a hosted
+session, or [Follow the session](#follow-the-session) and
+[Reports](references/reports.md) for a CLI session. If you don't know which, try
+the hosted tools first. Don't start, message or stop work for a read-only
+request.
 
 ## Workflow at a glance
 

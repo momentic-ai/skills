@@ -23,18 +23,15 @@ generated fields to v2 YAML.
 
 ## AI Action V3
 
-AI Action V3 takes a natural-language goal and determines the browser steps.
+An AI action takes a natural-language goal and determines the browser steps.
 
-- **Cached by default:** save and replay a successful flow, self-healing failed
-  replay steps. Use for repeatable flows.
-- **Uncached:** run the agent fresh each time. Set `cache: false` in v2 or use
-  `--disable-cache` with `AI_ACTION_DYNAMIC`. Prefer this for chats, agentic
-  workflows, exploratory tests, and other dynamic or nondeterministic behavior.
+Keep caching enabled for repeatable flows. Set `cache: false` in v2 or use
+`--disable-cache` with `AI_ACTION_DYNAMIC` for chats, exploratory tests, or
+other behavior that must be chosen afresh each run.
 
-Treat "make sure you can do X" as goal-based testing unless the user specifies a
-route. Use granular steps when controls, intermediate assertions,
-deterministic replay, or a risky side effect needs individual control. Keep
-existing granular tests granular unless asked to change strategy.
+Use individual steps when controls, intermediate assertions,
+deterministic replay, or a risky side effect needs individual control. Preserve
+the step style of existing tests.
 
 ### Time-sensitive interactions
 
@@ -55,15 +52,15 @@ claiming coverage from a passing end state.
 
 ## Cache and memory
 
-Momentic caches resolved selectors, text, coordinates, and other metadata so
-most runs avoid repeated AI calls. AI assertions may also reuse past-result
-memory. Stale cache or memory can explain a fast wrong-element match or a
-repeated borderline verdict.
+Stale cache or assertion memory can explain a fast wrong-element match or a
+repeated incorrect verdict.
 
 Cache is scoped by git metadata, including branch. Protected branches read cache
 but do not write it unless `--save-cache` is used or `CI` is set.
 
-- Change a granular step description when its intent changes. Do not add `DANGEROUS_FORCE_DYNAMIC` or `--disable-cache` to locator steps unless asked, or unless a proven bad cache persists after clarifying the description and fixing timing.
+- Change a step description when its intent changes. Disable a locator's cache
+  only when requested or when a proven bad cache persists after correcting the
+  description and page readiness.
 - Reword an assertion when old memory no longer matches its intended condition.
 - For AI Action V3 cache behavior, see [AI Action V3](#ai-action-v3).
 
@@ -102,8 +99,8 @@ conventions for reusable v2 scripts. See the
 [JavaScript guide](https://momentic.ai/docs/integrations/javascript) for runtime
 APIs and timeout details.
 
-Playwright `evaluate` callbacks run in the browser and cannot close over Node
-values. Pass values as callback arguments or use `customWindow._momentic`.
+Browser-evaluation callbacks can't capture Node variables. Pass values as
+callback arguments or through `customWindow._momentic`.
 
 # Working with v2 YAML
 
@@ -111,13 +108,9 @@ V2 is human-editable. Tests use `before`, `steps`, and `after`; modules use
 `steps`. Each step has one command key, with options nested beneath it. Durations
 are milliseconds, and step IDs are not stored in YAML.
 
-If syntax is unclear, consult
-the generated v2 format reference at
-`infra/scripts/v2-json-schema/build/v2-format-reference.md` when working in the
-Momentic monorepo, or https://static.momentic.ai/v2-format-reference.md in an
-installed skill. `momentic app` and `momentic run` lint automatically.
-
-`momentic_test_get` reads persisted state; it does not refresh an active session.
+If syntax is unclear, read the
+[v2 format reference](https://static.momentic.ai/v2-format-reference.md).
+`momentic app` and `momentic run` lint automatically.
 
 ## Choose steps
 

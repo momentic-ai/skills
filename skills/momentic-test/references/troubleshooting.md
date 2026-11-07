@@ -38,15 +38,12 @@ Momentic, say so.
 - Element absent: debug the prerequisite. Element visible but not found: use a
   stable description based on visible text, role, and nearby context.
 - Fast wrong-element match: consider stale cache, then correct the description.
-- In normal mode, errors that an element is hidden, disabled, detached, covered,
-  moving, or outside the viewport originate in Playwright's actionability
-  enforcement, which Momentic surfaces; they are not failures in Momentic's
-  locator AI. Fix the page state or prerequisite. Use force only when bypassing
-  actionability is part of the intended behavior.
-- For controls that intentionally cannot satisfy Playwright actionability, such
-  as some rich-text editors, `browser.visualActions: true` uses coordinate-based
-  actions instead. It avoids those checks but also gives up their stability
-  guarantees. See [Visual actions](https://momentic.ai/docs/configuration/browser#browser-visualactions).
+- Hidden, disabled, detached, covered, moving, or offscreen target: fix the page
+  state or prerequisite before retrying. Use force only when bypassing those
+  checks is part of the intended behavior.
+- For controls that require coordinate-based actions, such as some rich-text
+  editors, read [Visual actions](https://momentic.ai/docs/configuration/browser#browser-visualactions)
+  before enabling `browser.visualActions`.
 - Use quoted text only when the exact text must appear; otherwise describe
   meaning. Make assertions concrete about region, object, count, or state.
 - Use `assertVisually` when the condition is visual and fully inside the
@@ -64,6 +61,3 @@ Momentic, say so.
 - Missing env value: verify the producing save and `env.X` versus
   `{{ env.X }}` at the consumer.
 - JavaScript failure: verify Node versus Browser context.
-
-After about three attempts at the same failure, stop and ask the user for
-direction.

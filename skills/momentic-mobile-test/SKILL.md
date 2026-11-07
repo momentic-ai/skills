@@ -1,92 +1,68 @@
 ---
 name: momentic-mobile-test
-description: Create, run, and maintain Momentic mobile E2E tests and modules for Android and iOS. Use Momentic MCP tools for live device validation, and use direct v2 YAML edits only for high-confidence local mobile v2 changes.
+description: Create, run, and maintain Momentic mobile E2E tests and modules for Android and iOS.
 ---
 
 # Write mobile tests
 
-1. Read `momentic.config.yaml` and the target test; confirm the intended result, environment, authentication, platform, app source, and provider. Run `npx momentic-mobile doctor` before initial device setup.
-2. Before editing YAML or choosing steps, read [Authoring](references/authoring.md) for device setup, file formats, commands, caches, timing, and module inputs.
-3. For a known v2 change, edit YAML, run `npx momentic-mobile lint` if syntax or references are uncertain, then reload or restart the session before validating.
-4. For v1, unknown screens, or live validation, use the MCP sequence below. Create new tests with `momentic_test_create` first; `momentic_session_start` opens existing tests only.
-5. Validate the saved range and terminate the session. Read [Troubleshooting](references/troubleshooting.md) when targeting, timing, device, or data failures block progress.
+1. Read `momentic.config.yaml` and the target test. Confirm the intended result,
+   environment, and authentication. Run `npx momentic-mobile doctor` before initial
+   device setup, and confirm the platform and app.
+2. Before choosing steps or editing YAML, read [Authoring](references/authoring.md)
+   for device setup, file formats, step choices, timing, and module inputs.
+3. For a known v2 change, edit the YAML and run `npx momentic-mobile lint`. Reload or
+   restart an active session before validating the saved change.
+4. For v1 changes, unfamiliar screens, or live validation, use the MCP steps below.
+5. Run the changed saved steps and their prerequisites, then terminate the session.
+   Read [Troubleshooting](references/troubleshooting.md) when a failure blocks you.
 
-Use hosted `momentic_search_docs` before writing step options, CLI flags, or configuration keys from memory.
-For mobile run history, call hosted `momentic_list_runs` with `executionType: ["ANDROID", "IOS"]`, or select one platform.
+Use hosted `momentic_search_docs` for current step options and configuration.
+If hosted tools aren't connected, add `https://mcp.momentic.ai` as an HTTP MCP
+server and sign in with OAuth. See [MCP setup](https://momentic.ai/docs/mo/chatgpt-and-claude).
 
-If hosted tools are missing, connect `https://mcp.momentic.ai` over HTTP and sign in with OAuth.
-In Codex, run the commands below; for other clients, use [remote MCP settings](https://momentic.ai/docs/mo/chatgpt-and-claude).
+## Confirm side effects
 
-```bash
-codex mcp add momentic-hosted --url https://mcp.momentic.ai
-codex mcp login momentic-hosted
-```
+Get approval before running or previewing an action that submits, purchases,
+deletes, sends, creates data, or has another non-idempotent side effect.
+Execute an approved side effect once, not once
+in preview and again in the saved test. Also confirm shared-module edits,
+local device overrides, and
+expensive full-test runs.
 
-## Confirm scope
+## Start a session
 
-Ask before previewing or running any step or AI
-action that may submit, purchase, delete, send, create, or cause another
-non-idempotent side effect. If approved, execute it at most once. Also ask before
-using local device overrides, editing a shared module, restarting a long flow, or
-running an expensive full test.
+Use `momentic_test_create` for a new test, then `momentic_session_start` with
+its test ID. For an existing test, start the session directly. Use the test's
+configured device and app unless the user requests an override. Read the
+returned platform-specific Step Authoring Guide and use its active step IDs.
 
-## Start and validate with MCP
+Use `momentic_get_artifacts` to discover unknown tests, modules, environments,
+devices, or app channels.
+Use `momentic_test_get` to read a saved test outside the active session, and
+`momentic_get_environment_variables` when a step needs an unknown value.
 
-Use tool descriptions and the platform-specific Step Authoring Guide returned by session start for current arguments and syntax.
-Prefer the test's configured remote device and app. Use local device or app overrides only when explicitly requested.
+## Preview, save, and validate
 
-Preview and run wait 30 seconds by
-default, then return a `stepRunnerId` while work continues. Leave
-`timeoutSeconds` unset for most calls, especially single preset steps. Lower it
-only when the coding agent's tool timeout is shorter; raise it only within a
-larger tool timeout. Poll returned handles with `momentic_poll_runner`.
+1. For a mid-test change, run through the preceding step in the same session.
+2. Preview a group of adjacent steps with `momentic_preview_steps`. Preview an
+   uncertain target individually with `momentic_preview_step`.
+3. Inspect the screenshots. Request emulator state only when the image doesn't
+   show enough to choose a target or diagnose a failure.
+4. Save a successful group with `momentic_test_splice_steps`. Attach each
+   returned `CacheId` to its exact step and use the updated step IDs in the response.
+5. Run the next dependent saved step or range. Validate the smallest saved range
+   covering the changed behavior, reusing prerequisites already run in this session.
+   Don't replay an approved side effect; report any saved steps left unverified.
 
-### Fetch context
-
-Fetch context only when needed; use filters in tool descriptions.
-
-- If the test ID is known, start `momentic_session_start` by itself. Its Test
-  Content provides active steps and runnable IDs; the platform comes from the
-  test.
-- Use `momentic_get_artifacts` only to discover unknown tests, modules,
-  environments, local devices, simulators, or managed asset channels. Avoid
-  redundant refreshes.
-- Use `momentic_test_get` to inspect persisted state before starting, or to read
-  a different test. Use active session and splice responses afterward.
-- Use filtered `momentic_get_environment_variables` only when a step needs env
-  data that is not already known.
-
-Only one device operation may run per session. Do not issue concurrent preview,
-run, state, or splice operations against the same session.
-
-### Preview, splice, and validate
-
-1. For mid-test work, run through the preceding step once and keep the same
-   session so authoring starts from the correct screen.
-2. Preview forward in logical checkpoints such as login complete, permission
-   handled, form ready, submission complete, or confirmation visible.
-3. Read the returned screenshot first. Request emulator state only when the
-   image lacks enough targeting or diagnostic context; request it again once if
-   the app may still be settling.
-4. Splice the successful checkpoint. Attach each returned `CacheId` only to its
-   exact step, then read the splice response for current step refs.
-5. Run the next dependent saved step or range.
-6. Before finishing, when safe, run the smallest saved range covering the
-   prerequisites, changed step, and next dependent contract. Reset first only
-   when accumulated state could mask a failure.
-
-Batch low-risk steps and preview uncertain targets individually. For non-idempotent actions, preview setup, splice it, then run only the approved saved action.
-
-MCP screenshots are the default signal. Request serialized emulator state for
-accessible names, native XML, webview structure, screen bounds, or offscreen
-context. Read environment and installed-app artifacts only when diagnosing data,
-launch, or install behavior.
+Run one device operation at a time per session. If a preview or run returns a
+`stepRunnerId`, wait for it with `momentic_poll_runner` before the next operation.
+Use a nonzero polling wait rather than repeatedly polling without waiting.
+Reset only when accumulated state could hide a failure. For nested steps, use
+the parent chain returned by the active session or splice response.
 
 ## Reuse modules
 
-For a logical flow of roughly four or more reusable steps, check
-`momentic_module_recommend` -> `momentic_module_get` -> reuse or inline. Modules
-cannot contain modules.
-
-Respect declared parameters, defaults, and enum values. Module inputs are
-JavaScript fragments, not `{{ }}` templates.
+For a reusable flow of roughly four or more steps, call
+`momentic_module_recommend`, then `momentic_module_get` before reusing it.
+Modules can't contain modules. Respect declared parameters, defaults, and enum
+values. Module inputs are JavaScript expressions, not `{{ }}` templates.

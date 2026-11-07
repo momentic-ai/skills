@@ -16,11 +16,9 @@
 
 ## Infrastructure and app health
 
-- Treat WDA, Appium, adb, emulator bootstrap or death, provider connectivity,
-  lost webview context, and repeated device-state capture failures as
-  infrastructure or app-environment signals. Run `npx momentic-mobile doctor`,
-  inspect logs and device health, and retry from a clean session before editing
-  the test.
+- For device startup, provider connectivity, lost webview context, or repeated
+  state-capture failures, run `npx momentic-mobile doctor`, inspect logs and device
+  health, and retry from a clean session before editing the test.
 - If the app never becomes idle, continuous animation, video, or background UI
   work can block iOS accessibility snapshots. Prefer a test-mode switch that
   disables it; longer waits do not make a permanently busy app idle.
@@ -54,6 +52,3 @@
   `{{ env.X }}` at the consumer.
 - App launch/install issue: inspect test settings, channels/tags, installed-apps
   artifacts, and whether the session is remote or local.
-
-After about three attempts at the same failure, stop and ask the user for
-direction.

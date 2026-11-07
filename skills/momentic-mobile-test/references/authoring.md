@@ -49,15 +49,15 @@ or generated fields to v2 YAML.
 
 ## Cache and memory
 
-Momentic caches native selectors, XML nodes, visible text, webview state,
-coordinates, and other metadata. AI checks may also reuse past-result memory.
-Stale cache or memory can explain a fast wrong-target action or a repeated
-borderline verdict.
+Stale cache or assertion memory can explain a fast wrong-target action or a
+repeated incorrect verdict.
 
 Cache is scoped by git metadata, including branch. Protected branches read cache
 but do not write it unless `--save-cache` is used or `CI` is set.
 
-- Change a step description when its intent changes. Do not add `DANGEROUS_FORCE_DYNAMIC` or `--disable-cache` to locator steps unless asked, or unless a proven bad cache persists after clarifying the description and fixing timing.
+- Change a step description when its intent changes. Disable a locator's cache
+  only when requested or when a proven bad cache persists after correcting the
+  description and screen readiness.
 - Reword an assertion when old memory no longer matches its intended condition.
 
 ## Readiness and timing
@@ -134,8 +134,6 @@ Common pitfalls:
 Consult [File format](https://momentic.ai/docs/core-concepts/file-format) for
 top-level structure and [Steps](https://momentic.ai/docs/core-concepts/steps) for
 step syntax.
-
-`momentic_test_get` reads persisted state; it does not refresh an active session.
 
 ## Choose steps
 

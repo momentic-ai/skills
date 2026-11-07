@@ -30,13 +30,18 @@ and uses the `qa` CLI only for localhost and private targets that need a tunnel.
 
 ## Install skills without the plugin
 
-Use a Momentic CLI to install the shared skills in supported coding agents:
+Use the browser, mobile, or Mo CLI to install its skills in supported coding
+agents:
 
 ```bash
 npx momentic skills
 npx momentic-mobile skills
 qa skills
 ```
+
+`momentic` installs `momentic-test`, `momentic-maintain`, and `momentic-spec`.
+`momentic-mobile` installs `momentic-mobile-test`, `momentic-maintain`, and
+`momentic-spec`. `qa` installs only `mo-qa`.
 
 Each command asks which coding agents to configure. Pass `--yes` to skip the
 prompt. Use the `skills` CLI to install the skills from the public catalog:

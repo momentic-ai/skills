@@ -29,7 +29,6 @@ Use exactly one ID:
 
 Name the earliest divergent step/container and its broken postcondition, not only the last failing step.
 Use readable module names or step descriptions in reasoning; use exact IDs in tool calls.
-For example, write `module create-subpage-under-parent-page`, `the last invocation of module <name>`, `substep 4 (0-indexed)`, or `the failed setup assertion`.
 Link past runs as `https://app.momentic.ai/runs/<runId>` with full UUIDs.
 
 ```text

@@ -1,9 +1,8 @@
 # Triage quarantined tests
 
-Confirm fresh runs or existing failures, the lookback, and repair delivery once.
-Default to fresh runs and a 7-day lookback for existing failures. Follow
-[Repair](repair.md) for app readiness, explicit delivery, sequential batches,
-and resource monitoring. Start with `--parallel 1`; keep at most 4 workers.
+Choose fresh runs or existing failures and the repair delivery. Default to fresh
+runs, or a 7-day lookback for existing failures. Read [Repair](repair.md) before
+triage for app readiness and delivery options.
 
 ## Fresh runs
 
@@ -28,8 +27,7 @@ Use the project's invocation prefix if it differs from `npx`.
    Deduplicate the remaining run IDs, classify them, and triage related runs
    together after one `--run-id` as described in [Repair](repair.md).
 
-Track every test through classification, repair, and replay. Report the date
-range, quarantine count, retained versus missing runs, each test's outcome,
-delivery artifact, and blockers. An environment failure needs a rerun, not an
-unrepairable verdict. Leave quarantine unchanged unless the user asks to remove
-it, and validate repairs with `npx momentic run --ignore-quarantine` first.
+Report each test's outcome, repair, and blockers, including tests without retained
+runs. Rerun environment failures after fixing setup; don't classify them as
+unrepairable tests. Leave quarantine unchanged unless the user asks to remove it,
+and validate repairs with `npx momentic run --ignore-quarantine` first.

@@ -1,8 +1,6 @@
 ## Download run artifacts manually
 
-Prefer MCP for ordinary inspection because `momentic_get_run` downloads and
-extracts cloud attempts automatically. Use the API when MCP output is missing,
-when raw files must be grepped, or when independently verifying the agent.
+Use the API when MCP output is missing or you need to inspect raw files.
 
 The export endpoint returns run metadata plus one short-lived signed ZIP URL per
 attempt; it does not return one combined run ZIP. Download and extract them

@@ -81,14 +81,13 @@ for connection setup, files, findings, and retests.
 
 ## Skills
 
-| Skill                                                                          | Description                                       |
-| ------------------------------------------------------------------------------ | ------------------------------------------------- |
-| [momentic-test](skills/momentic-test/SKILL.md)                                 | Create, run, and maintain Momentic browser tests. |
-| [momentic-mobile-test](skills/momentic-mobile-test/SKILL.md)                   | Create, run, and maintain Momentic mobile tests.  |
-| [momentic-maintain](skills/momentic-maintain/SKILL.md)                         | Diagnose and repair failing Momentic tests.       |
-| [mo-qa](skills/mo-qa/SKILL.md)                                                 | Run and control Mo bug bashes.                    |
-| [momentic-spec](skills/momentic-spec/SKILL.md)                                 | Improve code correctness with Momentic specs.     |
-| [momentic-triage](skills/momentic-triage/momentic-triage-quarantined-tests.md) | Triage and repair quarantined tests.              |
+| Skill                                                        | Description                                       |
+| ------------------------------------------------------------ | ------------------------------------------------- |
+| [momentic-test](skills/momentic-test/SKILL.md)               | Create, run, and maintain Momentic browser tests. |
+| [momentic-mobile-test](skills/momentic-mobile-test/SKILL.md) | Create, run, and maintain Momentic mobile tests.  |
+| [momentic-maintain](skills/momentic-maintain/SKILL.md)       | Diagnose and repair failing Momentic tests.       |
+| [mo-qa](skills/mo-qa/SKILL.md)                               | Run and control Mo bug bashes.                    |
+| [momentic-spec](skills/momentic-spec/SKILL.md)               | Improve code correctness with Momentic specs.     |
 
 ## Sources
 

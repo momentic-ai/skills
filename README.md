@@ -45,8 +45,8 @@ prompt. Use the `skills` CLI to install the skills from the public catalog:
 npx skills add https://github.com/momentic-ai/skills
 ```
 
-Install the standalone `mo-qa` skill for the lighter Mo-only path. It uses the
-same source as the plugin:
+Install the standalone `mo-qa` skill when Mo needs a local or private-target
+tunnel. It uses the same source as the plugin:
 
 ```bash
 npx skills add https://github.com/momentic-ai/skills --skill mo-qa
@@ -85,7 +85,7 @@ for connection setup, files, findings, and retests.
 | ------------------------------------------------------------ | ------------------------------------------------- |
 | [momentic-test](skills/momentic-test/SKILL.md)               | Create, run, and maintain Momentic browser tests. |
 | [momentic-mobile-test](skills/momentic-mobile-test/SKILL.md) | Create, run, and maintain Momentic mobile tests.  |
-| [momentic-maintain](skills/momentic-maintain/SKILL.md)       | Diagnose and repair failing Momentic tests.       |
+| [momentic-maintain](skills/momentic-maintain/SKILL.md)       | Diagnose failures and repair quarantined tests.   |
 | [mo-qa](skills/mo-qa/SKILL.md)                               | Run and control Mo bug bashes.                    |
 | [momentic-spec](skills/momentic-spec/SKILL.md)               | Improve code correctness with Momentic specs.     |
 

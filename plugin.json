@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "momentic",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Bug bash with Mo and write, run and maintain Momentic browser and mobile tests.",
   "author": {
     "name": "Momentic",

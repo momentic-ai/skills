@@ -1,10 +1,8 @@
-## Download run artifacts manually
+# Download run artifacts
 
 Use the API when MCP output is missing or you need to inspect raw files.
 
-The export endpoint returns run metadata plus one short-lived signed ZIP URL per
-attempt; it does not return one combined run ZIP. Download and extract them
-without printing the URLs:
+Download each attempt ZIP from the export response without printing signed URLs:
 
 ```bash
 RUN_ID="<run-id>"
@@ -30,8 +28,8 @@ jq -r '.attemptZipUrls | to_entries[] | select(.value != null) |
   done
 ```
 
-Inspect `metadata.json`, each attempt's `metadata.json`, screenshots, DOM
-snapshots, console logs, HAR logs, video, resource usage, and crash archives.
+Inspect `metadata.json`, each attempt's `metadata.json`, screenshots, state
+snapshots, logs, recordings, and crash archives when present.
 Keep attempt numbers intact. Do not commit the export response, run artifacts,
 signed URLs, credentials, or customer data. Remove the temporary directory when
 the investigation is complete.

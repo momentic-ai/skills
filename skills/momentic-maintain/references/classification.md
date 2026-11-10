@@ -1,41 +1,39 @@
 # Classify the failure
 
-Determine intent from the test name, description, and steps. Mark failures outside that intent, including setup/teardown failures, as unrelated.
-Relatedness qualifies bugs and changes; it does not change an `INFRA` failure into another category.
-Prove application changes with screenshots; distinguish them from an application error or other broken behavior.
+Read the test's name, description, and steps to establish intent.
+Find the earliest divergent step and its broken postcondition.
+Mark failures outside that intent, including setup/teardown failures, as unrelated.
 
-## Choose one category
+Choose the category supported by evidence:
 
-Use exactly one ID:
+- `NO_FAILURE` when all attempts passed.
+- `APPLICATION_CHANGE` when history or app changes prove a previously passing
+  flow changed and a test update would fix it.
+- `BUG` when the app behaves incorrectly.
+- `TEST_AUTHORSHIP` when a concrete test correction preserves intent and
+  permanently fixes the failure. Without evidence of a previous passing flow,
+  use this for a wrong expectation rather than assuming an app change.
+- `TEST_SETUP` when credentials, files, or data require outside action.
+- `INFRA` for outages, crashes, resource pressure, rate limits, or slow-but-eventual
+  readiness, after ruling out wrong state, targeting, assertions, and setup.
+- `MOMENTIC_ISSUE` for incorrect Momentic execution or data, such as an
+  unambiguous AI misread or bad cached locator with no reasonable test correction.
+- `OTHER` when none fits.
 
-| ID                   | Evidence or constraint                                                                                                                                                                                                                                            |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NO_FAILURE`         | All attempts passed.                                                                                                                                                                                                                                              |
-| `APPLICATION_CHANGE` | A changed flow or UI made the test outdated; updating it would permanently fix the failure.                                                                                                                                                                       |
-| `BUG`                | The application behaved incorrectly, such as an error message or missing expected content.                                                                                                                                                                        |
-| `TEST_AUTHORSHIP`    | Name a concrete test change that preserves intent and permanently prevents failure. Vague descriptions or a type-with-Enter race fixed by selecting an item qualify. Waiting longer or increasing timeouts does not; use `INFRA` for slow-but-eventual readiness. |
-| `TEST_SETUP`         | Missing data, upload files, or credentials require action outside the test.                                                                                                                                                                                       |
-| `INFRA`              | External factors such as outages, browser crashes, resource pressure, rate limits, or long load times caused the failure. Rule out wrong page state, data, flow, locator, assertion, and setup first.                                                             |
-| `MOMENTIC_ISSUE`     | Execution or Momentic data is wrong: a bad cache/global locator redirect, an unambiguous AI misread, or incorrect trace behavior with no reasonable test alternative.                                                                                             |
-| `OTHER`              | No category above fits.                                                                                                                                                                                                                                           |
+Use screenshots to distinguish a changed app from a broken app.
+Relatedness doesn't turn an infrastructure failure into another category.
+Increasing a timeout alone isn't a permanent authorship repair.
 
-## Choose recoverability
-
-- `RECOVERABLE`: a persistent test update can fix future runs, such as updating a flow or clarifying a locator/assertion.
-- `ONE_TIME_RECOVERABLE`: this run can recover without a persistent edit, such as dismissing an incidental modal or retrying a temporary delay.
-- `NON_RECOVERABLE`: external intervention is needed, such as supplying credentials/files or resolving a third-party outage.
-
-## Report the evidence
-
-Name the earliest divergent step/container and its broken postcondition, not only the last failing step.
-Use readable module names or step descriptions in reasoning; use exact IDs in tool calls.
-Link past runs as `https://app.momentic.ai/runs/<runId>` with full UUIDs.
+Report recoverability as `RECOVERABLE` for a persistent test fix,
+`ONE_TIME_RECOVERABLE` for recovery without a saved edit, or
+`NON_RECOVERABLE` when outside intervention is needed.
 
 ```text
-Reasoning: <earliest divergence, screenshots/traces, intent, and past runs if used>
-Category: <one ID>
-Recoverable: <RECOVERABLE | ONE_TIME_RECOVERABLE | NON_RECOVERABLE>
-Confidence: <high | medium | low>
+Reasoning: <earliest divergence, screenshots/traces, intent, and relevant history>
+Category: <category ID>
+Recoverable: <recoverability ID>
+Confidence: <high for direct evidence, medium for converging evidence, low for inference>
 ```
 
-Use `high` for direct evidence, `medium` for converging signals without conclusive direct evidence, and `low` for ambiguous or inferred causes.
+Use readable step/module names in the report and exact IDs in tool calls.
+Link historical runs as `https://app.momentic.ai/runs/<full-run-UUID>`.

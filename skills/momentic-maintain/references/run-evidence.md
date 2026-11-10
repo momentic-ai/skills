@@ -1,8 +1,9 @@
 # Inspect run evidence
 
-## Inspect the existing classification
+## Read saved classifications
 
-Fetch raw run metadata before MCP investigation when an API key is available:
+With API access, retrieve metadata for the exact run and organization before
+assigning a new classification:
 
 ```bash
 RUN_ID="<run-id>"
@@ -25,57 +26,49 @@ jq '{
 }' "${RUN_INSPECTION_DIR}/metadata.json"
 ```
 
-Do not treat a missing field as proof that no human reviewed the failure until
-the metadata request succeeds for the exact run and organization. Do not echo,
-log, or commit the API key. Treat downloaded metadata and signed artifact URLs
-as sensitive run data.
-
-`momentic_get_run` omits saved classification and heal fields; use the metadata endpoint or dashboard for those verdicts.
+Use this endpoint or the dashboard for saved classification/heal verdicts;
+`momentic_get_run` doesn't include them. Establish that the request succeeded
+before interpreting absent fields. Keep credentials and downloaded run data private.
 
 ## Compare history
 
-- For branch incidents, call `momentic_list_runs` with the exact `gitBranchName` and bounded `start`/`end`. Start without a status filter, then narrow to `FAILED`, `CANCELLED`, or `recovered=true`. Omit the branch only for a specific cross-branch question.
-- For mobile history, filter `executionType` to `["ANDROID", "IOS"]` or the
-  affected platform.
-- Use `failureCategory` for effective classification (manual when present, otherwise automated). The `minAttempts` filter counts total attempts. Use `minAttempts: 2` for at least one retry, or 3 for at least two.
-- Use `momentic_quarantine_list` with a bounded quarantine-date range for active local test quarantines and each test's latest retained failed CLI run. It does not filter by branch or category.
-- Read all `pageCount` pages needed before claiming an exhaustive inventory. Group symptoms only after inspecting representative runs and steps.
-- Open each comparison with `momentic_get_run`, then `momentic_get_step_result` for the matching step/container. Do not cite list summaries alone.
-- For passing runs with `attempts > 1`, retrieve earlier failed attempts using `attemptNumber`. Recovery can leave invalid state.
-- Call behavior flaky only after ruling out app and test changes. One failure is insufficient.
-- Skip history when the current run already proves the cause; say so in the report.
+Call `momentic_list_runs` with the incident's `gitBranchName` and bounded
+`start`/`end`. Start without a status filter; then narrow to `FAILED`,
+`CANCELLED`, or `recovered=true`. Omit the branch for cross-branch questions.
+
+Use `failureCategory` for the effective classification and `minAttempts: 2`
+for at least one retry, or 3 for two. For quarantine, use
+`momentic_quarantine_list` with bounded dates; it has no branch/category filter.
+
+Read every required page before claiming a complete inventory.
+Open representative runs with `momentic_get_run` and their matching
+`momentic_get_step_result`. For recovered runs, inspect earlier
+`attemptNumber` values and their resulting state.
+Rule out app and test changes before calling behavior flaky.
+Skip history when current evidence proves the cause and say so.
 
 ## Read local results
 
-Read local CLI results from `test-results` unless project settings or the run override the output directory.
-The group has `metadata.json` with git/timing data and `runs/<runId>.zip` per test.
+Use the configured output directory, normally `test-results`.
+Read the group's `metadata.json` and extract `runs/<runId>.zip`.
+Inspect run metadata, `attempts/<n>/metadata.json` (starting at 1),
+referenced screenshots/state, logs, and recordings.
+Read the product guide when locating individual artifacts.
 
-Unzip a run and inspect:
+Use the extracted `run-result-<runId>` folder returned by `momentic_get_run`
+for MCP downloads.
 
-- `metadata.json` for run metadata.
-- `attempts/<n>/metadata.json` for attempt outcomes and step results; attempt numbers start at 1.
-- `attempts/<n>/console.json` for browser console output when captured.
-- `attempts/<n>/assets/<snapshotId>.jpeg` and `.html` for screenshots and DOM snapshots referenced by step metadata.
-- `assets/har-pages.log` and `har-entries.log` within the attempt for HAR NDJSON.
-- `assets/resource-usage.ndjson` for CPU/memory samples, video files when enabled, and `browser-crash.zip` on crashes.
+## Trace cached behavior
 
-MCP `momentic_get_run` links to extracted `run-result-<runId>` folders in its working directory (default `.momentic-mcp`).
+For a wrong cached target, request `includeTrace=true` on
+`momentic_get_step_result`. Inspect `trace.cacheBustReason` and the result's
+`cache`. Open the cache's source run from `targetUpdateLoggerTags.runId`.
 
-## Inspect locator caches
-
-For a wrong cached target, request `includeTrace=true` on `momentic_get_step_result`.
-Read `cacheBustReason` on the step result's `trace` and inspect the result's `cache`.
-Use the `runId` field in the incorrect cache's `targetUpdateLoggerTags` to open the original cache-update run with `momentic_get_run`.
-
-## Check module state
-
-A cached module skips its steps when its cache key and resolved inputs are
-unchanged, reusing the last step's return value.
-When a cached authentication module skips login, inspect the resulting page and
-account state before blaming a later step.
+When a cached module skips authentication, inspect the resulting account and
+page before blaming a later step.
 
 ## Check uploads
 
-Run a file-upload step before the action that opens the native picker.
-Sources can be remote URLs, `file://` references to earlier downloads, CLI-local paths, or uploaded user files.
-Check any presented-filename override when investigating the selected file.
+Place the upload step before the action opening the native picker.
+Check its source (remote URL, prior `file://` download, local path, or uploaded
+user file) and any presented-filename override.

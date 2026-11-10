@@ -1,61 +1,42 @@
 ---
 name: momentic-spec
-description: Write Momentic tests as product specifications before implementing new or changed behavior.
+description: Specify browser, Android, and iOS behavior with Momentic tests before implementing new or changed features.
 ---
 
 # Specify product behavior with Momentic
 
-1. Read `momentic.config.yaml`, repository guidance, and nearby tests and modules.
-2. Identify the tests affected by the requested behavior. Report their paths and
-   whether each test needs to be added or changed. If none are affected, say why.
-3. Write the expected behavior in those tests before implementing it. Review the
-   test diff against the request, not the current implementation.
+1. Read [momentic-test](../momentic-test/SKILL.md) for product selection, the selected
+   CLI and local MCP server, and product-specific and linked shared references.
+   Read repository guidance and nearby tests and modules.
+2. List the tests to add or change for the request. If none are affected, say why.
+3. Write the expected behavior before implementing it. Review the test diff
+   against the request. Prepare required accounts, data, permissions, and services
+   before running new tests once to confirm the expected failure. If setup is
+   blocked, report it instead of treating it as an expected failure.
 4. Implement the change. Update the specification first if the requirement changes.
-5. Prepare the required accounts, data, permissions, and services. Enable tests
-   that should now pass, then run the smallest affected set at a usable checkpoint.
-6. Report the behavior verified, tests not run, and any tests still disabled.
+5. Enable tests that should now pass and run the smallest affected set through the app.
+6. Report verified behavior, tests not run, and tests still disabled.
 
-Use the `momentic-test` or `momentic-mobile-test` skill for file formats,
-step authoring, and live validation.
+Read the [web guide](references/products/web/guide.md) when specifying browser
+behavior, or the [mobile guide](references/products/mobile/guide.md) for Android/iOS.
 
-## Choose tests and steps
+## Choose coverage
 
-Update existing coverage for changed behavior. Add a test for a new user flow;
-reuse modules for established setup and navigation. Check which tests use a
-shared module before changing it.
+Update existing tests for changed behavior; add a test for a new user flow.
+Reuse modules for established setup and navigation, checking their callers
+before changing shared behavior. Follow nearby naming, setup, and assertion style.
 
-Follow nearby tests' naming, setup, and assertion style. Prefer native steps
-and natural-language targets over JavaScript or selectors. Preserve unrelated
-coverage and don't weaken a check to match a product bug.
+## Prepare the run
 
-For new browser tests, prefer an AI action when a short goal expresses the
-behavior more clearly than individual steps. Keep reusable setup in modules and
-check the result after the action. Use individual steps when intermediate
-states or side effects need separate checks.
+Mark a test `disabled: true` only when the product or a required dependency
+isn't ready. Record what must change before enabling it. Report missing local
+credentials as a validation gap rather than disabling a valid test.
 
-For timing-sensitive sequences, keep the rapid interactions in one focused AI
-action and verify the transient state in the recorded run. A passing final
-state alone doesn't prove that a race was exercised.
+Use existing test setup. Keep shared data stable and clean up only data created
+for the run. Restrict new setup tooling to approved test environments,
+authenticate it where needed, make it repeatable, and keep it out of production.
+Seed prerequisites, not the behavior being verified.
 
-Keep caching enabled for repeatable flows. Disable it only for behavior that
-must be chosen afresh, such as opening the latest record. When the expected
-behavior changes, update the goal rather than disabling its cache.
-
-## Prepare and run the specification
-
-Mark a test `disabled: true` only when the product behavior or a required
-dependency isn't ready. Record why and what must change before enabling it.
-Missing local credentials alone are a validation gap, not a reason to disable
-an otherwise valid test.
-
-Use the project's existing test setup to establish prerequisites. Keep shared
-data stable during the run and clean up only the data created for it.
-
-If you add setup tooling, restrict it to approved test environments, authenticate
-it where needed, make it safe to repeat, and keep it inaccessible in production.
-Seed prerequisites, not the behavior the test is meant to verify.
-
-Run at a checkpoint where the behavior can be exercised through the app. Before
-a long-running run, confirm the test set and expected duration with the user
-unless they already authorized it. Treat unknown duration as long-running.
-Get confirmation again for another long run unless iterative reruns were approved.
+Before a long run, confirm the test set and expected duration unless already
+authorized. Treat unknown duration as long-running; confirm another long run
+unless iterative reruns were approved.

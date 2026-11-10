@@ -1,0 +1,10 @@
+{
+  "name": "momentic",
+  "version": "1.2.0",
+  "description": "Bug bash apps and PRs with Mo and review Momentic test results.",
+  "mcpServers": {
+    "momentic-hosted": {
+      "httpUrl": "https://mcp.momentic.ai"
+    }
+  }
+}

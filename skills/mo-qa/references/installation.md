@@ -1,28 +1,22 @@
 # Install or update Mo
 
-## Update
+Run `qa version`. Update a standalone installation with `qa upgrade`, or
+an npm installation with `npm install -g qa@latest`.
 
-Update an installed release with `qa upgrade`, then verify it with `qa version`.
-For an npm-installed copy, update with `npm install -g qa@latest` instead;
-`qa upgrade` prints that instruction itself.
-
-## Legacy mo installations
-
-The command is `qa`. Older standalone installations can still be named `mo`.
-Run `mo upgrade`, then check `qa --version`. If `qa` is still missing, run
-`mo upgrade` again. The first run can execute an older updater that keeps the
-`mo` filename; the second run uses the new updater to rename it. Run `hash -r`
-if your shell remembers the old path.
-
-## Install
-
-If Mo is missing or too old to support `qa upgrade`, run the installer:
+If only the older `mo` command exists, run `mo upgrade` and check `qa version`.
+If `qa` is still missing, run the installer:
 
 ```bash
 curl -fsSL https://cli.momentic.ai/qa | sh
 ```
 
-By default, the installer writes `qa` to `$HOME/.local/bin`. Add that directory
-to `PATH` if needed, then verify the installation with `qa version`.
+Add `$HOME/.local/bin` to `PATH` if needed, then run `qa version`.
+Read [Authentication](authentication.md) when signing in for the first time.
 
-After a new installation, read [Authentication](authentication.md).
+When installing skills from an agent, target that agent explicitly:
+
+```bash
+qa skills -y --target claude-code
+```
+
+For Codex, use `qa skills -y --target codex` instead.

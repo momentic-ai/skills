@@ -1,39 +1,33 @@
 # Configure Mo's browser
 
-Put non-secret overrides in the brief so Mo applies them before browser work.
-For credential-bearing headers or Basic authentication, pass values through
-the [authentication options](authentication.md) and refer to variable names.
+Put required non-secret browser settings in the brief before starting.
+Read [Authentication](authentication.md) when supplying headers or Basic auth
+that contain credentials; refer to their variable names.
 
-`qa start --interaction-speed <default|human>` slows browser interaction to a
-human pace when the target needs it.
+Use `qa start --interaction-speed human` when the target needs slower
+interaction; omit it for default speed.
 
-| Setting               | Purpose                                                                                                   | Takes effect        |
-| --------------------- | --------------------------------------------------------------------------------------------------------- | ------------------- |
-| `extraHeaders`        | HTTP headers sent to every host. An empty value removes a header.                                         | Open or new browser |
-| `geolocation`         | Latitude and longitude exposed to the page.                                                               | Open or new browser |
-| `userAgent`           | Browser user agent. `null` uses the browser's native value.                                               | New browser         |
-| `viewport`            | Width and height in CSS pixels for responsive or mobile web coverage.                                     | New browser         |
-| `locale`              | Browser locale, such as `en-US`.                                                                          | New browser         |
-| `timezone`            | IANA timezone, such as `America/Los_Angeles`.                                                             | New browser         |
-| `colorScheme`         | `light` or `dark`.                                                                                        | New browser         |
-| `grantedPermissions`  | Permissions to grant; see below.                                                                          | New browser         |
-| `basicAuthorization`  | HTTP Basic username and password.                                                                         | New browser         |
-| `ignoreHttpsErrors`   | Allow invalid or self-signed HTTPS certificates.                                                          | New browser         |
-| `disableJavaScript`   | Disable page JavaScript.                                                                                  | New browser         |
-| `initialLocalStorage` | Per-origin local-storage key/value pairs loaded at startup.                                               | New browser         |
-| `visualActions`       | Use coordinate-based actions. This can handle rich-text editors but bypasses normal actionability checks. | New browser         |
-| `autoExpandIframes`   | Expose iframe contents to Momentic without explicit iframe URLs. Defaults to `true`.                      | New browser         |
+Choose only the overrides needed for the task:
 
-`grantedPermissions` accepts `clipboard-read`, `clipboard-write`, `microphone`,
-`camera`, or `geolocation`. If no effective permission list is configured, all
-cloud-supported permissions are granted; `local-network-access` is ignored in
-hosted Mo.
+- `extraHeaders`: headers sent to every host; an empty value removes a header.
+- `geolocation`: latitude and longitude.
+- `userAgent`: user agent; `null` restores the browser default.
+- `viewport`: width and height in CSS pixels.
+- `locale`: a locale such as `en-US`.
+- `timezone`: an IANA zone such as `America/Los_Angeles`.
+- `colorScheme`: `light` or `dark`.
+- `grantedPermissions`: `clipboard-read`, `clipboard-write`, `microphone`,
+  `camera`, or `geolocation`. Without a configured list, cloud-supported
+  permissions are granted. Hosted Mo ignores `local-network-access`.
+- `basicAuthorization`: HTTP Basic credentials.
+- `ignoreHttpsErrors`: allow invalid or self-signed certificates.
+- `disableJavaScript`: disable page JavaScript.
+- `initialLocalStorage`: per-origin local-storage values.
+- `visualActions`: coordinate actions for controls such as rich-text editors;
+  these bypass normal actionability checks.
+- `autoExpandIframes`: expose iframe contents without explicit iframe URLs;
+  defaults to `true`.
 
-Only `extraHeaders` and `geolocation` can change on an open browser. Every other
-setting needs a new browser. A restart closes pages and clears cookies, so
-request one mid-session only when Mo can recreate the state. Otherwise, start a
-new session with the setting in its brief.
-
-Supply application credentials at session start as described in
-[Authentication](authentication.md). Add only required
-headers because `extraHeaders` applies to every host.
+Only headers and geolocation can change on an open browser. Other changes need
+a new browser, which closes pages and clears cookies. Request a mid-session
+restart only when Mo can recreate the needed state.

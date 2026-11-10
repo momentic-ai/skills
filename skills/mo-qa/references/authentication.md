@@ -1,60 +1,48 @@
-# Authentication
+# Authenticate Mo and the app
 
-## Authenticate Mo
-
-Run `qa login`, or `qa login --no-browser` when the environment cannot open a
-browser. Login saves the API key and server URL in `~/.momentic/auth.json`.
-
-In CI, set `MOMENTIC_API_KEY`. It overrides the saved login. Preserve an
-existing value unless authentication fails or the user asks to replace it.
+Run `qa login`, or `qa login --no-browser` without a browser.
+In CI, supply `MOMENTIC_API_KEY` through the secret store; it overrides saved
+login. Preserve an existing key unless it fails or the user asks to replace it.
 
 ## Authenticate the application
 
-A Momentic environment groups a `BASE_URL` with reusable variables and secrets
-under a name such as `staging`. `--environment NAME` selects one created under
-**Environments** in the Momentic dashboard, not one from the shell or
-`momentic.config.yaml`. Mo copies its variables into the session at start.
+A Momentic environment groups a `BASE_URL` with reusable variables and secrets.
+Use `--environment NAME` to select one saved under **Environments** in Momentic,
+not a shell environment or `momentic.config.yaml` environment. Mo copies its
+variables and secrets into the session at start.
+For an existing session, have the user add a secret through the session-page
+composer. Put only the username/account label and variable names in the brief.
 
-Pass local values at session start with repeatable `--env-file` or
-`--env-var NAME` options; they override matching Momentic environment variables.
-Put only variable names and a non-secret account label in the brief. Root Mo
-supplies authentication to its internal sub-agents.
-
-Have the user or secret manager provision a dotenv file outside the checkout,
-readable only by its owner (mode `600` on Unix). Pass its path without reading
-or printing its contents. For example, if they supplied
-`~/.config/momentic/qa.env`:
+For local credentials, have the user or secret manager provision an owner-only
+dotenv file outside the checkout (mode `600` on Unix). Pass its path without
+reading or printing its contents:
 
 ```bash
 qa start "$brief" --effort "$effort" --env-file "$HOME/.config/momentic/qa.env"
 ```
 
-If your runner already supplies `QA_PASSWORD` through its secret store or
-secure environment binding, forward the name, not its value:
+Or forward an already provisioned process variable by name:
 
 ```bash
 qa start "$brief" --effort "$effort" --env-var QA_PASSWORD
 ```
 
-`--env-var` reads the process environment, not `NAME=value`. Never transcribe
-secrets, including ones pasted in chat, into shell assignments, commands,
-heredocs, scripts or file-edit payloads. Quoting, encoding or later deletion
-doesn't remove them from tool logs. Disable shell tracing; don't print secrets.
-Ask for secure provisioning through the paths above or session-page secrets.
-Continue unauthenticated only if in scope. Delete temporary credential files
-you created after start completes, not user-managed files.
+These options override matching saved-environment values. `--env-var` accepts
+a name, not `NAME=value`. To add CLI variables after start, restart with them.
 
-A browser auth-state file uses Playwright `storageState` JSON: cookies and
-`localStorage` by origin. Momentic `AUTH_SAVE` may add `sessionStorage` and a
-top-level `idb` dump. Use `AUTH_SAVE` if the app depends on either.
+Never transcribe a secret from chat into commands, shell assignments, scripts,
+file edits, messages, URLs, reports, or commits. Use secure provisioning;
+disable shell tracing and don't print secret values. Remove temporary
+credential files you created after start, not user-managed files.
+Continue unauthenticated only when in scope.
 
-If the user authorizes use of an auth-state file, upload it with `qa upload`
-and send root Mo only the returned sandbox path. Do not read its contents into
-chat or attach it to a report. This CLI path does not apply to hosted MCP,
-which accepts only non-secret assets. Uploading a credential file does not add
-its values to the session environment.
+## Reuse browser authentication
 
-The CLI supplies variables only at start. For an existing session, add an
-authorized secret through Mo's web composer, or restart with that value.
+With authorization, upload an auth-state file through `qa upload` and send Mo
+only its returned sandbox path. Don't read it into chat or reports.
+Hosted uploads accept non-secret files only; use the CLI for auth state.
 
-Keep secret values out of messages, URLs, reports and source control.
+A browser auth-state file stores cookies and local storage by origin in
+Playwright `storageState` JSON. Momentic `AUTH_SAVE` can also save session
+storage and IndexedDB; use it when the app needs either. Uploading this file
+doesn't add its values to the session environment.

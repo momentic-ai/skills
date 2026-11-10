@@ -1,7 +1,7 @@
 {
   "name": "momentic",
   "displayName": "Momentic",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Bug bash with Mo and write, run and maintain Momentic browser and mobile tests.",
   "author": {
     "name": "Momentic",
@@ -23,5 +23,6 @@
     "mcp"
   ],
   "logo": "assets/logo.png",
-  "skills": "./skills/"
+  "skills": "./skills/",
+  "mcpServers": "./.cursor-mcp.json"
 }

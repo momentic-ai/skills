@@ -1,0 +1,14 @@
+{
+  "name": "momentic",
+  "displayName": "Momentic",
+  "version": "1.0.0",
+  "description": "Run Mo bug bashes and review findings through Momentic's hosted MCP server.",
+  "author": {
+    "name": "Momentic",
+    "email": "support@momentic.ai"
+  },
+  "homepage": "https://momentic.ai/developers",
+  "repository": "https://github.com/momentic-ai/skills",
+  "privacyPolicyUrl": "https://momentic.ai/legal/privacy",
+  "keywords": ["momentic", "mo", "bug-bash", "testing", "browser", "mcp"]
+}

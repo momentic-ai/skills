@@ -1,5 +1,12 @@
 # Connect Mo to a private target
 
+A Connector is a named tunnel to a private web target. For hosted sessions,
+find one with [configuration discovery](hosted-tools.md#start-requirements)
+and pass its name as `access`. Have its owner resume an offline Connector;
+discovery doesn't create or resume it.
+
+For CLI sessions:
+
 1. Run `qa tunnel list` and look for an existing tunnel that reaches the target.
    Reuse it with `qa start "$brief" --effort "$effort" --tunnel <id>`.
 2. If none reaches it, expose only the required addresses:

@@ -1,6 +1,6 @@
 ---
 name: mo-qa
-description: Run and control Mo QA sessions with hosted Momentic tools or the qa CLI, including private targets, reports, replies, triage, and retests.
+description: Run and control Mo web and mobile QA with hosted Momentic tools or the qa CLI, including saved environments, mobile builds, private targets, reports, replies, triage, and retests.
 ---
 
 # Run QA with Mo
@@ -14,9 +14,10 @@ maintain Momentic tests instead of asking Mo to explore an app.
 
 ## Workflow at a glance
 
-1. Keep the interface the user requested. Otherwise, choose hosted tools for
-   public targets or the CLI for private targets. Read
-   [Hosted tools](references/hosted-tools.md) when using hosted tools.
+1. Keep the interface the user requested. Otherwise, use hosted tools for web
+   or mobile, including private web targets with an existing Connector. Use the
+   CLI when you need to create a tunnel. Read
+   [Hosted tools](references/hosted-tools.md) to discover and select session inputs.
    For a requested hosted session, stop setup and report the blocker if tools
    are unavailable or authentication fails; do not start a CLI session.
 2. For CLI sessions, prepare the brief and confirm effort, then run

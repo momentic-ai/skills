@@ -7,9 +7,11 @@ login. Preserve an existing key unless it fails or the user asks to replace it.
 ## Authenticate the application
 
 A Momentic environment groups a `BASE_URL` with reusable variables and secrets.
-Use `--environment NAME` to select one saved under **Environments** in Momentic,
-not a shell environment or `momentic.config.yaml` environment. Mo copies its
-variables and secrets into the session at start.
+For hosted sessions, call `momentic_mo_list_configuration` with
+`kind: "environments"` and pass the selected name as `environmentName`. For CLI sessions, use `--environment NAME`.
+These select an environment saved under **Environments** in Momentic, not a shell
+environment or `momentic.config.yaml` environment. Discovery doesn't reveal its
+variables or secrets; Mo copies them into the session at start.
 For an existing session, have the user add a secret through the session-page
 composer. Put only the username/account label and variable names in the brief.
 

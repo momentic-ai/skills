@@ -1,5 +1,11 @@
 # Configure Mo's browser
 
+For hosted web sessions, pass browser provisioning options such as `webgl` in
+`browserSettings.browserOptions`. Use the connected tool's schema for supported
+fields. Pass `interactionSpeed: "human"` for slower interaction.
+For mobile device settings, read
+[Hosted tools](hosted-tools.md#start-requirements) instead.
+
 Put required non-secret browser settings in the brief before starting.
 Read [Authentication](authentication.md) when supplying headers or Basic auth
 that contain credentials; refer to their variable names.

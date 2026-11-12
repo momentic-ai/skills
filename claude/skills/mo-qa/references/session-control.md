@@ -1,7 +1,7 @@
 # Control a session
 
-Read [the follow loop](../SKILL.md#follow-the-session) for blocking commands,
-progress polling, and when to message Mo.
+For interactive progress and findings, use
+[the bounded follow loop](../SKILL.md#follow-the-session).
 
 ## Read the state
 
@@ -28,12 +28,14 @@ Hosted `momentic_mo_get_session` waits up to 45 seconds for new output by defaul
 You don't need to pass `waitSeconds`; set it to 0 for an immediate snapshot.
 Pending questions, finished sessions, and `bugName` lookups return immediately.
 
-`qa wait "$session_id" --json` waits for root Mo, not its sub-agents.
-Check session state for running sub-agents before exporting or stopping.
-It has no timeout option. Use `timeout 45s qa wait "$session_id" --json`
-for a bounded shell call, then check status and repeat while agents work.
-Exit code `124` means the local wait expired; `2` means Mo needs input;
-`4` means it stopped. Ending the local wait does not cancel the session.
+For CI and scripts that need a final outcome, `qa wait "$session_id" --json`
+blocks while Mo and its sub-agents work.
+It allows up to five continuous minutes of `checking` or incomplete `sleeping`
+for work to resume. Exit `0` means the wait ended, not necessarily that the task
+completed or QA passed; `1` means the command failed or Mo failed (including startup),
+`2` means Mo needs input and `4` means the session was cancelled.
+It has no timeout option. An outer shell timeout ends only the local wait,
+not the session, and restarting the command resets its five-minute timer.
 
 Use `qa stop <session-id> --subagents` to end spending.
 Without `--subagents`, only root Mo stops and other agents can keep testing.

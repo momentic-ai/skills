@@ -79,11 +79,10 @@ It waits up to 45 seconds for new output by default; you don't need to pass
 `qa read "$session_id" --from start --timeout 45s --json` while `running` or
 `waiting_on_agents`; it waits for output across sub-agent turns.
 Use `qa send --wait 45s` when replying. Don't replace blocking waits
-with repeated immediate status calls or shell sleeps. Read
-[Session control](references/session-control.md) when interpreting the result.
-If reads return immediately while agents are still working, use
-`timeout 45s qa wait "$session_id" --json`, then check status and repeat if
-needed. Exit 124 means only the local wait timed out, not that Mo stopped.
+with repeated immediate status calls or shell sleeps. For CI and scripts that
+need a final outcome, use blocking `qa wait` instead. It exits `1` if Mo failed,
+including startup failures; see
+[Session control](references/session-control.md#wait-and-stop).
 
 Keep following `running` and `waiting_on_agents`. For `checking`, read the
 last reply; if it lasts over a minute, report the unknown outcome without
@@ -95,9 +94,9 @@ Monitoring has ended, but testing may still be running; ask whether to cancel it
 For incomplete hosted sessions, follow `get_session.nextAction`.
 Neither state verifies a QA pass.
 
-Report new findings and status changes. When the user asks a question, quote
-Mo's latest reply, not a status summary or verdict. If the tools don't expose
-that reply, say you couldn't retrieve it.
+Relay new findings and status changes as they arrive. For user questions,
+quote Mo's latest reply, not a status summary or verdict. If the tools don't
+expose that reply, say you couldn't retrieve it.
 
 ## Message Mo
 

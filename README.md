@@ -205,13 +205,14 @@ is blocked, report the blocker rather than switching to the CLI.
 
 ## Choose a path
 
-| Task                                       | Use                                                 |
-| ------------------------------------------ | --------------------------------------------------- |
-| Exploratory Mo bug bash or PR testing      | `mo-qa` with the hosted `momentic-hosted` server    |
-| Localhost or private-target QA             | `mo-qa` and the `qa` CLI with a tunnel              |
-| Write or maintain repository browser tests | `momentic-test` and the local `momentic` MCP        |
-| Write or maintain repository mobile tests  | `momentic-test` and the local `momentic-mobile` MCP |
-| ChatGPT, Claude, or Gemini                 | The hosted connector at `https://mcp.momentic.ai`   |
+| Task                                       | Use                                                                                      |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Exploratory Mo bug bash or PR testing      | `mo-qa` with the hosted `momentic-hosted` server                                         |
+| Localhost or private-target QA             | `mo-qa` and the `qa` CLI with a tunnel                                                   |
+| Mobile app build upload or download        | `qa assets` with the [mobile builds reference](skills/mo-qa/references/mobile-builds.md) |
+| Write or maintain repository browser tests | `momentic-test` and the local `momentic` MCP                                             |
+| Write or maintain repository mobile tests  | `momentic-test` and the local `momentic-mobile` MCP                                      |
+| ChatGPT, Claude, or Gemini                 | The hosted connector at `https://mcp.momentic.ai`                                        |
 
 See the
 [local MCP server guide](https://momentic.ai/docs/coding-agents/mcp-server) for
@@ -236,7 +237,7 @@ for connection setup, files, findings, and retests.
 | ------------------------------------------------------ | ------------------------------------------------------------------- |
 | [momentic-test](skills/momentic-test/SKILL.md)         | Create, run, and maintain Momentic browser, Android, and iOS tests. |
 | [momentic-maintain](skills/momentic-maintain/SKILL.md) | Diagnose failures and repair quarantined tests.                     |
-| [mo-qa](skills/mo-qa/SKILL.md)                         | Run and control Mo bug bashes.                                      |
+| [mo-qa](skills/mo-qa/SKILL.md)                         | Run Mo QA and manage app builds with `qa assets`.                   |
 | [momentic-spec](skills/momentic-spec/SKILL.md)         | Improve code correctness with Momentic specs.                       |
 
 ## Sources

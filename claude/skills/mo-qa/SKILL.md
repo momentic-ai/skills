@@ -54,6 +54,8 @@ Read these references when needed:
 - [Source context](references/source-context.md) when testing a PR, local changes,
   or a repository Mo can't access.
 - [Browser settings](references/browser-settings.md) when changing Mo's browser.
+- [Mobile builds](references/mobile-builds.md) to upload, download, or manage app
+  builds with `qa assets`.
 
 ## Start the session
 

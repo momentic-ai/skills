@@ -2,6 +2,14 @@
   "name": "momentic",
   "displayName": "Momentic",
   "version": "1.2.1",
+  "userConfig": {
+    "MOMENTIC_API_KEY": {
+      "type": "string",
+      "title": "Momentic API key",
+      "description": "Used by the local momentic and momentic-mobile MCP servers. Create one at https://app.momentic.ai/settings/api-keys. The hosted server signs in with OAuth and doesn't need it.",
+      "sensitive": true
+    }
+  },
   "description": "Bug bash with Mo and write, run and maintain Momentic browser and mobile tests.",
   "author": {
     "name": "Momentic",

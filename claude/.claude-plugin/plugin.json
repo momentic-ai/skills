@@ -1,7 +1,7 @@
 {
   "name": "momentic",
   "displayName": "Momentic",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Run Mo bug bashes and review findings through Momentic's hosted MCP server.",
   "author": {
     "name": "Momentic",

@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "momentic": {
+      "command": "npx",
+      "args": ["-y", "momentic", "mcp"],
+      "env_vars": ["MOMENTIC_API_KEY"]
+    },
+    "momentic-mobile": {
+      "command": "npx",
+      "args": ["-y", "momentic-mobile", "mcp"],
+      "env_vars": [
+        "MOMENTIC_API_KEY",
+        "ANDROID_HOME",
+        "ANDROID_SDK_ROOT",
+        "JAVA_HOME"
+      ]
+    },
+    "momentic-hosted": {
+      "type": "http",
+      "url": "https://mcp.momentic.ai"
+    }
+  }
+}

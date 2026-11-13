@@ -1,6 +1,6 @@
 {
   "name": "momentic",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Bug bash apps and PRs with Mo and review Momentic test results.",
   "mcpServers": {
     "momentic-hosted": {

@@ -24,7 +24,12 @@ such as a typo has `kind: "flag"`.
 
 ## Triage findings
 
-Read the finding before changing it. Use its ID, not its name, for CLI commands:
+Review every Needs review or Open finding in the report you're working from,
+including ones you didn't pull. Verify each finding against the code and
+available evidence. Ask the user when evidence or intended behavior is unclear.
+For a read-only review, propose outcomes and ask before changing triage.
+Don't dismiss a finding just to clear the report.
+Use its ID or exact name for CLI commands:
 
 ```bash
 qa bugs describe <session-id> <bug-id>
@@ -35,9 +40,17 @@ qa bugs dismiss <session-id> <bug-id> works-as-intended
 qa bugs review <session-id> <bug-id>
 ```
 
-Change triage only when requested. Accept moves Needs review to Open; recording
-a fix marks it Fixed. Include PR/commit links when available. Dismiss with
-`works-as-intended`, `cannot-reproduce`, or `duplicate`.
+After you land a fix, run `qa bugs fix <session-id> <bug-id>`; include PR/commit
+links when available. Dismiss with `works-as-intended` when behavior is intended
+or `cannot-reproduce` after an unsuccessful reproduction attempt, not when you
+lack access or context. For a duplicate, use `momentic_mo_triage_finding` with
+`status: "DUPLICATE"` and set `duplicateOfFindingId` to the earlier original
+finding's `id` from `momentic_mo_list_findings`.
+Without MCP, report the suspected duplicate and its original to the user instead
+of dismissing it.
+Use Accept (Open) only for a confirmed bug the user chooses not to fix now.
+For each unresolved finding, report the question that needs the user's answer
+or their decision to defer it. Retest only when the user requests it.
 Read [Repair loop](remediation-loop.md) when fixing or retesting.
 
 ## Inspect evidence

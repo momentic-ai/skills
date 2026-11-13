@@ -5,7 +5,8 @@ For an existing session, recover its brief with
 Skip findings dismissed as duplicate, works as intended, or cannot reproduce;
 read [Reports](reports.md) when inspecting triage.
 
-1. Read the finding with `qa bugs describe <session-id> <bug-id>`.
+1. List findings with `qa bugs list <session-id> --full` and follow
+   [Triage findings](reports.md#triage-findings).
    While testing continues, investigate and draft fixes in an isolated worktree
    or patches outside the served files. Keep the target and shared data unchanged.
    Don't hot-reload, restart, or deploy the target while Mo tests and reproduces findings.
@@ -13,7 +14,7 @@ read [Reports](reports.md) when inspecting triage.
    export a baseline with `qa report <session-id> --output <dir>`.
 3. Apply the fixes and make the fixed revision available at Mo's target,
    reusing its tunnel when present.
-4. For an Open bug, record the fix with `qa bugs fix <session-id> <bug-id>`;
+4. After you land a fix, mark it Fixed with `qa bugs fix <session-id> <bug-id>`;
    include `--pr <url>` and `--commit <sha>` when available. If the user requests
    a recheck, relay that request with the finding name and original steps.
    Keep the target stable until it finishes.

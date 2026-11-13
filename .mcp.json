@@ -1,19 +1,18 @@
 {
   "mcpServers": {
     "momentic": {
-      "command": "npx",
-      "args": ["-y", "momentic", "mcp"],
-      "env_vars": ["MOMENTIC_API_KEY"]
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/local-mcp.cjs", "momentic@3.73.0"],
+      "env": {
+        "MOMENTIC_PLUGIN_API_KEY": "${user_config.MOMENTIC_API_KEY}"
+      }
     },
     "momentic-mobile": {
-      "command": "npx",
-      "args": ["-y", "momentic-mobile", "mcp"],
-      "env_vars": [
-        "MOMENTIC_API_KEY",
-        "ANDROID_HOME",
-        "ANDROID_SDK_ROOT",
-        "JAVA_HOME"
-      ]
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/local-mcp.cjs", "momentic-mobile@1.46.0"],
+      "env": {
+        "MOMENTIC_PLUGIN_API_KEY": "${user_config.MOMENTIC_API_KEY}"
+      }
     },
     "momentic-hosted": {
       "type": "http",

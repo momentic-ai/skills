@@ -20,24 +20,21 @@
    `assistant`; it is Mo's reply, unlike the report summary or earlier verdicts.
    Replies over 20,000 characters end with an ellipsis; open the session link
    for the full reply.
-   Report findings, uncovered requirements, and the link.
 6. Call `momentic_mo_stop_session` after `get_session` confirms testing is complete
    and no testers are running, unless the user wants more testing. If a prior
    read confirmed completion, stop even if final report retrieval fails.
    During active testing, stop only when the
    user wants to cancel. If access prevents following the session to completion,
    report the pending session and ask whether to cancel; don't claim cleanup is done.
+7. After stopping, report findings, uncovered requirements, and the link.
 
-Hosted web sessions reach private targets through an existing Connector.
 Discovery doesn't create or resume a tunnel, upload a build, or read local files.
 Read [Tunneling](tunneling.md) when the target needs private access.
 
 ## Start requirements
 
-Confirm effort unless the user chose it; read [Brief](brief.md#effort) when
-choosing a level. For login, name the account and select a saved environment,
-or ask the user to add credentials on the session page. Read
-[Authentication](authentication.md) when provisioning them.
+Follow the [workflow](../SKILL.md#workflow-at-a-glance) for effort and interface
+selection. Read [Authentication](authentication.md) when the app needs credentials.
 
 Use `momentic_mo_list_configuration` to find saved environments, uploaded app
 builds, existing Connectors, workspace-wide knowledge and Slack destinations.

@@ -13,6 +13,9 @@ curl -fsSL https://cli.momentic.ai/qa | sh
 Add `$HOME/.local/bin` to `PATH` if needed, then run `qa version`.
 Read [Authentication](authentication.md) when signing in for the first time.
 
+For a CLI bridge, run `npx -y qa login`, then configure `momentic-hosted` with
+`npx -y qa mcp`.
+
 When installing skills from an agent, target that agent explicitly:
 
 ```bash

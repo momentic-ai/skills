@@ -5,120 +5,93 @@ description: Run and control Mo web and mobile QA with hosted Momentic tools or 
 
 # Run QA with Mo
 
-Mo runs web and mobile QA in a hosted sandbox; its files and processes are remote.
+Mo runs web and mobile QA in the cloud. For repository tests, use
+`momentic-test` or `momentic-maintain`.
 
-Control Mo with hosted `momentic_mo_*` tools or the `qa` CLI, not the
-`momentic` or `momentic-mobile` CLIs.
-Use those CLIs with `momentic-test` / `momentic-maintain` to author, run, or
-maintain Momentic tests instead of asking Mo to explore an app.
+Control Mo with hosted tools or `qa`, not `momentic` or `momentic-mobile`.
 
 ## Workflow at a glance
 
-1. Keep the interface the user requested. Otherwise, use hosted tools for web
-   or mobile, including private web targets with an existing Connector. Use the
-   CLI when you need to create a tunnel. Read
-   [Hosted tools](references/hosted-tools.md) to discover and select session inputs.
-   For a requested hosted session, stop setup and report the blocker if tools
-   are unavailable or authentication fails; do not start a CLI session.
-2. For CLI sessions, prepare the brief and confirm effort, then run
-   `qa start "$brief" --effort "$effort"`.
-3. [Follow the session](#follow-the-session) with `qa read "$session_id" --from start --timeout 45s --json`.
-4. For `needs_you`, answer with `qa send "$session_id" --wait 45s "<answer>"`.
-5. Once testing finishes, export with `qa report "$session_id" --output <dir>`,
-   then run `qa stop "$session_id" --subagents`, even if export fails.
-   Run `qa tunnel stop "$tunnel_id"` only for tunnels you started, after their last session.
+1. Keep the requested interface. Otherwise, use hosted tools for web or mobile,
+   including private web targets with an existing Connector. Run sessions that
+   need a new tunnel with the CLI. Read [Tunneling](references/tunneling.md) for
+   private access. Read [Hosted tools](references/hosted-tools.md) to
+   discover configuration before starting. For a requested hosted session, report
+   unavailable tools or authentication failures without starting a CLI session.
+2. Prepare the brief. If effort is unset, ask the user to choose
+   [effort](references/brief.md#effort) and wait. For CLI sessions:
 
-For read-only requests, inspect the existing session without starting,
-messaging, or stopping work.
-Continue hosted sessions with hosted tools and CLI sessions with the `qa` CLI.
-Report the actual stop result. If nothing was running, say the session was
-already idle, not stopped.
+   ```bash
+   session_json=$(qa start "$brief" --effort "$effort")
+   session_id=$(jq -r .sessionId <<<"$session_json")
+   web_url=$(jq -r .webUrl <<<"$session_json")
+   ```
+
+3. [Follow the session](#follow-the-session) with `momentic_mo_get_session`, or
+   `qa read "$session_id" --from start --timeout 45s --json`.
+4. For `needs_you`, answer with `momentic_mo_message_session`, or
+   `qa send "$session_id" --wait 45s "<answer>"`. Pass
+   `--question-id "<question-id>"` when Mo provides an ID.
+5. After `ready`, unless the user wants more testing, export or read the report,
+   stop even if that fails, then summarize results. For CLI sessions, run
+   `qa report "$session_id" --output <dir>`, then `qa stop "$session_id" --subagents`;
+   do not use the hosted stop tool. For hosted sessions, read the report with
+   `momentic_mo_get_session`, then call `momentic_mo_stop_session`.
+   Stop only tunnels you started, after their last session: `qa tunnel stop "$tunnel_id"`.
+
+For read-only requests, inspect without starting, messaging or stopping work.
+Continue with the same interface. Report the actual stop result, including
+when the session was already idle.
 
 ## Prepare the brief
 
-Include the target URL, goal, requirements, login method, username or test
-account label, allowed data, prohibited actions, and coverage exclusions.
-Keep passwords out of the brief; use a saved Momentic environment or have the
-user add a secret on the session page. Read
-[Authentication](references/authentication.md) when the app needs credentials.
-
-Preserve requested coverage. Supply requirements and constraints rather than
-inventing a checklist. Ask when missing scope, access, or permission would
-change the run.
+Include the target URL, goal, requirements, login method, test account label,
+allowed data, prohibited actions and coverage exclusions. Preserve requested
+steps; ask about missing scope, access or permission that would change the run.
+Keep passwords out of the brief.
 
 Read these references when needed:
 
-- [Brief](references/brief.md) when choosing effort or writing the first brief.
+- [Brief](references/brief.md) when preparing the first brief.
 - [Installation](references/installation.md) when `qa version` fails or needs updating.
-- [Tunneling](references/tunneling.md) when the target is local or private.
-- [Source context](references/source-context.md) when testing a PR, local changes,
-  or a repository Mo can't access.
-- [Browser settings](references/browser-settings.md) when changing Mo's browser.
+- [Authentication](references/authentication.md) when the app needs credentials.
+- [Tunneling](references/tunneling.md) for local or private targets.
+- [Source context](references/source-context.md) for PRs, local changes or missing repository access.
+- [Browser settings](references/browser-settings.md) for non-default browser setup.
 - [Mobile builds](references/mobile-builds.md) to upload, download, or manage app
   builds with `qa assets`.
 
-## Start the session
-
-Keep the returned ID and link:
-
-```bash
-session_json=$(qa start "$brief" --effort "$effort")
-session_id=$(jq -r .sessionId <<<"$session_json")
-web_url=$(jq -r .webUrl <<<"$session_json")
-```
-
-Share `web_url`.
-After an uncertain start, check for the session before retrying.
+Keep the returned session ID and `webUrl`; share the link. After an uncertain
+start, check for the session before retrying.
 
 ## Follow the session
 
-Mo manages its own testing clock and time budget. Use the 45-second waits
-below to poll for progress, not to impose a testing deadline.
+Read [Session control](references/session-control.md) for statuses, questions
+and wait behavior. Use blocking waits rather than immediate polls or shell sleeps.
+Keep following `running` and `waiting_on_agents`. For `checking`, read the last
+reply; if it lasts over a minute, report the unknown outcome without messaging Mo.
+For `needs_you`, answer each pending question using its question ID, or ask the
+user. Report blockers. After three consecutive failed reads, report the failures
+and unknown outcome, share the link and ask whether to cancel; testing may continue.
 
-For hosted sessions, call `momentic_mo_get_session` while Mo is working.
-It waits up to 45 seconds for new output by default; you don't need to pass
-`waitSeconds`. For CLI sessions, use
-`qa read "$session_id" --from start --timeout 45s --json` while `running` or
-`waiting_on_agents`; it waits for output across sub-agent turns.
-Use `qa send --wait 45s` when replying. Don't replace blocking waits
-with repeated immediate status calls or shell sleeps. For CI and scripts that
-need a final outcome, use blocking `qa wait` instead. It exits `1` if Mo failed,
-including startup failures; see
-[Session control](references/session-control.md#wait-and-stop).
+Mo manages its testing clock and time budget. Use 45-second waits to poll,
+not to impose a testing deadline.
 
-Keep following `running` and `waiting_on_agents`. For `checking`, read the
-last reply; if it lasts over a minute, report the unknown outcome without
-nudging Mo. For `needs_you`, answer each open card or ask the user.
-For `blocked`, report the blocker. After three consecutive failed reads, stop
-following, report the failures and unknown outcome, and share the session link.
-Monitoring has ended, but testing may still be running; ask whether to cancel it.
-`ready` means Mo marked the task complete; `sleeping` does not.
-For incomplete hosted sessions, follow `get_session.nextAction`.
-Neither state verifies a QA pass.
-
-Relay new findings and status changes as they arrive. For user questions,
-quote Mo's latest reply, not a status summary or verdict. If the tools don't
-expose that reply, say you couldn't retrieve it.
+Only `ready` means the session finished. For incomplete hosted sessions, follow
+`get_session.nextAction`. Do not stop incomplete testing unless the user asks.
+Credit findings to Mo; a tester's verified verdict is not a verified session pass.
 
 ## Message Mo
 
-Send messages only to answer Mo's questions, relay user requests, or point to
-an untested area within the agreed scope. Don't send "continue", "finalize",
-or routine progress requests.
-
-For `needs_you`, answer each `pendingQuestions` card with its `--question-id`.
-Without that flag, a send answers the oldest card. Use authorized context or
-ask the user for missing access or decisions.
+Relay new findings and status changes as they arrive. Answer user questions from Mo's latest
+reply, not a status summary; say when that reply is unavailable. Send messages
+only for Mo's questions, user requests or untested areas within the agreed scope.
+Don't send `continue`, `finalize` or routine progress requests.
 
 ## Finish
 
-Check coverage against the brief. If unblocked areas within the agreed scope
-remain untested, ask Mo to cover them and follow the session again.
-Report remaining gaps, findings, the session link, and the export directory
-when evidence was exported.
-Read [Reports](references/reports.md) when exporting evidence or triaging findings.
-Read [Repair loop](references/remediation-loop.md) when fixes are in scope;
-keep the running target and shared data unchanged until testing and reproductions finish.
-
-For a completed session, follow step 5 for cleanup. Stopping active testing
-cancels it; do that only when the user asks to cancel.
+Compare coverage with the brief and ask Mo to cover remaining unblocked areas.
+Report gaps, findings, the session link and any export directory.
+Read [Reports](references/reports.md) for evidence export, triage and retests.
+Read [Repair loop](references/remediation-loop.md) when fixes are in scope.
+Keep the target and shared data unchanged until testing and reproductions finish.

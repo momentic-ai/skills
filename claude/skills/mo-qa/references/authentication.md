@@ -23,7 +23,8 @@ reading or printing its contents:
 qa start "$brief" --effort "$effort" --env-file "$HOME/.config/momentic/qa.env"
 ```
 
-Or forward an already provisioned process variable by name:
+For CLI sessions, use `--env-var NAME` to forward an already provisioned process
+variable:
 
 ```bash
 qa start "$brief" --effort "$effort" --env-var QA_PASSWORD

@@ -12,6 +12,7 @@
     {
       "name": "momentic",
       "source": "./",
+      "version": "1.2.1",
       "description": "Bug bash with Mo and write, run and maintain Momentic browser and mobile tests."
     }
   ]

@@ -1,7 +1,7 @@
 {
   "name": "momentic",
   "displayName": "Momentic",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Bug bash web and mobile apps with Mo and review findings through Momentic's hosted MCP server.",
   "author": {
     "name": "Momentic",
@@ -10,5 +10,7 @@
   "homepage": "https://momentic.ai/developers",
   "repository": "https://github.com/momentic-ai/skills",
   "privacyPolicyUrl": "https://momentic.ai/legal/privacy",
+  "termsOfServiceUrl": "https://momentic.ai/legal/tos",
+  "supportUrl": "https://momentic.ai/docs/account/help",
   "keywords": ["momentic", "mo", "bug-bash", "testing", "browser", "mcp"]
 }

@@ -12,12 +12,12 @@ Control Mo with hosted tools or `qa`, not `momentic` or `momentic-mobile`.
 
 ## Workflow at a glance
 
-1. Keep the requested interface. Otherwise, use hosted tools for web or mobile,
-   including private web targets with an existing Connector. Run sessions that
-   need a new tunnel with the CLI. Read [Tunneling](references/tunneling.md) for
-   private access. Read [Hosted tools](references/hosted-tools.md) to
-   discover configuration before starting. For a requested hosted session, report
-   unavailable tools or authentication failures without starting a CLI session.
+1. Keep the requested interface; in a requested hosted session, report tool or
+   authentication failures without starting a CLI session. Otherwise, use hosted
+   tools, with an existing Connector for private web targets, or the CLI for a
+   new tunnel. If you can't run commands on the machine that reaches the target,
+   have the user start it there, then use hosted tools unless you lack them or
+   the CLI was requested. Read [Tunneling](references/tunneling.md) and [Hosted tools](references/hosted-tools.md).
 2. Prepare the brief. If effort is unset, ask the user to choose
    [effort](references/brief.md#effort) and wait. For CLI sessions:
 

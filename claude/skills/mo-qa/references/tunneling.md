@@ -5,14 +5,36 @@ find one with [configuration discovery](hosted-tools.md#start-requirements)
 and pass its name as `access`. Have its owner resume an offline Connector;
 discovery doesn't create or resume it.
 
-For a requested hosted session that needs a new Connector, use CLI credentials
-for the hosted workspace's organization. Run `qa login` on the tunnel machine unless it has saved CLI
-credentials or `MOMENTIC_API_KEY` for that organization.
-Run `qa tunnel start --name <name> <address>` on the machine that can reach
-the target. Discover the Connector and pass its
-name as `access`. Continue with hosted tools rather than starting a CLI session.
+Start a new tunnel on the machine that reaches the target. A cloud sandbox or
+remote VM can't reach the user's `localhost` or private network. Give a hosted
+or user-started tunnel a name of two or more groups of lowercase ASCII letters
+(no digits) separated by single hyphens, such as `checkout-dev`.
 
-For CLI sessions:
+If you can run commands on that machine and the user requested a hosted
+session, run `qa login` there unless it has saved CLI credentials or
+`MOMENTIC_API_KEY` for the hosted workspace's organization. Then run
+`qa tunnel start --name <name> <address>`, find the Connector with discovery,
+pass its name as `access`, and continue with hosted tools. Otherwise, follow the
+CLI steps below.
+
+If you can't run commands on that machine:
+
+1. Use the address from the user's request. Ask for the host and port if they
+   didn't give one.
+2. Ask the user to run `npx -y qa login`, choosing the organization your hosted
+   tools or `qa whoami` use, and
+   `npx -y qa tunnel start --name <name> <address>` there. Wait for them to
+   confirm.
+3. For hosted sessions, find the Connector with discovery and pass its name as
+   `access`. For CLI sessions (requested, or you have no hosted tools), run
+   `qa start "$brief" --effort "$effort" --tunnel <name>` and skip the CLI steps
+   below. If discovery doesn't list it as online or `qa start` rejects the name,
+   ask the user to check that `npx -y qa whoami` shows the same organization and
+   the tunnel is still running. Don't start without the Connector.
+4. After the last session, tell them to stop it with
+   `npx -y qa tunnel stop <name>`.
+
+For CLI sessions you tunnel yourself, on the machine that reaches the target:
 
 1. Run `qa tunnel list` and look for an existing tunnel that reaches the target.
    Reuse it with `qa start "$brief" --effort "$effort" --tunnel <id>`.

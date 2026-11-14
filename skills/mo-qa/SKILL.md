@@ -18,8 +18,8 @@ Control Mo with hosted tools or `qa`, not `momentic` or `momentic-mobile`.
    new tunnel. If you can't run commands on the machine that reaches the target,
    have the user start it there, then use hosted tools unless you lack them or
    the CLI was requested. Read [Tunneling](references/tunneling.md) and [Hosted tools](references/hosted-tools.md).
-2. Prepare the brief. If effort is unset, ask the user to choose
-   [effort](references/brief.md#effort) and wait. For CLI sessions:
+2. Prepare the brief. If effort is unset, ask the user to choose [effort](references/brief.md#effort) and wait.
+   For mobile CLI sessions, follow [Mobile bug bash](references/mobile-bug-bash.md) to select a build and start. For web CLI sessions:
 
    ```bash
    session_json=$(qa start "$brief" --effort "$effort")
@@ -45,7 +45,7 @@ when the session was already idle.
 
 ## Prepare the brief
 
-Include the target URL, goal, requirements, login method, test account label,
+Include the target app/build or URL, goal, requirements, login method, test account label,
 allowed data, prohibited actions and coverage exclusions. Preserve requested
 steps; ask about missing scope, access or permission that would change the run.
 Keep passwords out of the brief.
@@ -62,7 +62,7 @@ Read these references when needed:
   builds with `qa assets`.
 
 Keep the returned session ID and `webUrl`; share the link. After an uncertain
-start, check for the session before retrying.
+start, use [startup recovery](references/session-control.md#recover-startup) before retrying.
 
 ## Follow the session
 
@@ -93,5 +93,6 @@ Don't send `continue`, `finalize` or routine progress requests.
 Compare coverage with the brief and ask Mo to cover remaining unblocked areas.
 Report gaps, findings, the session link and any export directory.
 Read [Reports](references/reports.md) for evidence export, triage and retests.
-Read [Repair loop](references/remediation-loop.md) when fixes are in scope.
+For fixes, use [Mobile bug bash](references/mobile-bug-bash.md#finish-and-recheck)
+for app builds or [Repair loop](references/remediation-loop.md) for web targets.
 Keep the target and shared data unchanged until testing and reproductions finish.

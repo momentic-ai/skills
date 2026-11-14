@@ -44,8 +44,26 @@ Shutdown can take over a minute. A later message can resume the session.
 Archive only when asked: `qa archive <session-id>` cancels work and hides the
 session; `qa unarchive <session-id>` restores it.
 
+## Recover startup
+
+If an ordinary CLI start loses its response or times out, use the request ID
+in the error's recovery command. If you supplied a UUID with `--request-id`,
+use that same ID. Set `request_id` to it and look up the request before starting
+another session:
+
+```bash
+qa sessions recover "$request_id"
+qa sessions list --limit 20
+```
+
+Use the recovered session ID and link to follow the existing session. Listing
+shows recent sessions without starting work. If recovery is unavailable or the
+outcome is still uncertain, report that uncertainty and inspect the list; don't
+generate a new request ID or repeat the paid start. Recovery doesn't support PR
+sessions.
+
 ## Files
 
-Upload with `qa upload <session-id> <local-path>` and send Mo the returned
+Upload with `qa upload <local-path> --session-id <session-id>` and send Mo the returned
 sandbox path. Its files are remote. Before `qa download`, create the output
 directory if `--output` names a directory.

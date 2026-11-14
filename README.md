@@ -230,6 +230,7 @@ blocked, report the blocker rather than switching to the CLI.
 | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | Exploratory Mo bug bash or PR testing      | `mo-qa` with the hosted `momentic-hosted` server                                         |
 | Localhost or private-target QA             | `mo-qa` with an existing Connector or a new CLI tunnel                                   |
+| Mobile bug bash through the CLI            | `mo-qa` and the `qa` CLI                                                                 |
 | Mobile app build upload or download        | `qa assets` with the [mobile builds reference](skills/mo-qa/references/mobile-builds.md) |
 | Write or maintain repository browser tests | `momentic-test` and the local `momentic` MCP                                             |
 | Write or maintain repository mobile tests  | `momentic-test` and the local `momentic-mobile` MCP                                      |
@@ -255,12 +256,12 @@ for connection setup, files, findings, and retests.
 
 ## Skills
 
-| Skill                                                  | Description                                                         |
-| ------------------------------------------------------ | ------------------------------------------------------------------- |
-| [momentic-test](skills/momentic-test/SKILL.md)         | Create, run, and maintain Momentic browser, Android, and iOS tests. |
-| [momentic-maintain](skills/momentic-maintain/SKILL.md) | Diagnose failures and repair quarantined tests.                     |
-| [mo-qa](skills/mo-qa/SKILL.md)                         | Run Mo QA and manage app builds with `qa assets`.                   |
-| [momentic-spec](skills/momentic-spec/SKILL.md)         | Improve code correctness with Momentic specs.                       |
+| Skill                                                  | Description                                                             |
+| ------------------------------------------------------ | ----------------------------------------------------------------------- |
+| [momentic-test](skills/momentic-test/SKILL.md)         | Create, run, and maintain Momentic browser, Android, and iOS tests.     |
+| [momentic-maintain](skills/momentic-maintain/SKILL.md) | Diagnose failures and repair quarantined tests.                         |
+| [mo-qa](skills/mo-qa/SKILL.md)                         | Run web or mobile Mo bug bashes and manage app builds with `qa assets`. |
+| [momentic-spec](skills/momentic-spec/SKILL.md)         | Improve code correctness with Momentic specs.                           |
 
 ## Sources
 

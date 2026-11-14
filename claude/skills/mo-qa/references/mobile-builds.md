@@ -34,5 +34,5 @@ qa assets delete --platform ANDROID --channel checkout --tag release-42 --yes
 
 Deletion also removes aliases pointing to the tag. Upload, list, and delete
 print JSON; download prints the local path. Use `qa upload --session-id` for
-session fixtures, not app builds. After uploading a simulator or Android build,
-pass its channel, tag, and platform to `qa start`.
+session fixtures, not app builds. Follow [Mobile bug bash](mobile-bug-bash.md)
+to start QA with the selected build.

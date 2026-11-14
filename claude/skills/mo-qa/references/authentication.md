@@ -8,11 +8,13 @@ login. Preserve an existing key unless it fails or the user asks to replace it.
 
 A Momentic environment groups a `BASE_URL` with reusable variables and secrets.
 For hosted sessions, call `momentic_mo_list_configuration` with
-`kind: "environments"` and pass the selected name as `environmentName`. For CLI sessions, use `--environment NAME`.
+`kind: "environments"` and pass the selected name as `environmentName`.
+For CLI sessions, discover names with `qa environments list --search staging`,
+then use `--environment NAME`.
 These select an environment saved under **Environments** in Momentic, not a shell
 environment or `momentic.config.yaml` environment. Discovery doesn't reveal its
 variables or secrets; Mo copies them into the session at start.
-For an existing session, have the user add a secret through the session-page
+For an existing hosted session, have the user add a secret through the session-page
 composer. Put only the username/account label and variable names in the brief.
 
 For local credentials, have the user or secret manager provision an owner-only
@@ -31,13 +33,34 @@ qa start "$brief" --effort "$effort" --env-var QA_PASSWORD
 ```
 
 These options override matching saved-environment values. `--env-var` accepts
-a name, not `NAME=value`. To add CLI variables after start, restart with them.
+a name, not `NAME=value`.
 
 Never transcribe a secret from chat into commands, shell assignments, scripts,
 file edits, messages, URLs, reports, or commits. Use secure provisioning;
 disable shell tracing and don't print secret values. Remove temporary
 credential files you created after start, not user-managed files.
 Continue unauthenticated only when in scope.
+
+## Add session secrets
+
+For a CLI session you created, save securely provisioned variables without
+restarting the session:
+
+```bash
+qa secrets set "$session_id" --env-var QA_PASSWORD
+qa send "$session_id" --wait 45s "QA_PASSWORD is available. Retry the sign-in."
+```
+
+Pass `--question-id "<question-id>"` on the reply when Mo provides an ID.
+`--env-var` reads from the shell, not from a file. To use an owner-only dotenv
+file, pass `--env-file "$HOME/.config/momentic/qa.env"` instead. Don't read or print
+its contents. Confirmation contains only the session ID and saved names.
+
+Saving secrets doesn't send a message. The follow-up turn picks up the new values;
+an already-running process keeps its old environment. Rejecting a file saves
+nothing. Remove `__proto__` and `BASE_URL` from files passed to `qa secrets set`;
+neither name is supported there. `qa start` still accepts `BASE_URL` as public
+target configuration, not a secret.
 
 ## Reuse browser authentication
 

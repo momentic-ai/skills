@@ -6,13 +6,13 @@
   },
   "metadata": {
     "description": "Agent skills for Momentic tests and Mo bug bashes",
-    "version": "1.2.1"
+    "version": "1.3.0"
   },
   "plugins": [
     {
       "name": "momentic",
       "source": "./",
-      "version": "1.2.1",
+      "version": "1.3.0",
       "description": "Bug bash with Mo and write, run and maintain Momentic browser and mobile tests."
     }
   ]

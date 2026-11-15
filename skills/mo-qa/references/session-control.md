@@ -29,9 +29,12 @@ You don't need to pass `waitSeconds`; set it to 0 for an immediate snapshot.
 Pending questions, finished sessions, and `bugName` lookups return immediately.
 
 For CI and scripts that need a final outcome, `qa wait "$session_id" --json`
-blocks while Mo and its sub-agents work.
-It allows up to five continuous minutes of `checking` or incomplete `sleeping`
-for work to resume. Exit `0` means the wait ended, not necessarily that the task
+keeps waiting while the server reports `running` or `waiting_on_agents`,
+including sub-agent work. After it returns, check `qa status` before exporting
+or stopping; a return alone does not confirm completion.
+It allows up to five continuous minutes of `checking`, or `sleeping`, `findings`,
+`incomplete` or `replied` without completion, for work to resume.
+Exit `0` means the wait ended, not necessarily that the task
 completed or QA passed; `1` means the command failed or Mo failed (including startup),
 `2` means Mo needs input and `4` means the session was cancelled.
 It has no timeout option. An outer shell timeout ends only the local wait,

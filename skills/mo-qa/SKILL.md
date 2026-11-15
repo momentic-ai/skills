@@ -32,11 +32,11 @@ Control Mo with hosted tools or `qa`, not `momentic` or `momentic-mobile`.
 4. For `needs_you`, answer with `momentic_mo_message_session`, or
    `qa send "$session_id" --wait 45s "<answer>"`. Pass
    `--question-id "<question-id>"` when Mo provides an ID.
-5. After `ready`, unless the user wants more testing, export or read the report,
-   stop even if that fails, then summarize results. For CLI sessions, run
-   `qa report "$session_id" --output <dir>`, then `qa stop "$session_id" --subagents`;
-   do not use the hosted stop tool. For hosted sessions, read the report with
-   `momentic_mo_get_session`, then call `momentic_mo_stop_session`.
+5. After `ready`, for hosted sessions, read the report with `momentic_mo_get_session`
+   and summarize findings and uncovered requirements. Call `momentic_mo_stop_session`
+   only when the user asks or agrees. For CLI sessions, unless the user wants more testing,
+   run `qa report "$session_id" --output <dir>`, then `qa stop "$session_id" --subagents`
+   even if export fails, then summarize results; do not use the hosted stop tool.
    Stop only tunnels you started, after their last session: `qa tunnel stop "$tunnel_id"`.
 
 For read-only requests, inspect without starting, messaging or stopping work.

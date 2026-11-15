@@ -11,7 +11,8 @@
 4. Answer questions with `momentic_mo_message_session` and `questionId`.
    Apply the [message limits](../SKILL.md#message-mo).
 5. Follow the [finish sequence](../SKILL.md#finish), using
-   `momentic_mo_get_session` for the report and `momentic_mo_stop_session` to stop.
+   `momentic_mo_get_session` for the report. Call `momentic_mo_stop_session` only
+   when the user asks or agrees.
 
 Quote `latestMessage.text` when its role is `assistant`; it is Mo's reply, unlike
 the report summary or earlier verdicts. Replies over 20,000 characters end with

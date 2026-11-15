@@ -1,30 +1,29 @@
 # Connect Mo to a private target
 
-A Connector is a named tunnel to a private web target. For hosted sessions,
-find one with [configuration discovery](hosted-tools.md#start-requirements)
-and pass its name as `access`. Have its owner resume an offline Connector;
-discovery doesn't create or resume it.
+A Connector is a named tunnel to a private web target. For a requested hosted
+session, discover an online Connector with
+[configuration discovery](hosted-tools.md#start-requirements) and pass its name
+as `access`. If a matching Connector is offline, ask the user to resume it on
+its original machine with `npx -y qa tunnel start --name <name>`. If none exists,
+ask them to run `npx -y qa tunnel start --name <name> <address>` on a machine
+that reaches the target. Wait for it to be online. Do not run login or tunnel
+commands for them. Report authentication failures without switching to the CLI.
 
-Start a new tunnel on the machine that reaches the target. A cloud sandbox or
+A new tunnel must run on the machine that reaches the target. A cloud sandbox or
 remote VM can't reach the user's `localhost` or private network. Give a hosted
 or user-started tunnel a name of two or more groups of lowercase ASCII letters
 (no digits) separated by single hyphens, such as `checkout-dev`.
 
-If you can run commands on that machine and the user requested a hosted
-session, run `qa login` there unless it has saved CLI credentials or
-`MOMENTIC_API_KEY` for the hosted workspace's organization. Then run
-`qa tunnel start --name <name> <address>`, find the Connector with discovery,
-pass its name as `access`, and continue with hosted tools. Otherwise, follow the
-CLI steps below.
+For hosted sessions without an online Connector, or CLI sessions where you
+can't run commands on that machine:
 
-If you can't run commands on that machine:
-
-1. Use the address from the user's request. Ask for the host and port if they
-   didn't give one.
+1. For a new tunnel, use the address from the user's request. Ask for the host
+   and port if they didn't give one.
 2. Ask the user to run `npx -y qa login`, choosing the organization your hosted
-   tools or `qa whoami` use, and
-   `npx -y qa tunnel start --name <name> <address>` there. Wait for them to
-   confirm.
+   tools or `qa whoami` use if login is needed. Ask them to resume a matching
+   offline tunnel on its original machine with
+   `npx -y qa tunnel start --name <name>`, or create one with
+   `npx -y qa tunnel start --name <name> <address>`. Wait for them to confirm.
 3. For hosted sessions, find the Connector with discovery and pass its name as
    `access`. For CLI sessions (requested, or you have no hosted tools), run
    `qa start "$brief" --effort "$effort" --tunnel <name>` and skip the CLI steps

@@ -27,6 +27,8 @@ Follow the [workflow](../SKILL.md#workflow-at-a-glance) for effort and interface
 selection. Read [Authentication](authentication.md) when the app needs credentials.
 
 Use `momentic_mo_list_configuration` to discover environments, Connectors, and mobile builds.
+It also lists workspace knowledge and Slack destinations. Use returned names
+and IDs; ask when multiple resources match.
 
 For a web session with a saved environment and an existing Connector, discover each
 kind separately. Set `environmentName` and `access` from those selections in the
@@ -45,6 +47,9 @@ session. Pin the selected build tag unless the user asks to follow `latest`.
 Put browser, device and advanced settings in the start inputs, not just the
 brief. After an uncertain start, inspect the dashboard before retrying.
 Correct missing inputs before retrying a rejected request.
+Hosted starts are limited to five per user in 15 minutes.
+For a PR, pass its URL as `pullRequest` without a query or fragment. The
+Momentic GitHub App needs repository access, and the PR needs a deployed preview.
 
 ## Findings and files
 

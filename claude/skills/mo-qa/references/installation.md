@@ -13,6 +13,10 @@ curl -fsSL https://cli.momentic.ai/qa | sh
 Add `$HOME/.local/bin` to `PATH` if needed, then run `qa version`.
 Read [Authentication](authentication.md) when signing in for the first time.
 
+`qa logout` removes the saved login, not a provisioned `MOMENTIC_API_KEY`.
+For CLI diagnostics, global `--log-level` accepts `debug`, `info`, `warn`, or
+`error`.
+
 For a CLI bridge, run `npx -y qa login`, then configure `momentic-hosted` with
 `npx -y qa mcp`.
 

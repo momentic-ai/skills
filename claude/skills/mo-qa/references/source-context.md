@@ -13,11 +13,13 @@ A full PR URL or `owner/repo#number` works. Omit the brief to test the PR's
 changed behavior and regressions. Preserve any user-specified scope.
 
 If preview discovery fails, provide its verified deployment URL.
+Don't invent a preview URL from the branch name.
 A saved environment's base URL doesn't replace the PR preview.
 Use `--tunnel` for private previews. Without `--pr`, put the target in the
 brief; `--url` and `--patch` apply only to PR sessions.
 
-Use the session report for findings rather than a superseded GitHub comment.
+PR sessions test the remote PR revision and post a GitHub comment. New sessions
+collapse older Mo comments as outdated; use the session report for findings.
 
 ## Test local changes
 
@@ -27,6 +29,7 @@ Serve those changes at the target URL; a patch supplies source, not deployment.
 
 Select relevant tracked and untracked files. Exclude secrets, credentials,
 logs, temporary files, large blobs, and unrelated changes or customer data.
+Don't collect the entire working tree or force-add ignored files.
 Use text-only Git diffs at most 256 KiB.
 
 To preserve the real index, prepare a patch with a temporary index and explicit

@@ -74,11 +74,15 @@ For `needs_you`, answer each pending question using its question ID, or ask the
 user. Report blockers. After three consecutive failed reads, report the failures
 and unknown outcome, share the link and ask whether to cancel; testing may continue.
 
-Mo manages its testing clock and time budget. Use 45-second waits to poll,
-not to impose a testing deadline.
+Mo manages its testing budget. Poll with 45-second waits; they aren't deadlines.
+Monitor time caps with wall time and spend caps with signed-in `qa cost`.
+Hosted MCP doesn't expose cost; the CLI can read hosted session costs.
+If spend can't be monitored, tell the user before starting.
+At the cap, report coverage cut short. Stop if the user authorized stopping at
+the cap; otherwise ask before stopping.
 
 Only `ready` means the session finished. For incomplete hosted sessions, follow
-`get_session.nextAction`. Do not stop incomplete testing unless the user asks.
+`get_session.nextAction`.
 Credit findings to Mo; a tester's verified verdict is not a verified session pass.
 
 ## Message Mo

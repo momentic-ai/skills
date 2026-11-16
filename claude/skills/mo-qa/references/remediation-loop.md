@@ -1,5 +1,8 @@
 # Fix bugs found by QA
 
+This is the CLI repair loop. Use [Hosted tools](hosted-tools.md) for findings,
+landed fixes, and authorized retests in hosted sessions.
+
 For an existing session, recover its brief with
 `qa read <session-id> --from start --timeout 0 --json`.
 Skip findings dismissed as duplicate, works as intended, or cannot reproduce;
@@ -14,6 +17,8 @@ read [Reports](reports.md) when inspecting triage.
    export a baseline with `qa report <session-id> --output <dir>`.
 3. Apply the fixes and make the fixed revision available at Mo's target,
    reusing its tunnel when present.
+   Ask before publishing to a shared environment or broadening access outside
+   existing authorization. Don't deploy just to complete verification.
 4. After you land a fix, mark it Fixed with `qa bugs fix <session-id> <bug-id>`;
    include `--pr <url>` and `--commit <sha>` when available. If the user requests
    a recheck, relay that request with the finding name and original steps.
@@ -22,3 +27,5 @@ read [Reports](reports.md) when inspecting triage.
    the baseline. Call the fix verified only after a passing recheck of the
    original steps. A reproduced Fixed bug reopens; a completed non-reproduction
    marks an Open bug Fixed. A blocked recheck leaves status unchanged.
+
+Exporting a report doesn't rerun the test. Use the requested recheck to verify it.

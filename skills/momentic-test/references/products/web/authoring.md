@@ -12,8 +12,9 @@ Read the [v2 format reference](https://static.momentic.ai/v2-format-reference.md
 when syntax is unclear.
 
 Use `before`, `steps`, and `after` in tests, and `steps` in modules.
-Give each step one command key with options underneath. Use milliseconds for
-durations; omit step IDs, generated data, and default-valued options.
+Give each step one command key with options underneath, not beside it.
+Use milliseconds for durations; omit step IDs, generated data, and default-valued
+options.
 
 Set `defaultEnv` explicitly or override it with `--env <name>`.
 The base URL comes from `--url-override`, then test `url`, then `env.BASE_URL`.
@@ -56,6 +57,7 @@ Declare parameters in the module:
 parameters:
   - name: username
     default: { string: standard_user }
+  - name: password
 ```
 
 Supply inputs from the test:
@@ -65,11 +67,19 @@ Supply inputs from the test:
     path: ./login.module.yaml
     inputs:
       username: { string: standard_user }
+      password: { javascript: env.QA_PASSWORD }
 ```
 
-In a preview step string, use
-`--step-type MODULE --module-path ./login.module.yaml --inputs username='"standard_user"'`.
-For a shell command, quote the pair as `'username="standard_user"'`.
+Use `{ string: ... }` for literals and `{ javascript: ... }` for expressions.
+A bare YAML string input is evaluated as JavaScript; `{{ }}` doesn't work
+in module inputs. Declare every supplied parameter in the module.
+
+For `momentic_preview_step`, use this step string:
+
+```text
+--step-type MODULE --module-path ./login.module.yaml
+--inputs 'username="standard_user"' password=env.QA_PASSWORD
+```
 
 ## Wait for readiness
 
@@ -94,6 +104,15 @@ when choosing runtime APIs.
 
 ## Correct cache or assertion memory
 
-Change a description when its intent changes. Disable a locator's cache only
-when requested or a proven bad match persists after fixing the description
-and page readiness. Reword an assertion when old memory contradicts its intent.
+Change a description when its intent changes. Reword an assertion when old
+memory contradicts its intent.
+
+## Author nested and adjacent steps
+
+For a conditional, use `--step-type CONDITIONAL --assertion-type` with the
+matching assertion fields from the Step Authoring Guide. Splice its children
+with `momentic_test_splice_steps` and `parentStepIdChain: [conditionalStepId]`.
+
+Batch obvious adjacent low-risk steps with `momentic_preview_steps` before
+splicing. Use `momentic_locate_multiple_elements` only when several future
+targets are already present and earlier actions won't change them.

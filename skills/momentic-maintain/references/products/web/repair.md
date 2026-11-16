@@ -9,6 +9,8 @@ npx momentic ai classify --git-commit "<commit-sha>"
 ```
 
 Add `--save` only when asked to replace the saved verdict.
+Classification explains the failure; it doesn't edit the test. Use
+`--output-format json` for automation and multi-run bookkeeping.
 Use `--no-cache` for a requested fresh analysis, and `--skip-classified`
 when resuming a batch. Keep each result mapped to its run.
 For interactive single-run classification, use `--interactive` with a TTY,
@@ -18,12 +20,16 @@ without JSON output.
 
 1. Read the config, test, setup modules, and normal run command. Match
    environment, credentials, files, fixtures, and browser; check API access.
+   Inspect `git status` and preserve unrelated work.
 2. Start the app and required services, preferring a prebuilt app. Check
    readiness and warm affected routes when using a dev server.
-3. Confirm repair delivery before starting. Begin with `--parallel 1`;
-   increase it only when host capacity permits.
+3. Run a focused smoke or the failing test when needed to prove app, fixture,
+   authentication, and browser readiness. Fix setup failures first.
+4. Confirm repair delivery before starting. Begin with `--parallel 1`;
+   use at most four workers, and only when host capacity permits.
 
-To start the app as part of triage, supply its server command and readiness URL:
+To start the app as part of triage, discover its server command and readiness URL
+from the repository and CI. Don't copy these example values blindly:
 
 ```bash
 npx momentic ai triage --run-id "$RUN_ID" \
@@ -32,6 +38,9 @@ npx momentic ai triage --run-id "$RUN_ID" \
 ```
 
 ## Run triage
+
+Triage groups failures by shared test fixes, edits repairable tests, and replays
+the repairs.
 
 For an already running app:
 

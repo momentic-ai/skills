@@ -22,7 +22,8 @@ failures; fix that cause rather than changing assertions.
 
 For absent elements, check prerequisites. For visible elements, use text, role,
 and nearby context. Restore hidden, covered, disabled, moving, or offscreen
-targets before retrying; force interaction only when the test requires it.
+targets before retrying; recapture detached targets. Force interaction only when
+the test requires it.
 Read [Cache](authoring.md#correct-cache-or-assertion-memory) for fast wrong matches.
 
 Read [Visual actions](https://momentic.ai/docs/configuration/browser#browser-visualactions)
@@ -31,6 +32,8 @@ when a control needs coordinate actions, before enabling `browser.visualActions`
 Quote exact text only when required. Specify the region, object, count, or state.
 Use `assertVisually` for conditions fully visible in the viewport, scrolling
 them into view first; otherwise use `assert`.
+In MCP step strings, use `--context-choice VISION_ONLY` with `AI_ASSERTION`
+for these viewport-only checks.
 Use [run assertions](https://momentic.ai/docs/core-concepts/writing-assertions#run-assertions)
 when checking toasts or changes over time.
 

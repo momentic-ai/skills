@@ -12,6 +12,10 @@ Remote Android needs adb and `ANDROID_HOME`; local Android also needs Java
 and Android Studio. Local iOS needs macOS and Xcode; remote iOS needs a
 simulator build, not local Xcode.
 
+Keep the test's configured provider. When choosing one, default to remote;
+use a local emulator or simulator only when requested. `momentic_session_start`
+accepts `provider`, `envName`, `localDeviceId`, and `localAppPath` overrides.
+
 Enable WebView debugging in Android builds that automate WebViews.
 A missing debug connection can report `No browser controller is attached to
 the requested webview`. Device WebViews don't need local Chromium.
@@ -65,6 +69,8 @@ steps:
 Check visible results after material state changes and before dependent actions.
 Use element/screen checks for deterministic state and AI checks for semantic
 visual state. Use visual-only checks when hierarchy data can't express the condition.
+AI checks retry until their timeout, but each attempt checks one snapshot.
+Prefer stable conditions over fleeting states.
 
 Use AI actions when requested or already used by the test. Keep caching for
 repeatable flows; disable it for behavior that must be chosen afresh.
@@ -76,9 +82,13 @@ Declare parameters in the module:
 
 ```yaml
 parameters:
-  - name: username
-    default: { string: standard_user }
+  parameterNames: [username, password]
+  defaultParameters:
+    username: '"standard_user"'
 ```
+
+Unlike browser modules, mobile declarations use this object shape with
+JavaScript-expression strings for defaults.
 
 Pass inputs from the test:
 
@@ -87,11 +97,22 @@ Pass inputs from the test:
     path: ./login.module.yaml
     inputs:
       username: { string: standard_user }
+      password: { javascript: env.QA_PASSWORD }
 ```
 
-In a preview step string, use
-`--step-type MODULE --module-path ./login.module.yaml --inputs username='"standard_user"'`.
-For a shell command, quote the pair as `'username="standard_user"'`.
+Use `{ string: ... }` for literals and `{ javascript: ... }` for expressions.
+A bare YAML string input is evaluated as JavaScript; `{{ }}` doesn't work
+in module inputs. Declare every supplied parameter in `parameterNames`;
+saved YAML ignores undeclared inputs at runtime; preview/step strings reject them.
+
+In a preview step string, use:
+
+```text
+--step-type MODULE --module-path ./login.module.yaml
+--inputs 'username="standard_user"' password=env.QA_PASSWORD
+```
+
+Pass it to `momentic_preview_step`; the mobile CLI has no `preview-step` command.
 Inside the module, use `{{ env.username }}` in text fields and `env.username`
 in JavaScript.
 
@@ -121,11 +142,12 @@ module input expressions, and `{{ env.NAME }}` in string fields.
 
 Use JavaScript for setup, data generation, APIs, databases, OTP/email/SMS,
 assertions, or context writes that a native step can't express.
+Don't reproduce native actions or poll UI state in JavaScript when a native
+step or retrying check fits.
 Read the [mobile JavaScript command](https://momentic.ai/docs/reference/mobile-commands/javascript)
 when writing reusable scripts.
 
 ## Correct cache or assertion memory
 
-Change descriptions when intent changes. Disable a locator's cache only when
-requested or a proven bad match persists after correcting the description
-and screen readiness. Reword assertions when old memory contradicts their intent.
+Change descriptions when intent changes. Reword assertions when old memory
+contradicts their intent.

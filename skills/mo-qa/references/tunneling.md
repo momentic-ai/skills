@@ -48,6 +48,8 @@ qa start "$brief" --effort "$effort" --tunnel "$tunnel_id"
 Add addresses such as `api.internal:8080` only when the flow needs them.
 Keep the exact private URL in the brief. Run the health check, tunnel, and
 session commands in the same network context.
+In sandboxed environments, a host-network service may be unreachable from the
+sandbox network.
 
 For a named tunnel, set `tunnel_id` to your chosen name or a name from
 `qa tunnel list`. Use `qa tunnel start --name "$tunnel_id" localhost:3000` to

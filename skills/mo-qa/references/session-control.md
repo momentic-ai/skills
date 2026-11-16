@@ -17,6 +17,8 @@ Read `status` from `qa read`; on older servers that omit it, use `qa status`.
 `timedOut: true` means the read reached its timeout while Mo was still working.
 A completed root turn can leave sub-agents running; check the session state
 before exporting and stopping.
+After `qa send`, read the session again. Its response confirms delivery, not
+task completion.
 
 With `--json`, `qa read` writes one JSON response. Without it, replies go to
 stdout and waiting/status text goes to stderr. Read from `start` to include
@@ -70,3 +72,5 @@ sessions.
 Upload with `qa upload <local-path> --session-id <session-id>` and send Mo the returned
 sandbox path. Its files are remote. Before `qa download`, create the output
 directory if `--output` names a directory.
+Without `--output`, downloads use `MOMENTIC_ARTIFACTS_DIR`, then
+`<current-directory>/.momentic-artifacts`.

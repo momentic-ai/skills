@@ -36,6 +36,10 @@ is wrong, walk back to the step that produced it. Compare repeated module
 invocations before older runs; inspect failed or recovered children even when
 their container passed.
 
+Prove each causal claim with before/after screenshots, URLs, or DOM or
+screen-hierarchy evidence.
+Check whether a passing assertion was scoped enough to prove the intended state.
+
 Check the final screenshot against the next step's expected state.
 Use `momentic_get_test_steps_for_run` when intent is unclear, and request
 `includeTrace=true` when screenshots and step results don't explain the failure.
@@ -43,5 +47,7 @@ Read [Manual artifacts](references/artifacts.md) when MCP output is missing.
 
 Preserve the intended assertion when the failure is an app bug, missing fixture,
 invalid credentials, outage, or Momentic defect.
+Reject deleted assertions, broadened checks, sleeps, or longer timeouts that
+only hide the cause.
 Use hosted MCP for run discovery and the selected product's local MCP for artifacts.
 Read [MCP setup](https://momentic.ai/docs/coding-agents/mcp-server) when disconnected.

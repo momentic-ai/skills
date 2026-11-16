@@ -23,6 +23,8 @@ Choose the category supported by evidence:
 Use screenshots to distinguish a changed app from a broken app.
 Relatedness doesn't turn an infrastructure failure into another category.
 Increasing a timeout alone isn't a permanent authorship repair.
+For a race, recommend a concrete stable interaction, such as selecting a
+suggestion explicitly instead of typing and immediately pressing Enter.
 
 Report recoverability as `RECOVERABLE` for a persistent test fix,
 `ONE_TIME_RECOVERABLE` for recovery without a saved edit, or

@@ -33,6 +33,8 @@ description: Create, run, and maintain Momentic browser, Android, and iOS tests 
 Create a new test with `momentic_test_create`, then call `momentic_session_start`
 with its ID. For an existing test, start it directly. Read the returned Step
 Authoring Guide and use its active step IDs.
+Read [Session details](references/sessions.md) for creation inputs, persisted
+versus active state, and step references.
 
 Use `momentic_get_artifacts` to discover tests, environments, and other artifacts.
 Use `momentic_test_get` to read a saved test outside the active session, and
@@ -49,9 +51,13 @@ Use `momentic_test_get` to read a saved test outside the active session, and
    step. Reuse prerequisites already run in this session.
 
 Run one operation at a time per session. If a preview or run returns a
-`stepRunnerId`, wait with `momentic_poll_runner` using a nonzero wait before
-the next operation. Reset when accumulated state could hide a failure.
+`stepRunnerId`, call `momentic_poll_runner` with `timeoutSeconds` greater than 0
+before the next operation. Reset when accumulated state could hide a failure.
 For nested steps, use the parent chain from the active session or splice response.
+After about three attempts at the same failure, stop and ask the user what to do.
+
+Disable cache only when requested, behavior must be chosen afresh, or a proven
+bad match persists after correcting the description and readiness.
 
 Get approval before previewing or running actions that submit, purchase, delete,
 send, create data, or have any other non-idempotent side effect. Also get approval

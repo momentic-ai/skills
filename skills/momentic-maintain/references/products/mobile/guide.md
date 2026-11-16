@@ -5,8 +5,8 @@ when preparing the device.
 Match the failing test's app build, platform, environment, and credentials.
 Compare screenshots, screen state, and device logs.
 
-Filter run history by `executionType: ANDROID` or `IOS`, reading every required
-page before summarizing results.
+Filter run history by `executionType: ["ANDROID"]` or `["IOS"]`. Read every
+required page before summarizing results.
 
 ## Save a classification
 

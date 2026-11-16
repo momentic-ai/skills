@@ -35,10 +35,10 @@ qa start "$brief" --effort "$effort" --env-var QA_PASSWORD
 These options override matching saved-environment values. `--env-var` accepts
 a name, not `NAME=value`.
 
-Never transcribe a secret from chat into commands, shell assignments, scripts,
-file edits, messages, URLs, reports, or commits. Use secure provisioning;
-disable shell tracing and don't print secret values. Remove temporary
-credential files you created after start, not user-managed files.
+Never invent credentials or transcribe a secret from chat into commands,
+shell assignments, scripts, file edits, messages, URLs, reports, or commits.
+Use secure provisioning; disable shell tracing and don't print secret values.
+Remove temporary credential files you created after start, not user-managed files.
 Continue unauthenticated only when in scope.
 
 ## Add session secrets

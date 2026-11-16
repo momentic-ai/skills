@@ -34,6 +34,6 @@ Choose only the overrides needed for the task:
 - `autoExpandIframes`: expose iframe contents without explicit iframe URLs;
   defaults to `true`.
 
-Only headers and geolocation can change on an open browser. Other changes need
-a new browser, which closes pages and clears cookies. Request a mid-session
+Headers, geolocation, and viewport can change on an open browser. Other changes
+need a new browser, which closes pages and clears cookies. Request a mid-session
 restart only when Mo can recreate the needed state.

@@ -24,6 +24,8 @@ List filters match immutable tags or saved aliases, not `latest`.
 List, download, and delete accept `--build-target`. The default for download and
 delete is `universal` for Android or `simulator` for iOS. Mo sessions cannot run
 device builds. Platform values are `ANDROID` and `IOS`.
+For stored IPAs, use `--platform IOS --build-target device` when managing builds,
+not when starting a Mo session.
 
 Delete only when the user asks, using the immutable tag rather than an alias:
 

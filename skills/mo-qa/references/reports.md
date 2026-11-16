@@ -1,5 +1,9 @@
 # Read a Mo report
 
+For hosted sessions, use [Hosted tools](hosted-tools.md) for reports, findings,
+triage, and retests. The export instructions and `qa` commands are CLI-only;
+duplicate linking below uses hosted tools.
+
 After testing settles, export the evidence:
 
 ```bash
@@ -21,12 +25,20 @@ An export from active testing is partial. Check `summary.status`, artifact
 download errors, and per-finding warnings. Report each finding's name, evidence,
 status, and session link. A reproduced bug has `kind: "bug"`; a static finding
 such as a typo has `kind: "flag"`.
+Findings expose `lifecycleStatus`: `NEEDS_REVIEW`, `OPEN`, `FIXED`, or
+`DISMISSED`.
+Agent verdicts are `verified`, `issues_found`, or `blocked`. An idle session or
+empty findings list alone doesn't establish passing QA. Check coverage and
+blockers.
+Exports don't include raw sub-agent transcripts.
 
 ## Triage findings
 
-Review every Needs review or Open finding in the report you're working from,
-including ones you didn't pull. Verify each finding against the code and
-available evidence. Ask the user when evidence or intended behavior is unclear.
+For a whole-report review, review every Needs review or Open finding, including
+ones you didn't pull. For a selected-finding fix, keep to that finding.
+Verify each in-scope finding against the code and available evidence. Ask the
+user when evidence or intended behavior is unclear.
+Before reporting a bug, check that the product behavior and brief still apply.
 For a read-only review, propose outcomes and ask before changing triage.
 Don't dismiss a finding just to clear the report.
 Use its ID or exact name for CLI commands:
@@ -52,12 +64,16 @@ Use Accept (Open) only for a confirmed bug the user chooses not to fix now.
 For each unresolved finding, report the question that needs the user's answer
 or their decision to defer it. Retest only when the user requests it.
 Read [Repair loop](remediation-loop.md) when fixing or retesting.
+`qa bugs fix` records a fix; it doesn't verify a retest or file a tracker issue.
 
 ## Inspect evidence
 
 Start with finding details, screenshots, and MP4s. Use the finding's session
 link for browser replays; raw rrweb files aren't videos or rendered screenshots.
+Keep raw rrweb as secondary evidence; don't generate screenshots from replay.
 If no screenshot or video is available, report that gap even without warnings.
+An empty warnings list doesn't prove every evidence type is present. Missing
+console or network logs are `null`, not an empty list proving no events occurred.
 
 Correlate console and network entries with the reproduction window; offsets
 are milliseconds from its start. Logs with `scope: "agent"` cover the agent,

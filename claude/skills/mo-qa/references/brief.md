@@ -1,29 +1,12 @@
-# Write a brief
+# Prepare the brief
 
-Describe the target and desired behavior:
+State the target URL, app or pull request, goal, required behavior, account label, allowed data, prohibited actions, and coverage exclusions. Preserve the user's required steps. Ask about missing access or permission that would change the run. Do not put passwords, tokens, cookies, or other secrets in the brief.
 
-```text
-Target: https://preview.example.com/checkout?variant=express
-Goal: Keep the selected shipping method after returning from payment.
-Sign in: Use the staging QA buyer account.
-Test data: Create test carts only.
-Do not: Submit payment, send email, delete data, or change the shared catalog.
-Coverage: Express checkout and standard checkout; skip other flows.
-Pass criteria: Shipping stays selected, the total stays unchanged, and standard checkout works.
-```
+Ask the user to choose an effort before starting if they have not already done so:
 
-If the user's request prescribes how Mo should test, such as reproducing each
-bug three times or covering the happy path, failure cases, edge cases, and page
-reloads for every flow, warn them that this can lower Mo's results. Mo is good
-at deciding what is most important to test. Keep the instructions they still
-want after the warning.
+- `low`: 15 minutes, one flow.
+- `medium`: 30 minutes, a feature or pull request.
+- `high`: 60 minutes, a bug bash.
+- `max`: 120 minutes, a whole app.
 
-Preserve the user's scope and constraints.
-
-## Effort
-
-Choose `--effort low` for 15 testing minutes, `medium` for 30, `high` for 60,
-or `max` for 120. Ask the user to confirm a level with its testing time unless
-they already chose it. Use low for one flow, medium for a feature, high for a
-broad bug bash, or max for a whole app.
-Read the [follow loop](../SKILL.md#follow-the-session) for progress polling.
+Pass the selected value to `momentic_mo_start_session`. Do not choose a value on the user's behalf. Clarification does not count toward testing effort.

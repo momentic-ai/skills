@@ -32,8 +32,8 @@ mobile). Do not run `skills` alongside the plugin.
 Before your first session, download the local CLIs outside Claude Code:
 
 ```bash
-npx -y momentic@3.74.0 --version
-npx -y momentic-mobile@1.47.0 --version
+npx -y momentic@3.74.1 --version
+npx -y momentic-mobile@1.47.1 --version
 ```
 
 A cold `npx` install can exceed Claude Code's default 30-second `MCP_TIMEOUT`

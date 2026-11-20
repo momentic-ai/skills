@@ -53,14 +53,17 @@ qa bugs review <session-id> <bug-id>
 ```
 
 After you land a fix, run `qa bugs fix <session-id> <bug-id>`; include PR/commit
-links when available. Dismiss with `works-as-intended` when behavior is intended
-or `cannot-reproduce` after an unsuccessful reproduction attempt, not when you
-lack access or context. For a duplicate, use `momentic_mo_triage_finding` with
-`status: "DUPLICATE"` and set `duplicateOfFindingId` to the earlier original
-finding's `id` from `momentic_mo_list_findings`.
+links when available. Fixed records a landed fix, not a passing retest. For a
+confirmed bug the user asked you to file with a tracker or defer, run
+`qa bugs accept <session-id> <bug-id>` to record Accepted/Open without asking
+again for status permission. Dismiss with `works-as-intended` when behavior is
+intended or `cannot-reproduce` after an unsuccessful reproduction attempt, not
+when you lack access or context. For a duplicate, use
+`momentic_mo_triage_finding` with `status: "DUPLICATE"` and set
+`duplicateOfFindingId` to the earlier original finding's `id` from
+`momentic_mo_list_findings`.
 Without MCP, report the suspected duplicate and its original to the user instead
 of dismissing it.
-Use Accept (Open) only for a confirmed bug the user chooses not to fix now.
 For each unresolved finding, report the question that needs the user's answer
 or their decision to defer it. Retest only when the user requests it.
 Read [Repair loop](remediation-loop.md) when fixing or retesting.

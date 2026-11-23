@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mo QA CLI"
+  short_description: "Run Mo QA sessions with the qa CLI"
+  default_prompt: "Use $mo-qa to run and follow a Mo QA session with the qa CLI."

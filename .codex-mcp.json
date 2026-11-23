@@ -16,8 +16,8 @@
       ]
     },
     "momentic-hosted": {
-      "type": "http",
-      "url": "https://mcp.momentic.ai"
+      "command": "npx",
+      "args": ["-y", "qa", "mcp"]
     }
   }
 }

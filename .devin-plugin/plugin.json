@@ -32,7 +32,8 @@
       "args": ["-y", "momentic-mobile", "mcp"]
     },
     "momentic-hosted": {
-      "url": "https://mcp.momentic.ai"
+      "command": "npx",
+      "args": ["-y", "qa", "mcp"]
     }
   }
 }

@@ -4,7 +4,8 @@
   "description": "Bug bash web and mobile apps with Mo and review Momentic test results.",
   "mcpServers": {
     "momentic-hosted": {
-      "httpUrl": "https://mcp.momentic.ai"
+      "command": "npx",
+      "args": ["-y", "qa", "mcp"]
     }
   }
 }

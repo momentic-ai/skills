@@ -11,8 +11,8 @@
       "env": { "MOMENTIC_API_KEY": "${env:MOMENTIC_API_KEY}" }
     },
     "momentic-hosted": {
-      "type": "http",
-      "url": "https://mcp.momentic.ai"
+      "command": "npx",
+      "args": ["-y", "qa", "mcp"]
     }
   }
 }

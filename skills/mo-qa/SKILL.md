@@ -7,7 +7,9 @@ description: Run hosted Mo QA sessions through Momentic's MCP tools. Covers web,
 
 Use the hosted Mo tools for this skill. It is separate from the CLI-only `mo-qa` skill. Do not install both variants for one workflow.
 
-Connection setup belongs in the [MCP setup guide](https://momentic.ai/docs/coding-agents/mcp-server) and [hosted connection guide](https://momentic.ai/docs/mo/chatgpt-and-claude). If a tool or authentication is unavailable, report the blocker. Do not switch to the CLI or ask the user to install the other skill.
+Connection setup belongs in the [MCP setup guide](https://momentic.ai/docs/coding-agents/mcp-server) and [hosted connection guide](https://momentic.ai/docs/mo/chatgpt-and-claude). If hosted tools are missing or unregistered, follow the setup guides above and report any remaining setup blocker. Report other unavailable-tool blockers.
+
+For authentication failures on an existing hosted connection, follow [Authentication](references/authentication.md) and report any remaining blocker. Do not switch hosted testing to CLI sessions or ask the user to install the CLI-only skill.
 
 Do not start, message, or stop a session for an explicit read-only request. Before starting, confirm the target, scope, access, exclusions, allowed data, and effort. Never choose effort for the user. Read [Brief](references/brief.md) and [Configuration](references/configuration.md).
 

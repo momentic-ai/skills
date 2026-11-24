@@ -1,13 +1,14 @@
 {
   "name": "momentic",
   "displayName": "Momentic",
-  "version": "1.3.5",
+  "version": "1.3.9",
   "userConfig": {
     "MOMENTIC_API_KEY": {
       "type": "string",
       "title": "Momentic API key",
-      "description": "Used by the local momentic and momentic-mobile MCP servers. Create one at https://app.momentic.ai/settings/api-keys. The hosted server signs in with OAuth and doesn't need it.",
-      "sensitive": true
+      "description": "Optional API key for the local momentic and momentic-mobile MCP servers. Leave blank to use your saved CLI login or MOMENTIC_API_KEY from the environment.",
+      "sensitive": true,
+      "required": false
     }
   },
   "description": "Bug bash with Mo and write, run and maintain Momentic browser and mobile tests.",

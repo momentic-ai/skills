@@ -1,16 +1,20 @@
 # Momentic agent skills
 
-The full Momentic marketplace plugin includes repository-authoring skills, local
-MCP servers, a hosted OAuth entry, and the separate MCP-only `mo-qa` skill. That
-skill uses hosted MCP even in Claude Code or Codex. `qa skills` installs a
-different, CLI-only `mo-qa`; its Mo flows use `qa login` and do not need MCP.
-Choose one `/mo-qa` variant for a workflow. Do not install the full plugin only
-to get hosted tools when you use the CLI skill. ChatGPT and Claude.ai connectors
-call hosted MCP directly without installing a skill. Hosted-only Claude and
-OpenAI plugins bundle the MCP-only skill and do not need the QA CLI.
+## Mo install paths
 
-For a single product, use the [CLI setup](#install-skills-without-the-plugin).
-Existing OAuth connections keep working after plugin updates.
+- `qa skills` and generic `skills add` install CLI-first `mo-qa` without MCP
+  configuration.
+- The full coding-agent plugin bundles the CLI-first `mo-qa` skill, the `qa mcp`
+  bridge with saved CLI login, and local authoring servers.
+- Hosted-only Claude and OpenAI packages use the hosted-MCP skill and HTTP
+  OAuth. ChatGPT and Claude.ai use hosted MCP directly.
+
+Use the interface the user requested. For shell-capable clients, default to `qa`
+when it can reach the target. Reuse a hosted connection when it is already
+authenticated and supports the task. For clients without CLI access, use direct
+HTTP OAuth to `https://mcp.momentic.ai`. See
+[CLI setup](#install-skills-without-the-plugin) for commands and
+[CLI bridge](#cli-bridge) for upgrade choices.
 
 ## Install the plugin
 
@@ -27,18 +31,27 @@ In Claude Code, the plugin and `install-mcp` are alternatives. Running both
 duplicates MCP servers.
 
 The local servers use the API key configured for the plugin, then an inherited
-`MOMENTIC_API_KEY`, then the saved CLI login.
+`MOMENTIC_API_KEY`, then the saved CLI login. The API key setting is optional;
+leave it blank when the saved CLI login is available.
 
 The plugin also supplies skills. Decline the CLI's skills prompt, or use
 `npx momentic init --config-only` (`npx momentic-mobile init --config-only` for
 mobile). Do not run `skills` alongside the plugin.
 
-Before your first session, download the local CLIs outside Claude Code:
+#### Download and check the latest CLIs
+
+Run these commands outside the agent to download and check the latest CLI
+packages:
 
 ```bash
-npx -y momentic@3.74.3 --version
-npx -y momentic-mobile@1.47.2 --version
+npx -y qa@latest --version
+npx -y momentic@latest --version
+npx -y momentic-mobile@latest --version
 ```
+
+The plugin's MCP servers use the selectors in their manifests. They may download
+their configured packages separately at startup, so these commands do not
+guarantee that those packages are cached.
 
 A cold `npx` install can exceed Claude Code's default 30-second `MCP_TIMEOUT`
 before the CLI process starts.
@@ -78,9 +91,10 @@ Install the extension from the public repository:
 gemini extensions install https://github.com/momentic-ai/skills
 ```
 
-The extension loads the skills and the hosted `momentic-hosted` URL with OAuth.
-For local test authoring, also configure your product's local MCP server with
-the [CLI setup](#install-skills-without-the-plugin).
+The extension loads the CLI-first Mo skill and starts `momentic-hosted` with
+`qa mcp`. See [CLI bridge](#cli-bridge) for login and upgrade choices. For local
+test authoring, configure your product's local MCP server with the
+[CLI setup](#install-skills-without-the-plugin).
 
 ### Codex
 
@@ -96,6 +110,9 @@ Start a new session before using its skills or MCP servers. See
 [marketplace setup](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)
 for the supported commands and legacy marketplace format.
 
+To download and check the latest CLI packages, follow the
+[latest CLI steps](#download-and-check-the-latest-clis).
+
 Start Codex from your project directory. The plugin's local MCP servers use that
 directory to find `momentic.config.yaml`; you don't need `install-mcp` alongside
 the plugin.
@@ -107,51 +124,69 @@ and is assembled separately from this marketplace plugin.
 
 Install the Momentic plugin from this repository.
 
-The plugin bundles the repository-test skills, `mo-qa`, the local `momentic` and
-`momentic-mobile` MCP servers, and the hosted `momentic-hosted` URL with OAuth.
-Load `mo-qa` to start and follow sessions.
+The plugin bundles the repository-test skills, CLI-first `mo-qa`, the local
+`momentic` and `momentic-mobile` MCP servers, and `momentic-hosted` through the
+`qa mcp` bridge. The bridge uses the saved CLI login. Load `mo-qa` to start and
+follow sessions.
 
 A local server without a matching project stays connected. Its tools explain
 which product's project is missing. The unused product's local server still
 downloads on first start.
 
-## Opt into the CLI bridge
+## CLI bridge
 
-The optional `qa mcp` stdio bridge provides hosted MCP tools for local MCP-only
-operations. It is not used by CLI Mo sessions. The bridge reuses the saved `qa`
-login for the same machine, OS user, and server. A valid login does not need to
-be repeated. To use the bridge instead of the plugin's hosted URL:
+The bridge reads the saved CLI login for its configured server from the same
+machine and OS user that starts it. A workstation login does not authenticate a
+remote MCP process. Client HTTP OAuth is separate; it is not transferred to the
+CLI login.
 
-1. Disable the plugin's hosted MCP entry before adding the bridge. If your agent
-   cannot disable one plugin server, use the
-   [CLI setup](#install-skills-without-the-plugin) instead of the plugin. Keep
-   only one hosted connection enabled.
-2. Run the install-appropriate login command only if no saved login exists or
-   the bridge explicitly asks you to sign in again: `npx -y qa login` for an npm
-   install, or `qa login` for a standalone install. Run it under the same OS
-   user that launches MCP. A workstation-only login does not authenticate a
-   remote MCP process.
-3. Add `momentic-hosted` as a stdio server. For Claude Code:
+If the bridge runtime has no saved CLI login, or `qa mcp` asks you to sign in
+again, run `qa login` there, or `npx -y qa login` for an npm install. For a
+custom server, pass the same `--server <bridge-server>` to `qa login` and
+`qa mcp`. See the
+[server selection reference](https://momentic.ai/docs/cli-reference/mo/commands/mcp).
 
-   For a standalone install, replace `npx -y qa mcp` with `qa mcp` in each
-   command below.
+After upgrading from the bundled HTTP connection, choose one route:
 
-   ```bash
-   claude mcp add --transport stdio momentic-hosted -- npx -y qa mcp
-   ```
+1. Keep the bridge. If sign-in is required, run the login steps above, then
+   restart it. A remote agent such as Devin needs its own CLI login.
+2. Keep client OAuth. Disable the plugin's `momentic-hosted` bridge entry. If
+   your client cannot disable one plugin server, disable the full plugin and
+   follow
+   [standalone authoring and skills setup](#install-skills-without-the-plugin).
+   After setup, keep exactly one Momentic hosted connection. Replace any
+   `install-mcp`-generated `qa mcp` stdio entries, regardless of server name,
+   with one direct HTTP OAuth connection to `https://mcp.momentic.ai`. If
+   `install-mcp` preserved an existing HTTP entry for Momentic, keep it. Remove
+   only duplicate Momentic entries; leave unrelated MCP servers, local authoring
+   servers, and installed skills untouched. Reuse its OAuth session if retained;
+   otherwise reconnect.
 
-   For Codex:
+Do not leave both routes enabled. For a standalone bridge, configure a stdio
+server. Replace `npx -y qa mcp` with `qa mcp` for a standalone CLI install. For
+Claude Code:
 
-   ```bash
-   codex mcp add momentic-hosted -- npx -y qa mcp
-   ```
+```bash
+claude mcp add --transport stdio momentic-hosted -- npx -y qa mcp
+```
 
-   For other agents, configure a stdio server running `npx -y qa mcp`.
+For Codex:
+
+```bash
+codex mcp add momentic-hosted -- npx -y qa mcp
+```
+
+For other agents, configure a stdio server running `npx -y qa mcp`.
 
 ## Complete setup for your product
 
 Restart your coding agent after installation. Configure only the product you
 intend to use; the plugin includes all products.
+
+Direct HTTP OAuth authenticates only the hosted connection. Local authoring
+servers use a saved CLI login or `MOMENTIC_API_KEY`; reuse existing local
+credentials, or authenticate those tools if none are configured. The `qa mcp`
+bridge needs a saved CLI login in its runtime; see [CLI bridge](#cli-bridge).
 
 ### Browser tests
 
@@ -165,8 +200,8 @@ intend to use; the plugin includes all products.
    `npx momentic whoami` reports the intended organization.
 3. Check the local `momentic` server's config path and working directory, then
    call its `momentic_get_artifacts` tool and check the project artifacts.
-4. Call `momentic_search_docs` on `momentic-hosted`, then load `momentic-test`
-   to write and validate your first test.
+4. Call `momentic_search_docs` on your configured authenticated Momentic hosted
+   connection, then load `momentic-test` to write and validate your first test.
 
 ### Mobile tests
 
@@ -181,38 +216,24 @@ intend to use; the plugin includes all products.
    `npx momentic-mobile whoami` reports the intended organization.
 3. Check the local `momentic-mobile` server's config path and working directory,
    then call its `momentic_get_artifacts` tool and check the project artifacts.
-4. Call `momentic_search_docs` on `momentic-hosted`, then load `momentic-test`
-   to write and validate your first test.
+4. Call `momentic_search_docs` on your configured authenticated Momentic hosted
+   connection, then load `momentic-test` to write and validate your first test.
 
 ### Mo sessions
 
-`qa skills` installs the CLI-only `mo-qa`; its Mo flows use `qa login` and do
-not need MCP. The full Momentic marketplace plugin ships a separate MCP-only
-`mo-qa`, even in Claude Code or Codex. The full plugin and standalone CLI skill
-both provide `/mo-qa`, so installing them for the same agent and project is
-unsupported. Use the plugin's MCP-only `mo-qa` when you use it. For CLI Mo with
-repository-authoring skills, disable or remove the full plugin for that agent
-and project, then follow the
-[standalone authoring setup](https://momentic.ai/docs/coding-agents/building-with-ai#install-the-tools-yourself).
-The full bundle still includes repository-authoring skills and local MCP
-servers.
-
-ChatGPT and Claude.ai connectors call hosted MCP directly without installing a
-skill. Hosted-only Claude and OpenAI plugins bundle the MCP-only skill and do
-not need the QA CLI. The full marketplace plugin is for its repository-authoring
-skills and local servers; do not install it only to get hosted Mo tools when you
-use the CLI skill. For local MCP-only operations, the optional `qa mcp` bridge
-reuses a valid saved CLI login on the same machine, OS user, and server. See the
-[MCP setup guide](https://momentic.ai/docs/coding-agents/mcp-server).
+For package and connection choices, see [Mo install paths](#mo-install-paths).
+See the [MCP setup guide](https://momentic.ai/docs/coding-agents/mcp-server) for
+server setup.
 
 For a hosted session, call `momentic_mo_list_sessions` through the configured
 hosted MCP connection to check it without starting paid work. Hosted private web
-targets need an existing online Connector. If none is online, ask for a public
-target or ask the user to prepare a Connector using the
-[tunneling guide](https://momentic.ai/docs/mo/tunneling).
+targets need an online Connector. If none can reach the target and the user did
+not request hosted tools, use the CLI tunnel when its host can reach it. If the
+user requested hosted tools, report the access limit before switching
+interfaces. Report a blocker if neither route can reach the target.
 
-If a local or hosted connection is missing, follow the
-[MCP setup guide](https://momentic.ai/docs/coding-agents/mcp-server).
+If the requested interface needs an MCP connection that is not configured,
+follow the [MCP setup guide](https://momentic.ai/docs/coding-agents/mcp-server).
 
 ## Install skills without the plugin
 
@@ -221,7 +242,6 @@ tests:
 
 ```bash
 npx momentic skills
-npx -y qa login
 npx momentic install-mcp
 ```
 
@@ -229,9 +249,14 @@ For mobile tests:
 
 ```bash
 npx momentic-mobile skills
-npx -y qa login
 npx momentic-mobile install-mcp
 ```
+
+For the `qa mcp` bridge, run `npx -y qa login` once if no saved CLI login
+exists. If you use direct HTTP OAuth instead, no new CLI login is needed; after
+setup, keep or replace one Momentic hosted connection as described in
+[CLI bridge](#cli-bridge). For local authoring credentials, see the
+[standalone MCP environment setup](https://momentic.ai/docs/coding-agents/mcp-server#setup-instructions).
 
 For Mo, install only `mo-qa`:
 
@@ -246,18 +271,15 @@ only `mo-qa`.
 
 Use `--target codex` for Codex. Without `--target`, each skills command asks
 which coding agents to configure; `--yes` selects detected agents without a
-prompt. For the CLI-only Mo skill, use `qa login` for a standalone install or
-`npx -y qa login` for an npm install, then invoke `/mo-qa`. The marketplace and
-hosted-only plugin skills are separate MCP-only distributions, even in Claude
-Code and Codex. For local MCP-only operations, use the optional `qa mcp` bridge
-with the valid saved CLI login. Do not install both `/mo-qa` variants for one
-workflow.
+prompt. For standalone Mo setup, run `qa login` or `npx -y qa login` only if no
+saved CLI login exists, then invoke `/mo-qa`. For package and connection
+choices, see [Mo install paths](#mo-install-paths).
 
 ## Choose a path
 
 | Task                                       | Use                                                                                                |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| Mo bug bash in a coding agent              | CLI-only `mo-qa` from `qa skills` or MCP-only plugin `mo-qa`                                       |
+| Mo bug bash in a coding agent              | CLI-first Mo skill; see [Mo install paths](#mo-install-paths)                                      |
 | Localhost or private-target QA             | `qa` CLI tunnel, or an existing Connector for hosted sessions                                      |
 | Mobile bug bash through the CLI            | `mo-qa` and the `qa` CLI                                                                           |
 | Mobile app build upload or download        | `qa assets` with the [mobile build docs](https://momentic.ai/docs/mo/cli#manage-mobile-app-builds) |
@@ -276,15 +298,10 @@ checking the original session.
 
 ## Hosted connector
 
-ChatGPT and Claude.ai connectors use Momentic OAuth and hosted tools directly;
-they do not install a coding-agent skill. Hosted-only Claude and OpenAI plugins
-bundle the MCP-only Mo skill and do not require the full marketplace plugin, QA
-CLI, or `qa mcp` bridge. The full marketplace plugin is a separate distribution
-with local authoring skills and servers plus a hosted OAuth entry; its `mo-qa`
-skill is MCP-only. The optional `qa mcp` bridge reuses the saved CLI login for
-local MCP-only operations. Disable the plugin's hosted entry before adding the
-bridge to avoid duplicate OAuth entries. Keep credentials out of chat and
-uploads; use a Momentic environment or session-page secrets instead.
+ChatGPT and Claude.ai use Momentic OAuth and hosted tools directly; they do not
+install a coding-agent skill. For coding-agent choices, see
+[Mo install paths](#mo-install-paths). Keep credentials out of chat and uploads;
+use a Momentic environment or session-page secrets instead.
 
 See the [hosted connector guide](https://momentic.ai/docs/mo/chatgpt-and-claude)
 for connection setup, files, findings, and retests.
@@ -295,12 +312,13 @@ for connection setup, files, findings, and retests.
 | ------------------------------------------------------ | ------------------------------------------------------------------- |
 | [momentic-test](skills/momentic-test/SKILL.md)         | Create, run, and maintain Momentic browser, Android, and iOS tests. |
 | [momentic-maintain](skills/momentic-maintain/SKILL.md) | Diagnose failures and repair quarantined tests.                     |
-| [mo-qa](skills/mo-qa/SKILL.md)                         | Run hosted Mo QA through MCP.                                       |
+| [mo-qa](skills/mo-qa/SKILL.md)                         | Run Mo QA through the CLI and its saved-login MCP bridge.           |
 | [momentic-spec](skills/momentic-spec/SKILL.md)         | Improve code correctness with Momentic specs.                       |
 
 ## Sources
 
-The canonical CLI-only Mo skill at `.agents/skills/mo-qa/` and MCP plugin skill
-at `plugins/skills/mo-qa/` live in the Momentic monorepo. Edit those sources
-upstream, not in this public mirror. Others should open an issue instead of a
-pull request.
+The CLI-first Mo skill source is `.agents/skills/mo-qa/`. The sync job sends it
+to the root public `skills/mo-qa/` path for coding-agent bundles. The
+hosted-only skill at `plugins/skills/mo-qa/` remains the source for the Claude
+and OpenAI packages. Edit these sources in the Momentic monorepo, not in this
+public mirror. Others should open an issue instead of a pull request.

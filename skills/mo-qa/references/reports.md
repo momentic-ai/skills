@@ -32,31 +32,49 @@ Exports don't include raw sub-agent transcripts.
 
 For a whole-report review, review every Needs review or Open finding, including
 ones you didn't pull. For a selected-finding fix, keep to that finding.
-Verify each in-scope finding against the code and available evidence. Ask the
-user when evidence or intended behavior is unclear.
+Verify each in-scope finding against the code and available evidence. If
+evidence or intended behavior is unclear, leave its status unchanged and report
+the uncertainty.
 Before reporting a bug, check that the product behavior and brief still apply.
-For a read-only review or uncertain evidence, propose outcomes and ask before
-changing triage. Don't dismiss a finding just to clear the report. When the user
-asks you to fix a finding or file a tracker issue, update its status as part of
-that task. Leave unrelated findings unchanged.
-Use its ID or exact name for CLI commands:
+Automatically triage each in-scope finding you can access with an
+evidence-supported status. Keep status unchanged for
+explicit read-only or no-report requests or when evidence is unclear. Don't
+dismiss a finding just to clear the report. Leave unrelated findings unchanged.
+Use its ID or exact name for CLI commands.
+
+Before using `--agent-observation`, check the installed command's help, such as
+`qa bugs accept --help`. If the flag is not listed, omit it. Do not retry the
+triage call without it.
 
 ```bash
 qa bugs describe <session-id> <bug-id>
-qa bugs accept <session-id> <bug-id>
+qa bugs accept <session-id> <bug-id> --agent-observation "<brief value note>"
 qa bugs fix <session-id> <bug-id> --pr <url> --commit <sha>
 qa bugs reopen <session-id> <bug-id>
 qa bugs dismiss <session-id> <bug-id> works-as-intended
-qa bugs review <session-id> <bug-id>
+qa bugs review <session-id> <bug-id> --agent-observation "<brief value note>"
 ```
 
 After you land a fix, run `qa bugs fix <session-id> <bug-id>`; include PR/commit
 links when available. Fixed records a landed fix, not a passing retest. For a
-confirmed bug the user asked you to file with a tracker or defer, run
-`qa bugs accept <session-id> <bug-id>` to record Accepted/Open without asking
-again for status permission. Dismiss with `works-as-intended` when behavior is
-intended or `cannot-reproduce` after an unsuccessful reproduction attempt, not
-when you lack access or context.
+confirmed bug you file or defer, run `qa bugs accept <session-id> <bug-id>` to
+record Accepted/Open. When the finding's value is known, optionally share your
+own brief, evidence-grounded value note with Momentic using `--agent-observation`
+on that same command; omit it when unknown. Do not quote or summarize user text, or
+include code, logs, identifiers, secrets, or other private details. For example,
+if it was already fixed before review and needed no further change, say so
+briefly.
+Status is the triage outcome; do not make a separate call to send the note.
+When the `momentic_submit_feedback` tool is available, automatically submit
+feedback only about issues with Momentic itself, not findings in the app under
+test, and optional suggested fixes. Exclude secrets, personal or customer data,
+user messages, code, logs, identifiers, and other private details. If the tool
+is unavailable, skip feedback submission. Do not use another command or open a
+connection; keep any known `--agent-observation` on the existing triage command. Feedback submission
+does not authorize unrelated code changes. Do not change status without
+evidence. Dismiss with
+`works-as-intended` when behavior is intended; use `cannot-reproduce` after an unsuccessful
+reproduction attempt, not when you lack access or context.
 The `qa` CLI cannot link duplicate findings. Report that limitation and see the
 [hosted Mo tool reference](https://momentic.ai/docs/mo/chatgpt-and-claude#tool-reference)
 for this separate MCP-only capability.

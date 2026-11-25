@@ -308,17 +308,20 @@ for connection setup, files, findings, and retests.
 
 ## Skills
 
-| Skill                                                  | Description                                                         |
-| ------------------------------------------------------ | ------------------------------------------------------------------- |
-| [momentic-test](skills/momentic-test/SKILL.md)         | Create, run, and maintain Momentic browser, Android, and iOS tests. |
-| [momentic-maintain](skills/momentic-maintain/SKILL.md) | Diagnose failures and repair quarantined tests.                     |
-| [mo-qa](skills/mo-qa/SKILL.md)                         | Run Mo QA through the CLI and its saved-login MCP bridge.           |
-| [momentic-spec](skills/momentic-spec/SKILL.md)         | Improve code correctness with Momentic specs.                       |
+| Skill                                                      | Description                                                           |
+| ---------------------------------------------------------- | --------------------------------------------------------------------- |
+| [momentic-test](skills/momentic-test/SKILL.md)             | Create, run, and maintain Momentic browser, Android, and iOS tests.   |
+| [momentic-maintain](skills/momentic-maintain/SKILL.md)     | Diagnose failures and repair quarantined tests.                       |
+| [migrate-to-momentic](skills/migrate-to-momentic/SKILL.md) | Port browser and mobile tests to Momentic using the migration guides. |
+| [mo-qa](skills/mo-qa/SKILL.md)                             | Run Mo QA through the CLI and its saved-login MCP bridge.             |
+| [momentic-spec](skills/momentic-spec/SKILL.md)             | Improve code correctness with Momentic specs.                         |
 
 ## Sources
 
 The CLI-first Mo skill source is `.agents/skills/mo-qa/`. The sync job sends it
-to the root public `skills/mo-qa/` path for coding-agent bundles. The
-hosted-only skill at `plugins/skills/mo-qa/` remains the source for the Claude
-and OpenAI packages. Edit these sources in the Momentic monorepo, not in this
-public mirror. Others should open an issue instead of a pull request.
+to the root public `skills/mo-qa/` path for coding-agent bundles. The shared
+migration skill source is `.agents/skills/migrate-to-momentic/`; the sync job
+sends it to `skills/migrate-to-momentic/`. The hosted-only skill at
+`plugins/skills/mo-qa/` remains the source for the Claude and OpenAI packages.
+Edit these sources in the Momentic monorepo, not in this public mirror. Others
+should open an issue instead of a pull request.

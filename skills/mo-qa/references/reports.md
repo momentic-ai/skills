@@ -85,8 +85,11 @@ Read [Repair loop](remediation-loop.md) when fixing or retesting.
 
 ## Inspect evidence
 
-Start with finding details, screenshots, and MP4s. Use the finding's session
-link for browser replays; raw rrweb files aren't videos or rendered screenshots.
+Start with finding details, screenshots, and MP4s. For a browser replay, point
+the user to the finding's `player` artifact (`bugs/bug-NNN-replay.html`): it
+opens offline in any browser without a Mo login, starts at the reproduction
+window, and needs the export's `artifacts` folder beside it. Without one, use
+the finding's session link. Raw rrweb files aren't videos or screenshots.
 Keep raw rrweb as secondary evidence; don't generate screenshots from replay.
 If no screenshot or video is available, report that gap even without warnings.
 An empty warnings list doesn't prove every evidence type is present. Missing

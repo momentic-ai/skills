@@ -33,8 +33,10 @@ or stopping; a return alone does not confirm completion.
 It allows up to five continuous minutes of `checking`, or `sleeping`,
 `findings`, `incomplete` or `replied` without completion, for work to resume.
 Exit `0` means the wait ended, not necessarily that the task completed or QA
-passed; `1` means the command failed or Mo failed (including startup), `2`
-means Mo needs input and `4` means the session was cancelled.
+passed; `1` means the command failed, Mo failed (including startup) or Mo is
+blocked, for example by a usage limit; `2` means Mo needs input and `4` means
+the session was cancelled. For a blocker, `qa status` and `qa wait` give
+`blockerReason` and `blockerSummary`, what blocks Mo and what you must do.
 It has no timeout option. An outer shell timeout ends only the local wait, not
 the session, and restarting the command resets its five-minute timer.
 

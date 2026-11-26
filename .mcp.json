@@ -9,7 +9,7 @@
     },
     "momentic-mobile": {
       "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/local-mcp.cjs", "momentic-mobile@1.48.2"],
+      "args": ["${CLAUDE_PLUGIN_ROOT}/local-mcp.cjs", "momentic-mobile@1.48.3"],
       "env": {
         "MOMENTIC_PLUGIN_API_KEY": "${user_config.MOMENTIC_API_KEY}"
       }

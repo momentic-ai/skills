@@ -2,14 +2,14 @@
   "mcpServers": {
     "momentic": {
       "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/local-mcp.cjs", "momentic@3.74.8"],
+      "args": ["${CLAUDE_PLUGIN_ROOT}/local-mcp.cjs", "momentic@3.74.9"],
       "env": {
         "MOMENTIC_PLUGIN_API_KEY": "${user_config.MOMENTIC_API_KEY}"
       }
     },
     "momentic-mobile": {
       "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/local-mcp.cjs", "momentic-mobile@1.48.1"],
+      "args": ["${CLAUDE_PLUGIN_ROOT}/local-mcp.cjs", "momentic-mobile@1.48.2"],
       "env": {
         "MOMENTIC_PLUGIN_API_KEY": "${user_config.MOMENTIC_API_KEY}"
       }

@@ -5,11 +5,14 @@ description: Run Mo web and mobile QA sessions with the qa CLI. Covers saved env
 
 # Run QA with Mo
 
-Use the interface the user requested. If they haven't chosen one, default to `qa` in shell-capable clients when the CLI can reach the target. Reuse an already authenticated `momentic-hosted` connection only when it supports the task; don't ask the user for a new login just to use MCP. The full coding-agent plugin runs `momentic-hosted` with `qa mcp` and saved CLI credentials. For repository tests, use `momentic-test` or `momentic-maintain`.
-
-For localhost or private targets, hosted tools need an online Connector that can reach the target. If none can reach it and the user did not request hosted tools, start a CLI tunnel when its host can reach the target. If the user requested hosted tools, report the access limit before changing interfaces.
-
-For hosted sessions, follow only the [hosted Mo guidance](https://github.com/momentic-ai/skills/blob/main/claude/skills/mo-qa/SKILL.md) and its linked references. The checklist and references below apply to CLI sessions. Do not install or authorize another hosted-only skill for the same task.
+Use the `qa` CLI for Mo sessions. Before a user's first session, run
+`qa whoami` to confirm the CLI is signed in to their Momentic account. If it
+reports another account or fails, follow
+[Authentication](references/authentication.md) to correct the credentials.
+If sign-in is needed and no environment key overrides saved login, run
+`qa login` and have the user complete browser sign-in. Reuse a confirmed account
+without signing in again. For repository tests, use `momentic-test` or
+`momentic-maintain`.
 If the agent's shell cannot find `qa`, replace the leading `qa` in commands in this skill and its references with `npx -y qa`; when `qa` is on `PATH`, use the examples as written.
 Stop only a tunnel process you started or resumed solely for this run, after its last session, with `qa tunnel stop "$tunnel_id"`. Ask the user to stop a process they started or resumed solely for this run. Leave tunnels already running or needed by other work alone.
 

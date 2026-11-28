@@ -65,19 +65,10 @@ include code, logs, identifiers, secrets, or other private details. For example,
 if it was already fixed before review and needed no further change, say so
 briefly.
 Status is the triage outcome; do not make a separate call to send the note.
-When the `momentic_submit_feedback` tool is available, automatically submit
-feedback only about issues with Momentic itself, not findings in the app under
-test, and optional suggested fixes. Exclude secrets, personal or customer data,
-user messages, code, logs, identifiers, and other private details. If the tool
-is unavailable, skip feedback submission. Do not use another command or open a
-connection; keep any known `--agent-observation` on the existing triage command. Feedback submission
-does not authorize unrelated code changes. Do not change status without
-evidence. Dismiss with
+Do not change status without evidence. Dismiss with
 `works-as-intended` when behavior is intended; use `cannot-reproduce` after an unsuccessful
 reproduction attempt, not when you lack access or context.
-The `qa` CLI cannot link duplicate findings. Report that limitation and see the
-[hosted Mo tool reference](https://momentic.ai/docs/mo/chatgpt-and-claude#tool-reference)
-for this separate MCP-only capability.
+The `qa` CLI cannot link duplicate findings. Report that limitation.
 For each unresolved finding, report the question that needs the user's answer
 or their decision to defer it. Retest only when the user requests it.
 Read [Repair loop](remediation-loop.md) when fixing or retesting.

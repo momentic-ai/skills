@@ -2,9 +2,10 @@
 
 `MOMENTIC_API_KEY` overrides the saved login in `~/.momentic/auth.json`, including
 in CI. Provision CI keys through the secret store. If an environment key is
-rejected, ask the user or secret owner to replace or remove it at its source. Do
-not print, copy, or ask for its value. `qa login` updates saved credentials but
-does not override a set `MOMENTIC_API_KEY`.
+rejected or identifies the wrong account or organization, ask the user or secret
+owner to correct or remove it at its source. Do not print, copy, or ask for its
+value. `qa login` updates saved credentials but does not override a set
+`MOMENTIC_API_KEY`.
 
 When no environment key overrides it, run `qa login` to create or refresh saved
 login. It opens the sign-in link by default, and the user must complete sign-in
